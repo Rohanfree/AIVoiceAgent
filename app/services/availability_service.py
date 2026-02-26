@@ -70,27 +70,36 @@ def _get_appointments_on_date(
     db: Client, client_id: str, date: datetime
 ) -> list[dict]:
     """
-    Fetch all confirmed/pending appointments for a client on the given date.
+    Fetch all active (confirmed/pending) appointments for a client on the given date.
 
-    Uses a date-range query so we only pull documents for that calendar day.
+    Firestore requires a composite index for range queries on multiple fields.
+    To avoid that, we query ONLY by client_id (single equality filter), then
+    filter by date range and status entirely in Python.
     """
     day_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
     day_end = day_start + timedelta(days=1)
     day_start_iso = day_start.isoformat()
     day_end_iso = day_end.isoformat()
 
+    # Single-field query — no composite index needed
     docs = (
         db.collection("appointments")
         .where("client_id", "==", client_id)
-        .where("status", "in", ["confirmed", "pending"])
-        .where("date_time", ">=", day_start_iso)
-        .where("date_time", "<", day_end_iso)
         .stream()
     )
 
-    results = [doc.to_dict() for doc in docs]
+    active_statuses = {"confirmed", "pending"}
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        appt_time = data.get("date_time", "")
+        status = data.get("status", "")
+        # Filter by date window and active status in Python
+        if status in active_statuses and day_start_iso <= appt_time < day_end_iso:
+            results.append(data)
+
     logger.debug(
-        "Found %d appointments for client %s on %s",
+        "Found %d active appointments for client %s on %s",
         len(results),
         client_id,
         day_start_iso,
