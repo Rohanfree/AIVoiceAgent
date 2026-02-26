@@ -47,7 +47,7 @@ cp .env.example .env
 uvicorn app.main:app --reload
 ```
 
-Swagger UI → http://localhost:8000/docs
+Swagger UI → http://localhost:8090/docs
 
 ---
 
