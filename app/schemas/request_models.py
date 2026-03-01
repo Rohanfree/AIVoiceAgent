@@ -4,13 +4,20 @@ request_models.py - Pydantic request body schemas for all /agent-tools endpoints
 
 from pydantic import BaseModel, Field
 
+from app.config import settings
+
+
+def _default_client_id() -> str:
+    """Return the configured default client ID from environment settings."""
+    return settings.client_id
+
 
 # ─── GET CLIENT BY MOBILE ────────────────────────────────────────────────────
 
 class GetClientByMobileRequest(BaseModel):
     """Request schema for POST /agent-tools/get-client-by-mobile"""
 
-    client_id: str = Field(..., description="The unique ID of the business client")
+    client_id: str = Field(default_factory=_default_client_id, description="The unique ID of the business client")
     customer_phone: str = Field(..., description="Customer phone number to search by")
 
 
@@ -19,7 +26,7 @@ class GetClientByMobileRequest(BaseModel):
 class GetServicesRequest(BaseModel):
     """Request schema for POST /agent-tools/get-services-and-prices"""
 
-    client_id: str = Field(..., description="The unique ID of the business client")
+    client_id: str = Field(default_factory=_default_client_id, description="The unique ID of the business client")
 
 
 # ─── CHECK AVAILABILITY ──────────────────────────────────────────────────────
@@ -27,7 +34,7 @@ class GetServicesRequest(BaseModel):
 class CheckAvailabilityRequest(BaseModel):
     """Request schema for POST /agent-tools/check-availability"""
 
-    client_id: str = Field(..., description="The unique ID of the business client")
+    client_id: str = Field(default_factory=_default_client_id, description="The unique ID of the business client")
     service_name: str = Field(..., description="Name of the service being requested")
     date_time: str = Field(
         ...,
@@ -40,7 +47,7 @@ class CheckAvailabilityRequest(BaseModel):
 class BookAppointmentRequest(BaseModel):
     """Request schema for POST /agent-tools/book-appointment"""
 
-    client_id: str = Field(..., description="The unique ID of the business client")
+    client_id: str = Field(default_factory=_default_client_id, description="The unique ID of the business client")
     customer_name: str = Field(..., description="Full name of the customer")
     customer_phone: str = Field(..., description="Phone number of the customer")
     service_name: str = Field(..., description="Name of the service to book")
@@ -55,7 +62,7 @@ class BookAppointmentRequest(BaseModel):
 class SaveCallLogRequest(BaseModel):
     """Request schema for POST /agent-tools/save-call-log"""
 
-    client_id: str = Field(..., description="The unique ID of the business client")
+    client_id: str = Field(default_factory=_default_client_id, description="The unique ID of the business client")
     caller_phone: str = Field(..., description="Phone number of the caller")
     transcript: str = Field(..., description="Full call transcript text")
     summary: str = Field(..., description="Short summary of the call")
