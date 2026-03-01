@@ -51,6 +51,33 @@ Swagger UI → http://localhost:8090/docs
 
 ---
 
+## Docker Deployment
+
+To run the application using Docker:
+
+### 1. Build and Run with Docker Compose (Recommended)
+
+```bash
+docker-compose up --build -d
+```
+
+### 2. Manual Docker Build
+
+```bash
+# Build the image
+docker build -t ai-agent-api .
+
+# Run the container
+docker run -d \
+  -p 8090:8090 \
+  --name ai-agent-api \
+  --env-file .env \
+  -v $(pwd)/firebase-service-account.json:/app/firebase-service-account.json \
+  ai-agent-api
+```
+
+---
+
 ## Endpoints
 
 | Method | Path | Description |
