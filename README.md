@@ -101,6 +101,46 @@ Set `APP_ENV=production` to suppress all debug output.
 
 ---
 
+## Testing
+
+A comprehensive test script is provided to verify all API endpoints against a live Firestore instance.
+
+### Run API Tests
+
+```bash
+# Ensure the server is running (locally or in Docker)
+bash test_api.sh
+```
+
+### Seed Firestore
+
+To populate your Firestore with initial test data:
+
+```bash
+python3 seed_firestore.py
+```
+
+---
+
+## Development & Git Workflow
+
+Common commands for managing the codebase:
+
+### Stage and Commit Changes
+
+```bash
+git add .
+git commit -m "feat: your descriptive message"
+```
+
+### Push to GitHub
+
+```bash
+git push origin main
+```
+
+---
+
 ## Environment Variables
 
 | Variable | Description |
