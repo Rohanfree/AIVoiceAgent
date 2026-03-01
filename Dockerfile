@@ -24,6 +24,5 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 8090
 
-# Command to run the application
-# We use JSON form with sh -c to allow environment variable expansion while following best practices
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8090}"]
+# Command to run the application — always on 8090 inside the container
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8090"]
