@@ -2,9 +2,9 @@
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV APP_ENV production
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV APP_ENV=production
 
 # Set the working directory in the container
 WORKDIR /app
@@ -25,5 +25,5 @@ COPY . .
 EXPOSE 8090
 
 # Command to run the application
-# We use bash to allow environment variable expansion for the port
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8090}
+# We use JSON form with sh -c to allow environment variable expansion while following best practices
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8090}"]
