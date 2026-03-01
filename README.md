@@ -44,7 +44,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Set FIREBASE_CREDENTIAL_PATH and APP_ENV in .env
 
-uvicorn app.main:app --reload
+# Start the server (respects .env settings for PORT and RELOAD)
+python app/main.py
 ```
 
 Swagger UI → http://localhost:8090/docs
