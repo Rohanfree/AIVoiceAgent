@@ -76,6 +76,16 @@ docker run -d \
   ai-agent-api
 ```
 
+### 3. Verify the Container
+
+```bash
+# Check container health
+curl http://localhost:8090/health
+
+# View live logs
+docker logs -f ai-agent-api
+```
+
 ---
 
 ## Endpoints
