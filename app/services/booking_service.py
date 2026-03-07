@@ -23,18 +23,19 @@ def _utcnow_iso() -> str:
     return datetime.now(tz=timezone.utc).isoformat()
 
 
-def get_client_services(db: Client, client_id: str) -> list[dict] | None:
+def get_client_services(db: Client, client_id: str) -> dict | None:
     """
-    Fetch the services array for a given client.
+    Fetch the full client document for a given client_id.
 
     Returns:
-        List of service dicts, or None if the client document does not exist.
+        The client document dict (contains services, operating_hours, policies etc.),
+        or None if the client document does not exist.
     """
     client_doc = db.collection("clients").document(client_id).get()
     if not client_doc.exists:
         logger.warning("Client not found when fetching services: %s", client_id)
         return None
-    return client_doc.to_dict().get("services", [])
+    return client_doc.to_dict()
 
 
 def find_service(services: list[dict], service_name: str) -> dict | None:

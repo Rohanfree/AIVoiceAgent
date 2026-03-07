@@ -20,7 +20,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import agent_tools
+from app.routers import agent_tools, vapi_webhook
 
 # ─── Logging setup ─────────────────────────────────────────────────────────
 
@@ -158,6 +158,7 @@ def create_app() -> FastAPI:
 
     # ── Routers ─────────────────────────────────────────────────────────────
     app.include_router(agent_tools.router)
+    app.include_router(vapi_webhook.router)
 
     # ── Health check ────────────────────────────────────────────────────────
     @app.get("/health", tags=["Health"], summary="Service health check")

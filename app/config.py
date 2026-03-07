@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # Path to Firebase service account credentials JSON
     firebase_credential_path: str = "./firebase-service-account.json"
 
-    # Default business client ID — used as fallback when Retell AI doesn't send it
+    # Default business client ID — used as fallback when Vapi doesn't pass assistantId
     client_id: str = "default-client"
 
     # Application environment: "development" enables debug logging
