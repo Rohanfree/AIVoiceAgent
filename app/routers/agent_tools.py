@@ -35,7 +35,7 @@ from app.services.booking_service import (
     get_client_services,
     save_call_log,
 )
-from app.services.customer_service import get_customer_by_phone, upsert_customer
+from app.services.customer_service import get_customer_by_phone, get_last_call_summary, upsert_customer
 
 logger = logging.getLogger(__name__)
 
@@ -126,11 +126,15 @@ async def get_client_by_mobile(
     customer = get_customer_by_phone(db=db, client_id=client_id, phone=customer_phone)
 
     if customer:
+        last_summary = get_last_call_summary(
+            db=db, client_id=client_id, phone=customer_phone
+        )
         result = {
             "found": True,
             "customer_name": customer.get("name", ""),
             "last_visit": customer.get("last_visit"),
             "notes": customer.get("notes"),
+            "last_call_summary": last_summary,
         }
     else:
         result = {"found": False}

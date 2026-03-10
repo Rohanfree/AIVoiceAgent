@@ -2,8 +2,11 @@
 customer_service.py - CRUD helpers for the 'customers' Firestore collection.
 
 Responsibilities:
-- Fetching a customer by (client_id, phone)
-- Upserting a customer record (create or update)
+- Fetching a customer by (client_id, phone) via a fast point read
+- Fetching the most recent call log summary for a customer
+- Upserting a customer record (create or update) using a deterministic doc ID
+
+Document ID strategy: {client_id}_{phone}
 """
 
 import logging
@@ -19,34 +22,92 @@ def _utcnow_iso() -> str:
     return datetime.now(tz=timezone.utc).isoformat()
 
 
+def _customer_doc_id(client_id: str, phone: str) -> str:
+    """Build a deterministic Firestore document ID for a customer."""
+    return f"{client_id}_{phone}"
+
+
 def get_customer_by_phone(
     db: Client, client_id: str, phone: str
 ) -> dict | None:
     """
     Look up a customer in Firestore by client_id + phone number.
 
+    Uses a direct point read (no query) via a deterministic document ID.
+
     Args:
         db: Firestore client.
         client_id: Business client identifier.
-        phone: Customer phone number to search.
+        phone: Customer phone number.
 
     Returns:
-        Customer document dict, or None if not found.
+        Customer document dict (with 'id' key), or None if not found.
     """
-    docs = (
-        db.collection("customers")
-        .where("client_id", "==", client_id)
-        .where("phone", "==", phone)
-        .limit(1)
-        .stream()
-    )
-    for doc in docs:
+    doc_id = _customer_doc_id(client_id, phone)
+    doc = db.collection("customers").document(doc_id).get()
+
+    if doc.exists:
         data = doc.to_dict()
         data["id"] = doc.id
         logger.debug("Found customer: %s", data)
         return data
+
     logger.debug("No customer found for client=%s phone=%s", client_id, phone)
     return None
+
+
+def get_last_call_summary(
+    db: Client, client_id: str, phone: str
+) -> str | None:
+    """
+    Fetch the summary from the most recent call log for this customer.
+
+    Queries the 'call_logs' collection filtered by client_id and
+    true_caller_phone, ordered by created_at descending, limited to 1.
+
+    Requires a Firestore composite index on:
+        (client_id ASC, true_caller_phone ASC, created_at DESC)
+
+    Args:
+        db: Firestore client.
+        client_id: Business client identifier.
+        phone: Customer phone number (matched against true_caller_phone).
+
+    Returns:
+        The summary string from the latest call, or None if no logs exist
+        or the composite index has not been created yet.
+    """
+    try:
+        from google.cloud.firestore import FieldFilter
+        docs = (
+            db.collection("call_logs")
+            .where(filter=FieldFilter("client_id", "==", client_id))
+            .where(filter=FieldFilter("true_caller_phone", "==", phone))
+            .order_by("created_at", direction="DESCENDING")
+            .limit(1)
+            .stream()
+        )
+        for doc in docs:
+            data = doc.to_dict()
+            summary = data.get("summary")
+            logger.debug(
+                "Last call summary for client=%s phone=%s: %s",
+                client_id, phone, summary
+            )
+            return summary
+
+        logger.debug("No call logs found for client=%s phone=%s", client_id, phone)
+        return None
+
+    except Exception as exc:
+        # Gracefully handle missing composite index — endpoint still works
+        # without the summary. Create the index at the URL printed below.
+        logger.warning(
+            "get_last_call_summary failed (composite index may be missing): %s", exc
+        )
+        return None
+
+
 
 
 def upsert_customer(
@@ -58,47 +119,46 @@ def upsert_customer(
     last_visit: str | None = None,
 ) -> None:
     """
-    Create a new customer or update an existing one.
+    Create a new customer or update an existing one using a deterministic ID.
 
-    - If the customer already exists (matched by client_id + phone), patch the
-      provided fields and refresh updated_at.
-    - If no record exists, create a fresh document with all base fields.
+    Uses Firestore's merge=True set() so no pre-read is needed.
+    Sets created_at only when the document does not yet exist.
 
     Args:
         db: Firestore client.
         client_id: Business client identifier.
-        phone: Customer phone number (used as lookup key).
+        phone: Customer phone number (used as part of document ID).
         name: Optional customer full name.
         notes: Optional freeform notes.
         last_visit: Optional ISO date string of the most recent visit.
     """
     now = _utcnow_iso()
+    doc_id = _customer_doc_id(client_id, phone)
 
-    existing = get_customer_by_phone(db, client_id, phone)
+    # Check existence with a point read to decide whether to set created_at
+    doc_ref = db.collection("customers").document(doc_id)
+    existing = doc_ref.get()
 
-    if existing:
-        # Build a partial update dict with only provided fields
-        update_data: dict = {"updated_at": now}
-        if name is not None:
-            update_data["name"] = name
-        if notes is not None:
-            update_data["notes"] = notes
-        if last_visit is not None:
-            update_data["last_visit"] = last_visit
+    data: dict = {
+        "client_id": client_id,
+        "phone": phone,
+        "updated_at": now,
+    }
 
-        db.collection("customers").document(existing["id"]).update(update_data)
-        logger.debug("Updated customer %s: %s", existing["id"], update_data)
-    else:
-        # Create a new customer document
-        new_doc = {
-            "client_id": client_id,
-            "phone": phone,
-            "name": name or "",
-            "last_visit": last_visit,
-            "notes": notes,
-            "created_at": now,
-            "updated_at": now,
-        }
-        ref = db.collection("customers").document()
-        ref.set(new_doc)
-        logger.debug("Created new customer %s: %s", ref.id, new_doc)
+    if not existing.exists:
+        data["created_at"] = now
+
+    if name is not None:
+        data["name"] = name
+    if notes is not None:
+        data["notes"] = notes
+    if last_visit is not None:
+        data["last_visit"] = last_visit
+
+    doc_ref.set(data, merge=True)
+    logger.debug(
+        "%s customer %s: %s",
+        "Updated" if existing.exists else "Created",
+        doc_id,
+        data,
+    )

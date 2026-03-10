@@ -5,6 +5,10 @@ Responsibilities:
 - Validate that the requested service exists for the client
 - Persist a new appointment to Firestore
 - Trigger customer upsert after successful booking
+
+Document ID strategy:
+  appointments : {client_id}_{customer_phone}_{date_time}
+  legacy call_logs (save_call_log): {client_id}_{caller_phone}_{uuid}
 """
 
 import logging
@@ -67,6 +71,9 @@ def create_appointment(
     """
     Persist a new appointment document to Firestore and upsert the customer.
 
+    Uses a deterministic document ID: {client_id}_{customer_phone}_{date_time}
+    This prevents duplicate bookings for the same customer/slot.
+
     Args:
         db: Firestore client.
         client_id: Business client identifier.
@@ -81,7 +88,9 @@ def create_appointment(
     """
     try:
         now = _utcnow_iso()
-        appt_id = str(uuid.uuid4())
+
+        # Deterministic ID: prevents double-booking the same slot
+        appt_id = f"{client_id}_{customer_phone}_{date_time}"
 
         appointment_doc = {
             "id": appt_id,
@@ -125,6 +134,9 @@ def save_call_log(
     """
     Persist a call log document and optionally upsert the customer.
 
+    This is the legacy endpoint used by the /agent-tools/save-call-log route.
+    For Vapi-triggered logs, use call_log_service.save_vapi_call_log instead.
+
     Args:
         db: Firestore client.
         client_id: Business client identifier.
@@ -138,12 +150,15 @@ def save_call_log(
     """
     try:
         now = _utcnow_iso()
-        log_id = str(uuid.uuid4())
+        # Append a short UUID suffix for uniqueness since we have no Vapi call ID here
+        log_id = f"{client_id}_{caller_phone}_{str(uuid.uuid4())}"
 
         log_doc = {
             "id": log_id,
             "client_id": client_id,
-            "caller_phone": caller_phone,
+            "true_caller_phone": caller_phone,
+            "direct_caller_phone": caller_phone,
+            "forwarded_from_phone": None,
             "transcript": transcript,
             "summary": summary,
             "created_at": now,

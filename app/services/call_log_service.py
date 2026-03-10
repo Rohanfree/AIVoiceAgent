@@ -5,6 +5,9 @@ Saves a structured call log that includes:
   - The actual caller phone (original number if call was forwarded)
   - The number that forwarded the call (if applicable)
   - Call metadata: Vapi call ID, ended reason, duration, transcript, summary
+
+Document ID strategy: {client_id}_{vapi_call_id}
+Falls back to {client_id}_{true_caller_phone}_{created_at} if no vapi_call_id.
 """
 
 import logging
@@ -35,6 +38,9 @@ def save_vapi_call_log(
     """
     Persist a Vapi call-end log document to Firestore.
 
+    Uses a deterministic document ID based on vapi_call_id to avoid duplicates
+    if the webhook is delivered more than once.
+
     Args:
         db:               Firestore client.
         client_id:        Business client identifier (from app config).
@@ -53,11 +59,16 @@ def save_vapi_call_log(
     """
     try:
         now = _utcnow_iso()
-        log_id = str(uuid.uuid4())
 
         # The "true" caller is the forwarded-from number when available,
         # otherwise it's the direct caller.
         true_caller = forwarded_from or caller_phone
+
+        # Deterministic ID: prefer vapi_call_id, fall back to UUID
+        if vapi_call_id:
+            log_id = f"{client_id}_{vapi_call_id}"
+        else:
+            log_id = f"{client_id}_{true_caller}_{str(uuid.uuid4())}"
 
         log_doc = {
             "id": log_id,
