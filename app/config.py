@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
 
+    # ── Google GenAI ────────────────────────────────────────────────────────
+    gemini_api_key: str = ""
+
     # ── Encryption ──────────────────────────────────────────────────────────
     secret_key: str = ""
 

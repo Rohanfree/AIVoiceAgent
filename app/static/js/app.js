@@ -205,6 +205,8 @@ function initRegisterForm() {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
+let currentProfile = null;
+
 async function initDashboard() {
     const profileSection = document.getElementById('profile-data');
     if (!profileSection) return;
@@ -217,6 +219,7 @@ async function initDashboard() {
     // Load profile
     const profile = await apiCall('GET', '/client-portal/profile');
     if (profile) {
+        currentProfile = profile;
         document.getElementById('business-name').textContent = profile.business_name || 'Unnamed';
         document.getElementById('client-id').textContent = profile.id || '';
 
@@ -256,6 +259,198 @@ async function initDashboard() {
     if (logs && logs.call_logs) {
         document.getElementById('calls-count').textContent = logs.total;
     }
+
+    // Init Edit Profile Form
+    initEditProfileForm();
+}
+
+// ─── Edit Profile Modal ──────────────────────────────────────────────────────
+
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+function openEditProfileModal() {
+    const modal = document.getElementById('edit-profile-modal');
+    if (!modal || !currentProfile) return;
+
+    // Reset AI Box
+    document.getElementById('ai-parse-text').value = '';
+
+    // Populate Business Name
+    document.getElementById('edit-business-name').value = currentProfile.business_name || '';
+
+    // Populate Operating Hours
+    const hoursContainer = document.getElementById('operating-hours-container');
+    hoursContainer.innerHTML = '';
+    
+    let hours = currentProfile.operating_hours || {};
+    DAYS_OF_WEEK.forEach(day => {
+        hoursContainer.innerHTML += `
+            <div style="font-weight: 500">${day}</div>
+            <input type="text" class="input-field" id="hours-${day}" value="${hours[day] || 'Closed'}" placeholder="e.g. 09:00 - 17:00">
+        `;
+    });
+
+    // Populate Services
+    editServices = Array.isArray(currentProfile.services) ? JSON.parse(JSON.stringify(currentProfile.services)) : [];
+    renderEditServices();
+
+    modal.style.display = 'block';
+}
+
+function closeEditProfileModal() {
+    document.getElementById('edit-profile-modal').style.display = 'none';
+}
+
+function setDefaultHours() {
+    DAYS_OF_WEEK.forEach(day => {
+        const inp = document.getElementById(`hours-${day}`);
+        if (inp) {
+            if (day === 'Saturday' || day === 'Sunday') {
+                inp.value = 'Closed';
+            } else {
+                inp.value = '09:00 - 17:00';
+            }
+        }
+    });
+}
+
+let editServices = [];
+
+function renderEditServices() {
+    const container = document.getElementById('edit-services-container');
+    container.innerHTML = '';
+    
+    if (editServices.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 0.9rem;">No services added yet.</p>';
+        return;
+    }
+
+    editServices.forEach((svc, index) => {
+        container.innerHTML += `
+            <div class="glass-card" style="margin-bottom: var(--space-sm); padding: var(--space-sm); position: relative;">
+                <span style="position: absolute; right: 10px; top: 10px; cursor: pointer; color: var(--color-danger);" onclick="removeServiceRow(${index})">&times; Remove</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; margin-top: 10px;">
+                    <div>
+                        <label style="font-size: 0.8rem">Name</label>
+                        <input type="text" class="input-field" id="svc-name-${index}" value="${svc.name || ''}" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem">Category</label>
+                        <input type="text" class="input-field" id="svc-cat-${index}" value="${svc.category || ''}">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.8rem">Duration (mins)</label>
+                        <input type="number" class="input-field" id="svc-dur-${index}" value="${svc.duration || 30}" min="1" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem">Price</label>
+                        <input type="number" class="input-field" id="svc-price-${index}" value="${svc.price || 0}" min="0" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function addServiceRow() {
+    syncServicesFromDOM();
+    editServices.push({ name: '', category: 'General', duration: 30, price: 0 });
+    renderEditServices();
+}
+
+function removeServiceRow(index) {
+    syncServicesFromDOM();
+    editServices.splice(index, 1);
+    renderEditServices();
+}
+
+function syncServicesFromDOM() {
+    editServices.forEach((_, index) => {
+        const nameEl = document.getElementById(`svc-name-${index}`);
+        if (nameEl) {
+            editServices[index].name = nameEl.value;
+            editServices[index].category = document.getElementById(`svc-cat-${index}`).value;
+            editServices[index].duration = parseInt(document.getElementById(`svc-dur-${index}`).value) || 30;
+            editServices[index].price = parseFloat(document.getElementById(`svc-price-${index}`).value) || 0;
+        }
+    });
+}
+
+async function parseTextWithAI(btn) {
+    const textEl = document.getElementById('ai-parse-text');
+    const text = textEl.value.trim();
+    if (!text) {
+        showAlert('alert', 'Please paste some text first!');
+        return;
+    }
+
+    setLoading(btn, true);
+    try {
+        const data = await apiCall('POST', '/client-portal/parse-text', { text });
+        if (data) {
+            // Populate Form from AI response
+            if (data.operating_hours) {
+                DAYS_OF_WEEK.forEach(day => {
+                    const inp = document.getElementById(`hours-${day}`);
+                    if (inp && data.operating_hours[day]) {
+                        inp.value = data.operating_hours[day];
+                    }
+                });
+            }
+            if (data.services && Array.isArray(data.services)) {
+                editServices = data.services;
+                renderEditServices();
+            }
+            showAlert('success', '✨ Extracted data successfully! Review the form below.');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to extract data. Check console.');
+    } finally {
+        setLoading(btn, false);
+    }
+}
+
+function initEditProfileForm() {
+    const form = document.getElementById('edit-profile-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = form.querySelector('button[type="submit"]');
+        setLoading(btn, true);
+
+        // Gather Operating Hours
+        const operating_hours = {};
+        DAYS_OF_WEEK.forEach(day => {
+            operating_hours[day] = document.getElementById(`hours-${day}`).value.trim() || 'Closed';
+        });
+
+        // Gather Services
+        syncServicesFromDOM();
+
+        const updates = {
+            business_name: document.getElementById('edit-business-name').value.trim(),
+            operating_hours: operating_hours,
+            services: editServices
+        };
+
+        const result = await apiCall('PUT', '/client-portal/profile', updates);
+        
+        if (result && result.status === 'updated') {
+            showAlert('success', 'Profile updated successfully!');
+            closeEditProfileModal();
+            // Refresh dashboard data
+            initDashboard();
+        } else {
+            showAlert('error', 'Failed to update profile.');
+        }
+
+        setLoading(btn, false);
+    });
 }
 
 // ─── Admin Dashboard ─────────────────────────────────────────────────────────

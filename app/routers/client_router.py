@@ -161,3 +161,82 @@ async def list_call_logs(
     logs.sort(key=lambda x: x.get("created_at", ""), reverse=True)
 
     return {"client_id": client_id, "total": len(logs), "call_logs": logs}
+
+
+# ─── PARSE TEXT (AI AUTO-FILL) ───────────────────────────────────────────────
+
+from pydantic import BaseModel, Field
+
+class ParseTextRequest(BaseModel):
+    text: str
+
+class ExtractedService(BaseModel):
+    name: str = Field(description="Name of the service", default="Unnamed Service")
+    category: str = Field(description="Category of the service, e.g., Haircut, Consultation", default="General")
+    duration: int = Field(description="Duration in minutes", default=30)
+    price: float = Field(description="Price of the service", default=0.0)
+
+class ExtractedOperatingHours(BaseModel):
+    Monday: str = Field(description="Hours for Monday, e.g. 09:00 - 17:00 or Closed", default="Closed")
+    Tuesday: str = Field(description="Hours for Tuesday", default="Closed")
+    Wednesday: str = Field(description="Hours for Wednesday", default="Closed")
+    Thursday: str = Field(description="Hours for Thursday", default="Closed")
+    Friday: str = Field(description="Hours for Friday", default="Closed")
+    Saturday: str = Field(description="Hours for Saturday", default="Closed")
+    Sunday: str = Field(description="Hours for Sunday", default="Closed")
+
+class ProfileExtraction(BaseModel):
+    services: list[ExtractedService]
+    operating_hours: ExtractedOperatingHours
+
+@router.post(
+    "/parse-text",
+    summary="Parse raw text into structured services and operating hours using Gemini",
+)
+async def parse_text(
+    body: ParseTextRequest,
+    user: dict = Depends(get_current_user)
+) -> dict:
+    """Uses Gemini API to extract services and operating hours from unstructured text."""
+    from app.config import settings
+    if not settings.gemini_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini API key is not configured.",
+        )
+
+    try:
+        from google import genai
+        from google.genai import types
+        import json
+
+        client = genai.Client(api_key=settings.gemini_api_key)
+        
+        prompt = f"""
+        Extract the business services and operating hours from the following text.
+        If a detail is missing, provide a reasonable default (e.g., 30 mins, price 0, or 'Closed').
+        
+        Text:
+        {body.text}
+        """
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=ProfileExtraction,
+                temperature=0.1,
+            ),
+        )
+        
+        parsed_data = json.loads(response.text)
+        return parsed_data
+        
+    except Exception as exc:
+        logger.error("Failed to parse text with Gemini: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI extraction failed: {str(exc)}"
+        )
+
