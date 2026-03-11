@@ -222,6 +222,20 @@ async function initDashboard() {
         currentProfile = profile;
         document.getElementById('business-name').textContent = profile.business_name || 'Unnamed';
         document.getElementById('client-id').textContent = profile.id || '';
+        document.getElementById('assistant-name-display').textContent = profile.assistant_name || 'Sofia';
+
+        // Google Calendar Status
+        const calBox = document.getElementById('calendar-status-box');
+        if (calBox) {
+            if (profile.google_calendar_linked) {
+                calBox.innerHTML = `
+                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-md);">
+                        <span style="color: var(--color-success)">✓</span> Linked to your Google account.
+                    </p>
+                    <button class="btn btn-sm btn-secondary" onclick="startGoogleAuth()">Reconnect / Sync</button>
+                `;
+            }
+        }
 
         // Services table
         const tbody = document.getElementById('services-tbody');
@@ -260,8 +274,26 @@ async function initDashboard() {
         document.getElementById('calls-count').textContent = logs.total;
     }
 
+    // Check for URL pulses (success/error from OAuth)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('google_linked') === 'success') {
+        showAlert('success', '✨ Google Calendar successfully connected!');
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('google_linked') === 'error') {
+        showAlert('error', 'Failed to connect Google Calendar. Please try again.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // Init Edit Profile Form
     initEditProfileForm();
+}
+
+function startGoogleAuth() {
+    const token = getAccessToken();
+    if (!token) return;
+    // Redirect to backend auth initiator (no /automiteui prefix for this specific route)
+    window.location.href = `/client/auth/google/login?token=${token}`;
 }
 
 // ─── Edit Profile Modal ──────────────────────────────────────────────────────
@@ -285,8 +317,10 @@ function openEditProfileModal() {
     let hours = currentProfile.operating_hours || {};
     DAYS_OF_WEEK.forEach(day => {
         hoursContainer.innerHTML += `
-            <div style="font-weight: 500">${day}</div>
-            <input type="text" class="input-field" id="hours-${day}" value="${hours[day] || 'Closed'}" placeholder="e.g. 09:00 - 17:00">
+            <div class="hours-row">
+                <div class="hours-day">${day}</div>
+                <input type="text" class="hours-input" id="hours-${day}" value="${hours[day] || 'Closed'}" placeholder="09:00 - 17:00">
+            </div>
         `;
     });
 
@@ -327,26 +361,29 @@ function renderEditServices() {
 
     editServices.forEach((svc, index) => {
         container.innerHTML += `
-            <div class="glass-card" style="margin-bottom: var(--space-sm); padding: var(--space-sm); position: relative;">
-                <span style="position: absolute; right: 10px; top: 10px; cursor: pointer; color: var(--color-danger);" onclick="removeServiceRow(${index})">&times; Remove</span>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; margin-top: 10px;">
+            <div class="service-manager-card animate-in">
+                <span class="remove-svc" onclick="removeServiceRow(${index})">🗑️ Remove</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; margin-top: 8px;">
                     <div>
-                        <label style="font-size: 0.8rem">Name</label>
-                        <input type="text" class="input-field" id="svc-name-${index}" value="${svc.name || ''}" required>
+                        <label class="form-label" style="font-size: 0.7rem;">Service Name</label>
+                        <input type="text" class="form-input" id="svc-name-${index}" value="${svc.name || ''}" required placeholder="Name">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem">Category</label>
-                        <input type="text" class="input-field" id="svc-cat-${index}" value="${svc.category || ''}">
+                        <label class="form-label" style="font-size: 0.7rem;">Category</label>
+                        <input type="text" class="form-input" id="svc-cat-${index}" value="${svc.category || ''}" placeholder="Category">
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
-                        <label style="font-size: 0.8rem">Duration (mins)</label>
-                        <input type="number" class="input-field" id="svc-dur-${index}" value="${svc.duration || 30}" min="1" required>
+                        <label class="form-label" style="font-size: 0.7rem;">Duration (mins)</label>
+                        <input type="number" class="form-input" id="svc-dur-${index}" value="${svc.duration || 30}" min="1" required>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem">Price</label>
-                        <input type="number" class="input-field" id="svc-price-${index}" value="${svc.price || 0}" min="0" step="0.01" required>
+                        <label class="form-label" style="font-size: 0.7rem;">Price</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--color-text-secondary);">${currentProfile.currency || 'INR'}</span>
+                            <input type="number" class="form-input" id="svc-price-${index}" value="${svc.price || 0}" min="0" step="0.01" required style="padding-left: 45px;">
+                        </div>
                     </div>
                 </div>
             </div>

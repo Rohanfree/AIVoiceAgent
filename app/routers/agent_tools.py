@@ -36,6 +36,7 @@ from app.services.booking_service import (
     save_call_log,
 )
 from app.services.customer_service import get_customer_by_phone, get_last_call_summary, upsert_customer
+from app.services.calendar_service import create_calendar_event
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +304,19 @@ async def book_appointment(
         date_time=date_time_str,
         duration_minutes=int(service.get("duration", 0)),
     )
+
+    if success:
+        # Sync to Google Calendar if linked
+        appointment_data = {
+            "id": f"{client_id}_{customer_phone}_{date_time_str}",
+            "client_id": client_id,
+            "customer_name": customer_name,
+            "customer_phone": customer_phone,
+            "service_name": service_name,
+            "date_time": date_time_str,
+            "duration_minutes": int(service.get("duration", 0)),
+        }
+        await create_calendar_event(db, client_id, appointment_data)
 
     result = {"status": "confirmed" if success else "failed"}
     resp = _vapi_response(tool_call_id, result)
