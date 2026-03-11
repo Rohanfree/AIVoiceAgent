@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+{% block meta_description %}Create your Automite AI account and get an AI voice assistant{% endblock %}
+
+{% block main_class %}auth-wrapper{% endblock %}
+
+{% block content %}
+<div class="auth-card glass-card animate-in" style="max-width: 480px;">
+    <div class="auth-header">
+        <h1><img src="/automiteui/static/images/icon.jpeg" alt="Icon" style="height: 40px; margin-right: 10px; border-radius: 8px; vertical-align: middle;">AUTOMITE<span class="brand-divider">|</span><span style="color: var(--color-cyan)">AI</span></h1>
+        <p>Create your account &amp; get your AI assistant</p>
+    </div>
+
+    <div class="alert" id="register-alert"></div>
+
+    <form id="register-form">
+        <div class="form-group">
+            <label class="form-label" for="client_name">Business Name</label>
+            <input type="text" id="client_name" class="form-input" placeholder="e.g. Rohan's Salon" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="assistant_name">AI Assistant Name</label>
+            <input type="text" id="assistant_name" class="form-input" placeholder="e.g. Sofia" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" class="form-input" placeholder="Choose a username" required minlength="3"
+                autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="Min 8 characters" required
+                minlength="8" autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+        Already have an account? <a href="/automiteui/pages/login">Sign in</a>
+    </div>
+</div>
+{% endblock %}

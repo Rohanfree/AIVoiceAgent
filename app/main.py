@@ -4,7 +4,10 @@ main.py - FastAPI application entry point.
 Sets up:
   - Logging (verbose in development, concise in production)
   - CORS middleware
-  - /agent-tools router
+  - Existing routes: /agent-tools, /vapi
+  - New routes under /automiteui: /auth, /client-portal, /mngr-sys-access-78,
+    /extraction, /pages
+  - Static file serving at /automiteui/static
   - Health check endpoint
   - Debug request/response middleware (prints full JSON when APP_ENV=development)
 """
@@ -18,6 +21,7 @@ from typing import Callable
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.routers import agent_tools, vapi_webhook
@@ -62,20 +66,19 @@ def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
 
     app = FastAPI(
-        title="AI Receptionist Agent Tools API",
+        title="Automite AI — Intelligent Automation Platform",
         description=(
-            "Backend API for the AI Receptionist system integrated with Retell AI. "
-            "Provides tools for checking availability, booking appointments, "
-            "managing customers, and logging calls — all backed by Firebase Firestore."
+            "Backend API for the Automite AI ecosystem. Includes Vapi AI integration, "
+            "client portal, admin dashboard, and intelligent extraction tools. "
+            "All new features are served under the /automiteui context path."
         ),
-        version="1.0.0",
+        version="2.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
     )
 
     # ── CORS ────────────────────────────────────────────────────────────────
-    # Retell AI and any connected frontends will hit this API cross-origin.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],        # Tighten in production with explicit origins
@@ -156,18 +159,40 @@ def create_app() -> FastAPI:
                 media_type=response.media_type,
             )
 
-    # ── Routers ─────────────────────────────────────────────────────────────
+    # ── Existing Routers (unchanged context paths) ──────────────────────────
     app.include_router(agent_tools.router)
     app.include_router(vapi_webhook.router)
+
+    # ── New Routers — all under /automiteui parent prefix ───────────────────
+    from app.routers import (
+        admin_router,
+        auth_router,
+        client_router,
+        extraction_router,
+        pages_router,
+    )
+
+    app.include_router(auth_router.router, prefix="/automiteui")
+    app.include_router(client_router.router, prefix="/automiteui")
+    app.include_router(admin_router.router, prefix="/automiteui")
+    app.include_router(extraction_router.router, prefix="/automiteui")
+    app.include_router(pages_router.router, prefix="/automiteui")
+
+    # ── Static files ────────────────────────────────────────────────────────
+    app.mount(
+        "/automiteui/static",
+        StaticFiles(directory="app/static"),
+        name="static",
+    )
 
     # ── Health check ────────────────────────────────────────────────────────
     @app.get("/health", tags=["Health"], summary="Service health check")
     async def health() -> dict:
         """Returns a simple liveness signal and current environment."""
-        return {"status": "ok", "environment": settings.app_env}
+        return {"status": "ok", "environment": settings.app_env, "version": "2.0.0"}
 
     logger.info(
-        "AI Receptionist API started | env=%s | debug=%s",
+        "Automite AI API started | env=%s | debug=%s | version=2.0.0",
         settings.app_env,
         settings.debug,
     )
@@ -187,3 +212,4 @@ if __name__ == "__main__":
         reload=settings.debug,   # Hot-reload only in development
         log_level="debug" if settings.debug else "info",
     )
+

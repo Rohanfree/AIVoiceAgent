@@ -22,6 +22,29 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8090
 
+    # ── JWT Authentication ──────────────────────────────────────────────────
+    jwt_secret_key: str = "change-me-to-a-64-char-random-hex-string"
+    jwt_access_token_expire_minutes: int = 15
+    jwt_refresh_token_expire_days: int = 7
+
+    # ── Admin Credentials ───────────────────────────────────────────────────
+    admin_username: str = "automite_admin"
+    admin_password: str = "Aut0m!te@Secure#2026"
+
+    # ── Vapi AI ─────────────────────────────────────────────────────────────
+    vapi_api_key: str = ""
+    vapi_template_assistant_id: str = "e8595039-80c0-4c78-a84c-8aff64d40407"
+
+    # ── Google OAuth2 (Calendar Integration) ────────────────────────────────
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
+    # ── Encryption ──────────────────────────────────────────────────────────
+    secret_key: str = ""
+
+    # ── Public base URL ─────────────────────────────────────────────────────
+    base_url: str = "http://localhost:8090"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -36,3 +59,4 @@ class Settings(BaseSettings):
 
 # Singleton instance used across the app
 settings = Settings()
+

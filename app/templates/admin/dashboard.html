@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}System Dashboard{% endblock %}
+{% block meta_extra %}
+<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-brand">
+            <img src="/automiteui/static/images/icon.jpeg" alt="Icon" style="height: 30px; margin-right: 10px; border-radius: 6px; vertical-align: middle;">AUTOMITE<span class="brand-divider">|</span><span class="brand-ai">AI</span>
+            <span class="badge badge-beta" style="margin-left: 8px;">ADMIN</span>
+        </div>
+        <ul class="navbar-links">
+            <li><a href="/automiteui/pages/mngr-sys-access-78/dashboard" class="active">Dashboard</a></li>
+            <li><a href="javascript:void(0)" onclick="refreshToolTokens()">Refresh Tokens</a></li>
+            <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container" id="admin-dashboard">
+    <h1 style="margin-bottom: var(--space-xl);">System Dashboard</h1>
+
+    <div class="alert" id="admin-alert"></div>
+
+    <!-- Stats Grid -->
+    <div class="dashboard-grid">
+        <div class="glass-card stat-card">
+            <div class="stat-value" id="total-clients">—</div>
+            <div class="stat-label">Total Clients</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" id="active-clients">—</div>
+            <div class="stat-label">Active</div>
+        </div>
+        <div class="glass-card stat-card glass-card--magenta">
+            <div class="stat-value" id="inactive-clients">—</div>
+            <div class="stat-label">Inactive</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" id="total-calls">—</div>
+            <div class="stat-label">Call Logs</div>
+        </div>
+    </div>
+
+    <!-- Clients Table -->
+    <div class="glass-card">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+            <h2>Registered Clients</h2>
+            <button class="btn btn-secondary btn-sm" onclick="refreshToolTokens()">🔄 Refresh Tool Tokens</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Business Name</th>
+                    <th>Client ID</th>
+                    <th>Status</th>
+                    <th>Subscription</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="clients-tbody">
+                <tr>
+                    <td colspan="5" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

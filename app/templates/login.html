@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+{% block meta_description %}Sign in to your Automite AI dashboard{% endblock %}
+
+{% block main_class %}auth-wrapper{% endblock %}
+
+{% block content %}
+<div class="auth-card glass-card animate-in">
+    <div class="auth-header">
+        <h1><img src="/automiteui/static/images/icon.jpeg" alt="Icon" style="height: 40px; margin-right: 10px; border-radius: 8px; vertical-align: middle;">AUTOMITE<span class="brand-divider">|</span><span style="color: var(--color-cyan)">AI</span></h1>
+        <p>Sign in to your dashboard</p>
+    </div>
+
+    <div class="alert" id="login-alert"></div>
+
+    <form id="login-form">
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" class="form-input" placeholder="Enter your username" required
+                autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="Enter your password" required
+                autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+    </form>
+
+    <div class="auth-footer">
+        Don't have an account? <a href="/automiteui/pages/register">Register here</a>
+    </div>
+</div>
+{% endblock %}

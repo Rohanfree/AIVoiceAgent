@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block meta_description %}Manage your AI voice assistant, services, and appointments{% endblock %}
+
+{% block navbar %}
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-brand">
+            <img src="/automiteui/static/images/icon.jpeg" alt="Icon" style="height: 30px; margin-right: 10px; border-radius: 6px; vertical-align: middle;">AUTOMITE<span class="brand-divider">|</span><span class="brand-ai">AI</span>
+        </div>
+        <ul class="navbar-links">
+            <li><a href="/automiteui/pages/dashboard" class="active">Dashboard</a></li>
+            <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container" id="profile-data">
+    <!-- Header -->
+    <div style="margin-bottom: var(--space-xl);">
+        <h1>Welcome, <span id="business-name" style="color: var(--color-cyan);">Loading...</span></h1>
+        <p style="color: var(--color-text-secondary); font-size: 0.9rem;">
+            Client ID: <code id="client-id" style="color: var(--color-text-secondary); font-size: 0.8rem;">—</code>
+        </p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="dashboard-grid">
+        <div class="glass-card stat-card">
+            <div class="stat-value" id="appointments-count">—</div>
+            <div class="stat-label">Appointments</div>
+        </div>
+        <div class="glass-card stat-card glass-card--magenta">
+            <div class="stat-value" id="calls-count">—</div>
+            <div class="stat-label">Call Logs</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" id="services-count">—</div>
+            <div class="stat-label">Services</div>
+        </div>
+    </div>
+
+    <!-- Services Table -->
+    <div class="glass-card" style="margin-bottom: var(--space-xl);">
+        <h2 style="margin-bottom: var(--space-lg);">Your Services</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Category</th>
+                    <th>Duration</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="services-tbody">
+                <tr>
+                    <td colspan="4" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div class="glass-card">
+        <h2 style="margin-bottom: var(--space-lg);">Recent Appointments</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Service</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="appointments-tbody">
+                <tr>
+                    <td colspan="4" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

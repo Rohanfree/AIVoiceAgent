@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}System Access{% endblock %}
+{% block meta_extra %}
+<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block main_class %}auth-wrapper{% endblock %}
+
+{% block content %}
+<div class="auth-card glass-card animate-in">
+    <div class="auth-header">
+        <h1 style="font-size: 1.5rem;"><img src="/automiteui/static/images/icon.jpeg" alt="Icon" style="height: 40px; margin-right: 10px; border-radius: 8px; vertical-align: middle;">System Access</h1>
+        <p>Administrative authentication required</p>
+    </div>
+
+    <div class="alert" id="login-alert"></div>
+
+    <form id="login-form">
+        <div class="form-group">
+            <label class="form-label" for="username">Identifier</label>
+            <input type="text" id="username" class="form-input" placeholder="Admin identifier" required
+                autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Passphrase</label>
+            <input type="password" id="password" class="form-input" placeholder="Passphrase" required
+                autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Authenticate</button>
+    </form>
+</div>
+{% endblock %}
