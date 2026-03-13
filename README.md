@@ -62,7 +62,8 @@ docker compose up --build -d
 │   │   ├── booking_service.py
 │   │   ├── call_log_service.py
 │   │   ├── customer_service.py
-│   │   └── vapi_service.py      #   Vapi assistant clone/update/toggle
+│   │   ├── vapi_service.py      #   Vapi assistant clone/update/toggle
+│   │   └── whatsapp_service.py  #   WhatsApp Cloud API messaging
 │   ├── static/
 │   │   ├── css/automite.css     #   Brand design system
 │   │   └── js/app.js            #   Frontend JavaScript
@@ -241,6 +242,9 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | — |
 | `SECRET_KEY` | Fernet encryption key | — |
 | `BASE_URL` | Public base URL for callbacks | `http://localhost:8090` |
+| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token | — |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID | — |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID | — |
 
 ---
 

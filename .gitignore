@@ -39,3 +39,6 @@ firebase-service-account.json
 # Logs
 *.log
 logs/
+
+# Local test scripts
+test_whatsapp.py

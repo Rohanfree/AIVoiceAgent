@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # ── Public base URL ─────────────────────────────────────────────────────
     base_url: str = "http://localhost:8090"
 
+    # ── WhatsApp Cloud API ──────────────────────────────────────────────────
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_business_account_id: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
