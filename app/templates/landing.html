@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automite AI — Intelligent AI Voice Agents for Business</title>
+  <meta name="description"
+    content="Automite AI builds intelligent AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 so your team doesn't have to." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/automiteui/static/css/landing.css?v=7" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+  <header id="navbar" role="banner">
+    <nav class="nav-inner" aria-label="Main navigation">
+      <a href="#hero" class="nav-logo" aria-label="Automite AI home">
+        <img src="/automiteui/static/images/logo.png" alt="Automite AI" />
+        <span>Automite AI</span>
+      </a>
+      <div class="nav-links" role="menubar">
+        <a href="#services" role="menuitem">Services</a>
+        <a href="#why" role="menuitem">Why Us</a>
+        <a href="#faq" role="menuitem">FAQ</a>
+        <a href="#contact" role="menuitem">Contact</a>
+      </div>
+      <div class="nav-cta">
+        <a href="#contact" class="btn btn-primary" style="display:none;" id="navCtaDesktop">Book a Free Call</a>
+        <button id="hamburger" class="hamburger" aria-label="Open navigation menu" aria-expanded="false"
+          aria-controls="mobileMenu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+    <div id="mobileMenu" class="mobile-menu" role="menu" aria-label="Mobile navigation">
+      <a href="#services" role="menuitem">Services</a>
+      <a href="#why" role="menuitem">Why Us</a>
+      <a href="#faq" role="menuitem">FAQ</a>
+      <a href="#contact" role="menuitem">Contact</a>
+      <a href="#contact" class="btn btn-primary">Book a Free Call</a>
+    </div>
+  </header>
+
+  <script>
+    // Show desktop CTA only when screen is wide enough
+    (function () {
+      var btn = document.getElementById('navCtaDesktop');
+      function check() { btn.style.display = window.innerWidth >= 769 ? '' : 'none'; }
+      check(); window.addEventListener('resize', check);
+    })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════
+     HERO
+════════════════════════════════════════════ -->
+  <section id="hero" aria-labelledby="hero-heading">
+
+    <!-- decorative animated SVG waveform -->
+    <div class="hero-svg-bg" aria-hidden="true">
+      <svg width="100%" height="100%" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg">
+        <path class="wave-line wave-anim" d="M0,180 Q200,120 400,180 T800,180 T1200,180" />
+        <path class="wave-line wave-anim2" d="M0,280 Q200,220 400,280 T800,280 T1200,280" />
+        <path class="wave-line wave-anim3" d="M0,380 Q200,320 400,380 T800,380 T1200,380" />
+        <path class="wave-line wave-anim" style="animation-delay:-3s" d="M0,480 Q200,420 400,480 T800,480 T1200,480" />
+        <path class="wave-line wave-anim2" style="animation-delay:-1s" d="M0,130 Q300,80 600,130 T1200,130" />
+        <path class="wave-line wave-anim3" style="animation-delay:-4s" d="M0,560 Q300,500 600,560 T1200,560" />
+      </svg>
+    </div>
+
+    <div class="hero-content reveal">
+      <div class="hero-eyebrow">
+        <span></span> AI Voice Agents Built for Real Business
+      </div>
+
+      <h1 class="hero-h1" id="hero-heading">
+        Automate Your Business<br>Calls With <span class="accent">AI Voice Agents</span>
+      </h1>
+
+      <p class="hero-sub">
+        Automite AI builds intelligent voice agents that handle inbound calls, automate follow-ups, and work 24/7 — so
+        your team doesn't have to.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="#contact" class="btn btn-primary">Book a Free Consultation</a>
+        <a href="#services" class="btn btn-outline">Our Services ↓</a>
+      </div>
+    </div>
+
+    <!-- Marquee ticker -->
+    <div class="marquee-section" aria-hidden="true">
+      <div class="marquee-row">
+        <div class="marquee-inner">
+          <!-- Half 1 -->
+          <span class="pill blue">Innovative</span>
+          <span class="pill purple">Intelligent</span>
+          <span class="pill green">Automated</span>
+          <span class="pill yellow">Scalable</span>
+          <span class="pill pink">Customized</span>
+          <span class="pill teal">Efficient</span>
+          <span class="pill blue">Innovative</span>
+          <span class="pill purple">Intelligent</span>
+          <span class="pill green">Automated</span>
+          <span class="pill yellow">Scalable</span>
+          <span class="pill pink">Customized</span>
+          <span class="pill teal">Efficient</span>
+          <!-- Half 2 (identical duplicate for seamless 50% transition) -->
+          <span class="pill blue">Innovative</span>
+          <span class="pill purple">Intelligent</span>
+          <span class="pill green">Automated</span>
+          <span class="pill yellow">Scalable</span>
+          <span class="pill pink">Customized</span>
+          <span class="pill teal">Efficient</span>
+          <span class="pill blue">Innovative</span>
+          <span class="pill purple">Intelligent</span>
+          <span class="pill green">Automated</span>
+          <span class="pill yellow">Scalable</span>
+          <span class="pill pink">Customized</span>
+          <span class="pill teal">Efficient</span>
+        </div>
+      </div>
+      <div class="marquee-row" style="margin-top: 20px;">
+        <div class="marquee-inner reverse">
+          <!-- Half 1 -->
+          <span class="pill pink">Responsive</span>
+          <span class="pill yellow">Strategic</span>
+          <span class="pill green">Human-Like</span>
+          <span class="pill purple">24/7 Ready</span>
+          <span class="pill blue">Auto-Dial</span>
+          <span class="pill teal">Availability</span>
+          <span class="pill pink">Responsive</span>
+          <span class="pill yellow">Strategic</span>
+          <span class="pill green">Human-Like</span>
+          <span class="pill purple">24/7 Ready</span>
+          <span class="pill blue">Auto-Dial</span>
+          <span class="pill teal">Availability</span>
+          <!-- Half 2 (identical duplicate for seamless 50% transition) -->
+          <span class="pill pink">Responsive</span>
+          <span class="pill yellow">Strategic</span>
+          <span class="pill green">Human-Like</span>
+          <span class="pill purple">24/7 Ready</span>
+          <span class="pill blue">Auto-Dial</span>
+          <span class="pill teal">Availability</span>
+          <span class="pill pink">Responsive</span>
+          <span class="pill yellow">Strategic</span>
+          <span class="pill green">Human-Like</span>
+          <span class="pill purple">24/7 Ready</span>
+          <span class="pill blue">Auto-Dial</span>
+          <span class="pill teal">Availability</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     WHY AUTOMITE AI — COMPARISON
+════════════════════════════════════════════ -->
+  <section id="why" aria-labelledby="why-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">The Difference</p>
+        <h2 class="section-title" id="why-heading">Why Automite AI?</h2>
+        <p class="section-subtitle">See how we compare to other agencies when it comes to building real AI voice
+          solutions.</p>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-card us reveal reveal-delay-1">
+          <div class="compare-header green">✅ Automite AI</div>
+          <div class="compare-item"><span class="icon">✅</span>Expert AI Prompt Engineers &amp; Automation Builders
+          </div>
+          <div class="compare-item"><span class="icon">✅</span>Modern, Cutting-Edge AI Technologies</div>
+          <div class="compare-item"><span class="icon">✅</span>Fully Custom Solutions — No Templates</div>
+          <div class="compare-item"><span class="icon">✅</span>Client-First Approach</div>
+          <div class="compare-item"><span class="icon">✅</span>Rigorous Multi-Stage Testing</div>
+          <div class="compare-item"><span class="icon">✅</span>Integrated with All Major AI Platforms</div>
+        </div>
+
+        <div class="compare-card reveal reveal-delay-2">
+          <div class="compare-header grey">❌ Other Agencies</div>
+          <div class="compare-item"><span class="icon">❌</span>Basic Rule-Based Automation Developers</div>
+          <div class="compare-item"><span class="icon">❌</span>Outdated Approaches &amp; Legacy Tools</div>
+          <div class="compare-item"><span class="icon">❌</span>Generic Copy-Paste Solutions</div>
+          <div class="compare-item"><span class="icon">❌</span>Agency-First, Not Client-First</div>
+          <div class="compare-item"><span class="icon">❌</span>Minimal Testing or No QA</div>
+          <div class="compare-item"><span class="icon">❌</span>No Platform Partnerships or Support</div>
+        </div>
+      </div>
+
+      <!-- Logo Ticker -->
+      <div class="logo-ticker-wrap reveal" aria-label="Technology partners" style="margin-top:64px;">
+        <div style="text-align:center; margin-bottom:28px;">
+          <p class="section-label" style="margin:0;">Powered By Leading Platforms</p>
+        </div>
+        <div class="logo-ticker" aria-hidden="true">
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M22.28 10.23A6.22 6.22 0 0016.12 4a6.14 6.14 0 00-5.6 3.63 4.68 4.68 0 00-.52 0 4.67 4.67 0 000 9.34h12.12a3.27 3.27 0 00.16-6.74z" />
+            </svg>
+            OpenAI
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16z" />
+            </svg>
+            Vapi
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M3 11.5a8.38 8.38 0 00.9 3.8 8.5 8.5 0 007.6 4.7 8.38 8.38 0 003.8-.9L21 21l-1.05-5.7a8.38 8.38 0 00.9-3.8 8.5 8.5 0 00-4.7-7.6 8.38 8.38 0 00-3.8-.9H12a8.48 8.48 0 00-8.5 8.5z" />
+            </svg>
+            Retell AI
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zm6 10a6 6 0 01-12 0H4a8 8 0 0016 0h-2zM11 23h2v-3h-2z" />
+            </svg>
+            ElevenLabs
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M2 16.5A6.5 6.5 0 008.5 23h7a6.5 6.5 0 000-13c-.2 0-.4 0-.6.02A8 8 0 002 16.5z" />
+            </svg>
+            Twilio
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 4a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+            Make.com
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Zapier
+          </span>
+          <span class="logo-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.05c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 01-1.93.07 4.28 4.28 0 004 2.98 8.521 8.521 0 01-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" />
+            </svg>
+            Google Cloud
+          </span>
+          <!-- duplicate for loop -->
+          <span class="logo-badge">OpenAI</span>
+          <span class="logo-badge">Vapi</span>
+          <span class="logo-badge">Retell AI</span>
+          <span class="logo-badge">ElevenLabs</span>
+          <span class="logo-badge">Twilio</span>
+          <span class="logo-badge">Make.com</span>
+          <span class="logo-badge">Zapier</span>
+          <span class="logo-badge">Google Cloud</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     SERVICES
+════════════════════════════════════════════ -->
+  <section id="services" aria-labelledby="services-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">Our Services</p>
+        <h2 class="section-title" id="services-heading">Tailored For Your Business</h2>
+        <p class="section-subtitle">Every voice agent we build is custom-crafted to match your workflows, brand voice,
+          and goals.</p>
+      </div>
+
+      <div class="services-grid">
+        <article class="service-card reveal reveal-delay-1" aria-label="Inbound Voice Agents">
+          <img src="/automiteui/static/images/inbound.png" alt="Inbound Calling AI" class="service-img"
+            onerror="this.src='https://images.unsplash.com/photo-1596524430615-b46475ddff6e?auto=format&fit=crop&q=80&w=800&h=400'" />
+          <div class="service-content">
+            <div class="service-tag">📥 Receive Calls</div>
+            <h3>Inbound Voice Agents</h3>
+            <p>Deploy a human-like AI receptionist that handles incoming calls, qualifies leads, and books appointments
+              — 24/7 without ever calling in sick.</p>
+            <a href="#contact" class="service-cta" aria-label="Get started with Inbound Voice Agents">Get Started →</a>
+          </div>
+        </article>
+
+        <article class="service-card reveal reveal-delay-2" aria-label="Outbound Voice Agents">
+          <img src="/automiteui/static/images/outbound.png" alt="Outbound Calling AI" class="service-img"
+            onerror="this.src='https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&q=80&w=800&h=400'" />
+          <div class="service-content">
+            <div class="service-tag">📤 Send Calls</div>
+            <h3>Outbound Voice Agents</h3>
+            <p>Fully automate follow-ups, reminders, re-engagement campaigns and more with intelligent outbound calling
+              that sounds natural and converts.</p>
+            <a href="#contact" class="service-cta" aria-label="Get started with Outbound Voice Agents">Get Started →</a>
+          </div>
+        </article>
+
+        <article class="service-card reveal reveal-delay-3" aria-label="Support and Maintenance">
+          <img src="/automiteui/static/images/support.png" alt="AI Agent Support" class="service-img"
+            onerror="this.src='https://images.unsplash.com/photo-1620912189868-30778f902ac2?auto=format&fit=crop&q=80&w=800&h=400'" />
+          <div class="service-content">
+            <div class="service-tag">🔧 Ongoing Care</div>
+            <h3>Support &amp; Maintenance</h3>
+            <p>Regular updates, performance monitoring, and fast bug fixes to keep your AI agents running at peak
+              performance long after launch.</p>
+            <a href="#contact" class="service-cta" aria-label="Get started with Support and Maintenance">Get Started
+              →</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="explainer-block reveal">
+        <h3>What Are AI Voice Agents?</h3>
+        <p>AI voice agents are intelligent software programs that can hold natural phone conversations — listening,
+          understanding context, and responding in real-time. Automite AI builds custom voice agents for businesses to
+          automate calls, reduce overhead, and deliver consistent customer experiences.</p>
+        <a href="#contact">Not sure how voice agents could help your business? Book a free project consultation →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     ROI CALCULATOR
+════════════════════════════════════════════ -->
+  <section id="calculator" aria-labelledby="calc-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">Calculate Your ROI</p>
+        <h2 class="section-title" id="calc-heading">See How Much You Could Save</h2>
+        <p class="section-subtitle">Use our interactive calculator to accurately project your savings by switching human
+          call volume to Automite AI agents.</p>
+      </div>
+
+      <div class="calc-card reveal">
+
+        <!-- Left side: Controls & Current Costs -->
+        <div class="calc-left">
+          <h3>Your Current Costs</h3>
+
+          <div class="calc-controls">
+            <div class="calc-group">
+              <label for="hoursSlider">Hours on phone per week <span id="hoursVal">10 hours</span></label>
+              <input type="range" id="hoursSlider" class="calc-slider" min="5" max="80" step="1" value="10">
+              <div class="slider-labels"><span>5 hrs</span><span>80 hrs</span></div>
+            </div>
+
+            <div class="calc-group">
+              <label for="wageSlider">Hourly rate of staff <span id="wageVal">$25/hr</span></label>
+              <input type="range" id="wageSlider" class="calc-slider" min="15" max="100" step="1" value="25">
+              <div class="slider-labels"><span>$15/hr</span><span>$100/hr</span></div>
+            </div>
+          </div>
+
+          <div class="calc-bottom-costs">
+            <div class="calc-cost-row">
+              <div class="calc-cost-label">Your monthly cost</div>
+              <div class="calc-cost-val" id="monthlyCostRes">$1,000</div>
+            </div>
+            <div class="calc-cost-row">
+              <div class="calc-cost-label">AI Voice Agent cost</div>
+              <div class="calc-cost-val ai" id="aiCostRes">$240</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right side: Savings -->
+        <div class="calc-right">
+          <div class="calc-right-label">Your potential monthly savings</div>
+          <div class="calc-right-val" id="monthlySavingsRes">$760</div>
+          <div class="calc-right-sub">That's <strong id="savingsPercentRes">76%</strong> less than your current costs
+          </div>
+
+          <div class="calc-right-divider"></div>
+
+          <div class="calc-right-label" style="opacity: 0.8; font-size: 14px;">Yearly savings</div>
+          <div class="calc-right-val" id="yearlySavingsRes" style="font-size: 32px;">$9,120</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     PRICING
+════════════════════════════════════════════ -->
+  <section id="partnership" aria-labelledby="partnership-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">Our Process</p>
+        <h2 class="section-title" id="partnership-heading">How We Partner</h2>
+        <p class="section-subtitle">We don't just build agents; we build long-term value. Our process ensures every
+          voice agent is a seamless extension of your business.</p>
+      </div>
+
+      <div class="partnership-grid">
+        <!-- Step 1 -->
+        <div class="process-card reveal reveal-delay-1">
+          <div class="process-number">01</div>
+          <div class="process-icon-wrap">🔍</div>
+          <h3>Strategic Audit</h3>
+          <p>We map your current workflows and identify the highest ROI opportunities for AI voice automation.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="process-card reveal reveal-delay-2">
+          <div class="process-number">02</div>
+          <div class="process-icon-wrap">⚙️</div>
+          <h3>Custom Engineering</h3>
+          <p>Our team builds and trains your agent using custom prompts, tone matching, and deep technical integration.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="process-card reveal reveal-delay-3">
+          <div class="process-number">03</div>
+          <div class="process-icon-wrap">🚀</div>
+          <h3>Seamless Handover</h3>
+          <p>We integrate the agent with your existing tools (CRM, Calendars, Dialers) and go live under careful
+            supervision.</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="process-card reveal reveal-delay-4">
+          <div class="process-number">04</div>
+          <div class="process-icon-wrap">📈</div>
+          <h3>Everlasting Growth</h3>
+          <p>Continuous monitoring, weekly optimization, and updates as AI technology evolves. No maintenance required.
+          </p>
+        </div>
+      </div>
+
+      <div class="partnership-cta reveal reveal-delay-5">
+        <a href="#contact" class="btn btn-primary">Book a Discovery Call</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     FAQ
+════════════════════════════════════════════ -->
+  <section id="faq" aria-labelledby="faq-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">Questions</p>
+        <h2 class="section-title" id="faq-heading">Common Questions</h2>
+        <p class="section-subtitle">Everything you need to know before getting started with your AI voice agent.</p>
+      </div>
+
+      <div class="faq-list reveal" role="list">
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a1">
+            What types of AI Voice Agents do you build?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a1" role="region">
+            <div class="faq-answer-inner">We specialize in inbound and outbound AI voice agents — custom-built for your
+              specific business workflows. Whether you need a 24/7 receptionist or an automated follow-up caller, we
+              tailor every detail.</div>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a2">
+            How do you ensure quality?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a2" role="region">
+            <div class="faq-answer-inner">Every agent goes through a minimum 2-week testing period with real call
+              scenarios before deployment. We run edge-case testing, tone calibration, and integration testing to ensure
+              reliability.</div>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a3">
+            What does your development process look like?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a3" role="region">
+            <div class="faq-answer-inner">Consultation → Planning → Build → Testing → Deployment. We follow agile
+              sprints with weekly client check-ins to make sure the agent evolves exactly to your requirements.</div>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a4">
+            How long does a project take?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a4" role="region">
+            <div class="faq-answer-inner">Typically 4–8 weeks depending on complexity. We provide a detailed timeline
+              with clear milestones upfront so you always know where things stand.</div>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a5">
+            Will I get updates during the project?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a5" role="region">
+            <div class="faq-answer-inner">Yes — at minimum one call per week during development and testing to keep you
+              fully in the loop. You'll also get access to progress reports and testing call recordings.</div>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-a6">
+            Do you offer ongoing maintenance?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-a6" role="region">
+            <div class="faq-answer-inner">Yes. Our maintenance plan includes priority bug fixes, prompt upgrades, and
+              performance monitoring to keep your agent performing at peak quality as AI technology evolves.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     CONTACT
+════════════════════════════════════════════ -->
+  <section id="contact" aria-labelledby="contact-heading">
+    <div class="container">
+      <div class="reveal">
+        <p class="section-label">Get In Touch</p>
+        <h2 class="section-title" id="contact-heading">Let's Build Your Voice Agent</h2>
+        <p class="section-subtitle">Ready to automate your calls? Schedule a free discovery call or send us a message.
+        </p>
+      </div>
+
+      <div class="contact-grid" style="margin-top:56px;">
+        <div class="reveal reveal-delay-1">
+          <form id="contactForm" class="contact-form" novalidate aria-label="Contact form">
+            <div class="form-group">
+              <label for="contact-name">Your Name</label>
+              <input type="text" id="contact-name" name="name" placeholder="Jane Smith" required autocomplete="name"
+                aria-required="true" />
+            </div>
+            <div class="form-group">
+              <label for="contact-email">Email Address</label>
+              <input type="email" id="contact-email" name="email" placeholder="jane@company.com" required
+                autocomplete="email" aria-required="true" />
+            </div>
+            <div class="form-group">
+              <label for="contact-phone">Phone <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+              <input type="tel" id="contact-phone" name="phone" placeholder="+1 (555) 000-0000" autocomplete="tel" />
+            </div>
+            <div class="form-group">
+              <label for="contact-message">Message</label>
+              <textarea id="contact-message" name="message"
+                placeholder="Tell us about your business and what you'd like to automate…" required
+                aria-required="true"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="align-self:flex-start;">Send Message</button>
+            <div id="formSuccess" class="form-success" role="status" aria-live="polite">
+              ✅ Message received! We'll respond within 24 hours.
+            </div>
+          </form>
+        </div>
+
+        <div class="contact-info-card reveal reveal-delay-2">
+          <h3>Contact Info</h3>
+          <div class="info-row">
+            <div class="info-icon" aria-hidden="true">✉</div>
+            <div>
+              <strong>aiautomite@gmail.com</strong>
+              <span>Response within 24 hours</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" aria-hidden="true">📞</div>
+            <div>
+              <strong>Book a Call</strong>
+              <span>Free 30-minute discovery session</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" aria-hidden="true">🕐</div>
+            <div>
+              <strong>Always Available</strong>
+              <span>Your agent works 24/7, and so does our support</span>
+            </div>
+          </div>
+
+          <!-- decorative waveform SVG -->
+          <div class="wave-deco" aria-hidden="true">
+            <svg width="100%" height="60" viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
+              <polyline
+                points="0,30 20,10 40,50 60,20 80,45 100,15 120,40 140,25 160,48 180,12 200,38 220,20 240,44 260,18 280,36 300,28"
+                fill="none" stroke="#1A4D3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                opacity="0.35" />
+              <polyline
+                points="0,30 20,45 40,15 60,42 80,18 100,40 120,22 140,50 160,20 180,44 200,16 220,38 240,20 260,42 280,22 300,34"
+                fill="none" stroke="#1A4D3A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                opacity="0.2" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════ -->
+  <footer id="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">Automite AI</span>
+          <span class="footer-tagline">Building AI Voice Agents for Real Business</span>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#services">Services</a>
+          <a href="#why">Why Us</a>
+          <a href="#faq">FAQ</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <span class="footer-copy">© Automite AI 2025. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/automiteui/static/js/landing.js?v=10"></script>
+</body>
+
+</html>
