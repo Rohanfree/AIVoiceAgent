@@ -3,7 +3,7 @@ auth_router.py — Authentication endpoints under /automiteui/auth/*.
 
 Handles:
   POST /automiteui/auth/login     → username/password → tokens
-  POST /automiteui/auth/register  → create user + clone Vapi assistant
+  POST /automiteui/auth/register  → create user + client record
   POST /automiteui/auth/refresh   → rotate refresh token
 """
 
@@ -106,9 +106,8 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     Flow:
     1. Validate username is unique
     2. Create user document in Firestore
-    3. Clone Vapi assistant using template (if VAPI_API_KEY is configured)
-    4. Create client document in Firestore
-    5. Return JWT tokens
+    3. Create client document in Firestore
+    4. Return JWT tokens
     """
     # Check for duplicate username
     existing = _find_user_by_username(db, body.username)
@@ -120,23 +119,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
 
     user_id = str(uuid.uuid4())
     hashed_pw = hash_password(body.password)
-
-    # Try to clone Vapi assistant
-    client_id = str(uuid.uuid4())  # fallback if Vapi not configured
-    vapi_assistant_id = None
-
-    if settings.vapi_api_key:
-        try:
-            from app.services.vapi_service import clone_assistant
-
-            vapi_assistant_id = await clone_assistant(
-                client_name=body.client_name,
-                assistant_name=body.assistant_name,
-            )
-            if vapi_assistant_id:
-                client_id = vapi_assistant_id
-        except Exception as exc:
-            logger.warning("Vapi assistant cloning failed (continuing): %s", exc)
+    client_id = str(uuid.uuid4())
 
     # Create user document
     from datetime import datetime, timezone
@@ -163,7 +146,6 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "user_id": user_id,
         "business_name": body.client_name,
         "assistant_name": body.assistant_name,
-        "vapi_assistant_id": vapi_assistant_id,
         "services": [],
         "operating_hours": {},
         "policies": {},

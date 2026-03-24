@@ -4,7 +4,7 @@ main.py - FastAPI application entry point.
 Sets up:
   - Logging (verbose in development, concise in production)
   - CORS middleware
-  - Existing routes: /agent-tools, /vapi
+  - Existing routes: /agent-tools
   - New routes under /automiteui: /auth, /client-portal, /mngr-sys-access-78,
     /extraction, /pages
   - Static file serving at /automiteui/static
@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import agent_tools, vapi_webhook
+from app.routers import agent_tools
 
 # ─── Logging setup ─────────────────────────────────────────────────────────
 
@@ -73,9 +73,9 @@ def create_app() -> FastAPI:
             "All new features are served under the /automiteui context path."
         ),
         version="2.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
+        docs_url="/automiteaiapplication/docs",
+        redoc_url="/automiteaiapplication/redoc",
+        openapi_url="/automiteaiapplication/openapi.json",
     )
 
     # ── CORS ────────────────────────────────────────────────────────────────
@@ -159,9 +159,8 @@ def create_app() -> FastAPI:
                 media_type=response.media_type,
             )
 
-    # ── Existing Routers (unchanged context paths) ──────────────────────────
-    app.include_router(agent_tools.router)
-    app.include_router(vapi_webhook.router)
+    # ── Existing Routers ─────────────────────────────────────────────────────
+    app.include_router(agent_tools.router, prefix="/automiteaiapplication")
 
     # ── New Routers — all under /automiteui parent prefix ───────────────────
     from app.routers import (
@@ -173,22 +172,22 @@ def create_app() -> FastAPI:
         google_auth_router,
     )
 
-    app.include_router(auth_router.router, prefix="/automiteui")
-    app.include_router(client_router.router, prefix="/automiteui")
-    app.include_router(admin_router.router, prefix="/automiteui")
-    app.include_router(extraction_router.router, prefix="/automiteui")
-    app.include_router(pages_router.router, prefix="/automiteui")
-    app.include_router(google_auth_router.router)
+    app.include_router(auth_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(client_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(admin_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(extraction_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(pages_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(google_auth_router.router, prefix="/automiteaiapplication")
 
     # ── Static files ────────────────────────────────────────────────────────
     app.mount(
-        "/automiteui/static",
+        "/automiteaiapplication/automiteui/static",
         StaticFiles(directory="app/static"),
         name="static",
     )
 
     # ── Health check ────────────────────────────────────────────────────────
-    @app.get("/health", tags=["Health"], summary="Service health check")
+    @app.get("/automiteaiapplication/health", tags=["Health"], summary="Service health check")
     async def health() -> dict:
         """Returns a simple liveness signal and current environment."""
         return {"status": "ok", "environment": settings.app_env, "version": "2.0.0"}

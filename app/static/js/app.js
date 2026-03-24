@@ -8,7 +8,7 @@
  *  - Admin panel operations
  */
 
-const API_BASE = '/automiteui';
+const API_BASE = '/automiteaiapplication/automiteui';
 
 // ─── Token Management ────────────────────────────────────────────────────────
 
@@ -293,7 +293,7 @@ function startGoogleAuth() {
     const token = getAccessToken();
     if (!token) return;
     // Redirect to backend auth initiator (no /automiteui prefix for this specific route)
-    window.location.href = `/client/auth/google/login?token=${token}`;
+    window.location.href = `/automiteaiapplication/client/auth/google/login?token=${token}`;
 }
 
 // ─── Edit Profile Modal ──────────────────────────────────────────────────────

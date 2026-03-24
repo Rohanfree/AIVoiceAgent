@@ -15,7 +15,6 @@ from google.cloud.firestore import Client
 
 from app.auth.dependencies import require_admin
 from app.auth.password import hash_password
-from app.config import settings
 from app.db import get_db
 
 logger = logging.getLogger(__name__)
@@ -97,7 +96,6 @@ async def toggle_client_status(
     """
     Toggle a client's active/inactive status.
     Body: { "is_active": true/false }
-    Also syncs the change to their Vapi assistant.
     """
     is_active = body.get("is_active")
     if is_active is None:
@@ -113,16 +111,6 @@ async def toggle_client_status(
 
     now = datetime.now(tz=timezone.utc).isoformat()
     doc_ref.set({"is_active": is_active, "updated_at": now}, merge=True)
-
-    # Sync to Vapi
-    client_data = doc.to_dict()
-    vapi_id = client_data.get("vapi_assistant_id")
-    if vapi_id and settings.vapi_api_key:
-        try:
-            from app.services.vapi_service import toggle_assistant
-            await toggle_assistant(vapi_id, is_active)
-        except Exception as exc:
-            logger.warning("Vapi toggle sync failed: %s", exc)
 
     action = "activated" if is_active else "deactivated"
     logger.info("Client %s %s by admin", client_id, action)
@@ -212,19 +200,6 @@ async def add_client_manually(
     user_id = str(uuid.uuid4())
     client_id = str(uuid.uuid4())
 
-    # Try to clone Vapi assistant
-    vapi_assistant_id = None
-    if settings.vapi_api_key:
-        try:
-            from app.services.vapi_service import clone_assistant
-            vapi_assistant_id = await clone_assistant(
-                client_name=client_name, assistant_name=assistant_name
-            )
-            if vapi_assistant_id:
-                client_id = vapi_assistant_id
-        except Exception as exc:
-            logger.warning("Vapi clone failed for manual add: %s", exc)
-
     # Create user
     user_doc = {
         "id": user_id,
@@ -246,7 +221,6 @@ async def add_client_manually(
         "user_id": user_id,
         "business_name": client_name,
         "assistant_name": assistant_name,
-        "vapi_assistant_id": vapi_assistant_id,
         "services": [],
         "operating_hours": {},
         "policies": {},

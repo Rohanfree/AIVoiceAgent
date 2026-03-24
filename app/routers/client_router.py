@@ -47,8 +47,6 @@ async def get_profile(
         )
 
     data = doc.to_dict()
-    # Remove sensitive fields
-    data.pop("vapi_assistant_id", None)
     return data
 
 
@@ -88,21 +86,6 @@ async def update_profile(
 
     db.collection("clients").document(client_id).set(filtered, merge=True)
     logger.info("Client %s profile updated: %s", client_id, list(filtered.keys()))
-
-    # Sync to Vapi if configured
-    doc = db.collection("clients").document(client_id).get()
-    if doc.exists:
-        client_data = doc.to_dict()
-        vapi_id = client_data.get("vapi_assistant_id")
-        if vapi_id:
-            try:
-                from app.services.vapi_service import update_assistant
-                await update_assistant(vapi_id, {
-                    "name": client_data.get("assistant_name", ""),
-                    "metadata": {"business_name": client_data.get("business_name", "")},
-                })
-            except Exception as exc:
-                logger.warning("Vapi sync failed (non-blocking): %s", exc)
 
     return {"status": "updated", "fields": list(filtered.keys())}
 

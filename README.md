@@ -22,7 +22,7 @@ python3 seed_firestore.py
 # 4. Run
 python3 -m app.main
 # Server: http://localhost:8090
-# Docs:   http://localhost:8090/docs
+# Docs:   http://localhost:8090/automiteaiapplication/docs
 ```
 
 ### Docker
@@ -44,13 +44,13 @@ docker compose up --build -d
 │   │   ├── password.py          #   Argon2 password hashing
 │   │   └── dependencies.py      #   FastAPI Depends() for auth guards
 │   ├── routers/
-│   │   ├── agent_tools.py       #   /agent-tools/*  — Vapi tool-call endpoints
-│   │   ├── vapi_webhook.py      #   /vapi/*         — Vapi webhooks
-│   │   ├── auth_router.py       #   /automiteui/auth/*       — Login, register, refresh
-│   │   ├── client_router.py     #   /automiteui/client-portal/* — Client dashboard API
-│   │   ├── admin_router.py      #   /automiteui/mngr-sys-access-78/* — Hidden admin API
-│   │   ├── extraction_router.py #   /automiteui/extraction/* — Extraction stubs
-│   │   └── pages_router.py      #   /automiteui/pages/*      — HTML page serving
+│   │   ├── agent_tools.py       #   /automiteaiapplication/agent-tools/*
+│   │   ├── vapi_webhook.py      #   (inactive — kept for reference)
+│   │   ├── auth_router.py       #   /automiteaiapplication/automiteui/auth/*
+│   │   ├── client_router.py     #   /automiteaiapplication/automiteui/client-portal/*
+│   │   ├── admin_router.py      #   /automiteaiapplication/automiteui/mngr-sys-access-78/*
+│   │   ├── extraction_router.py #   /automiteaiapplication/automiteui/extraction/*
+│   │   └── pages_router.py      #   /automiteaiapplication/automiteui/pages/*
 │   ├── schemas/
 │   │   ├── auth_models.py       #   Auth request/response schemas
 │   │   ├── extraction_models.py #   Extraction data models (future use)
@@ -90,46 +90,21 @@ docker compose up --build -d
 
 ## 🌐 Context Path Routing
 
-All new routes live under `/automiteui` for easy nginx proxying:
+All routes are prefixed with `/automiteaiapplication` to support multi-application deployments on a single server:
 
-| Context Path | Purpose |
+| Path | Purpose |
 |---|---|
-| `/agent-tools/*` | Vapi AI tool-call endpoints (existing) |
-| `/vapi/*` | Vapi webhook handler (existing) |
-| `/automiteui/auth/*` | Authentication (login, register, refresh token) |
-| `/automiteui/client-portal/*` | Client dashboard API (profile, appointments, call logs) |
-| `/automiteui/mngr-sys-access-78/*` | Hidden admin panel (client management) |
-| `/automiteui/extraction/*` | Intelligent extraction engine (stubs) |
-| `/automiteui/pages/*` | Jinja2 HTML pages |
-| `/automiteui/static/*` | Static CSS/JS assets |
-
-### Nginx Example
-
-```nginx
-server {
-    listen 80;
-    server_name api.automite.ai;
-
-    # Existing AI tool endpoints
-    location /agent-tools/ {
-        proxy_pass http://localhost:8090;
-    }
-
-    location /vapi/ {
-        proxy_pass http://localhost:8090;
-    }
-
-    # All new Automite UI features
-    location /automiteui/ {
-        proxy_pass http://localhost:8090;
-    }
-
-    # Health check
-    location /health {
-        proxy_pass http://localhost:8090;
-    }
-}
-```
+| `/automiteaiapplication/health` | Health check |
+| `/automiteaiapplication/docs` | Swagger UI |
+| `/automiteaiapplication/redoc` | ReDoc UI |
+| `/automiteaiapplication/agent-tools/*` | Vapi AI tool-call endpoints |
+| `/automiteaiapplication/automiteui/auth/*` | Authentication (login, register, refresh token) |
+| `/automiteaiapplication/automiteui/client-portal/*` | Client dashboard API (profile, appointments, call logs) |
+| `/automiteaiapplication/automiteui/mngr-sys-access-78/*` | Hidden admin panel (client management) |
+| `/automiteaiapplication/automiteui/extraction/*` | Intelligent extraction engine (stubs) |
+| `/automiteaiapplication/automiteui/pages/*` | Jinja2 HTML pages |
+| `/automiteaiapplication/automiteui/static/*` | Static CSS/JS assets |
+| `/automiteaiapplication/client/auth/google/*` | Google OAuth flow |
 
 ---
 
@@ -148,9 +123,9 @@ server {
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/automiteui/auth/register` | — | Register user + clone Vapi assistant |
-| `POST` | `/automiteui/auth/login` | — | Get access + refresh tokens |
-| `POST` | `/automiteui/auth/refresh` | — | Rotate tokens |
+| `POST` | `/automiteaiapplication/automiteui/auth/register` | — | Register user + clone Vapi assistant |
+| `POST` | `/automiteaiapplication/automiteui/auth/login` | — | Get access + refresh tokens |
+| `POST` | `/automiteaiapplication/automiteui/auth/refresh` | — | Rotate tokens |
 
 ### Admin Credentials (Change in Production!)
 
@@ -171,43 +146,43 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 
 ## 📡 API Reference
 
-### Agent Tools (existing — unchanged)
+### Agent Tools
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/agent-tools/get-client-by-mobile` | Customer lookup by phone |
-| `POST` | `/agent-tools/get-services-and-prices` | List services for a client |
-| `POST` | `/agent-tools/check-availability` | Check appointment slot |
-| `POST` | `/agent-tools/book-appointment` | Book an appointment |
-| `POST` | `/agent-tools/save-call-log` | Save call log (legacy) |
+| `POST` | `/automiteaiapplication/agent-tools/get-client-by-mobile` | Customer lookup by phone |
+| `POST` | `/automiteaiapplication/agent-tools/get-services-and-prices` | List services for a client |
+| `POST` | `/automiteaiapplication/agent-tools/check-availability` | Check appointment slot |
+| `POST` | `/automiteaiapplication/agent-tools/book-appointment` | Book an appointment |
+| `POST` | `/automiteaiapplication/agent-tools/save-call-log` | Save call log |
 
 ### Client Portal (requires `dashboard` JWT)
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/automiteui/client-portal/profile` | Get client profile |
-| `PUT` | `/automiteui/client-portal/profile` | Update services/timings |
-| `GET` | `/automiteui/client-portal/appointments` | List appointments |
-| `GET` | `/automiteui/client-portal/call-logs` | List call logs |
+| `GET` | `/automiteaiapplication/automiteui/client-portal/profile` | Get client profile |
+| `PUT` | `/automiteaiapplication/automiteui/client-portal/profile` | Update services/timings |
+| `GET` | `/automiteaiapplication/automiteui/client-portal/appointments` | List appointments |
+| `GET` | `/automiteaiapplication/automiteui/client-portal/call-logs` | List call logs |
 
 ### Admin (**hidden** — requires `admin:all` JWT)
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/automiteui/mngr-sys-access-78/dashboard` | System overview |
-| `GET` | `/automiteui/mngr-sys-access-78/clients` | List all clients |
-| `PATCH` | `/automiteui/mngr-sys-access-78/clients/{id}/status` | Activate/deactivate |
-| `PATCH` | `/automiteui/mngr-sys-access-78/clients/{id}/subscription` | Change tier |
-| `POST` | `/automiteui/mngr-sys-access-78/clients` | Manual client add |
-| `POST` | `/automiteui/mngr-sys-access-78/refresh-tool-tokens` | Rotate M2M tokens |
+| `GET` | `/automiteaiapplication/automiteui/mngr-sys-access-78/dashboard` | System overview |
+| `GET` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients` | List all clients |
+| `PATCH` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{id}/status` | Activate/deactivate |
+| `PATCH` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{id}/subscription` | Change tier |
+| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients` | Manual client add |
+| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/refresh-tool-tokens` | Rotate M2M tokens |
 
 ### Extraction Engine (stubs — coming soon)
 
 | Method | Path | Status |
 |---|---|---|
-| `POST` | `/automiteui/extraction/parse-text` | 🚧 Coming soon |
-| `POST` | `/automiteui/extraction/upload-file` | 🚧 Coming soon |
-| `POST` | `/automiteui/extraction/confirm` | 🚧 Coming soon |
+| `POST` | `/automiteaiapplication/automiteui/extraction/parse-text` | 🚧 Coming soon |
+| `POST` | `/automiteaiapplication/automiteui/extraction/upload-file` | 🚧 Coming soon |
+| `POST` | `/automiteaiapplication/automiteui/extraction/confirm` | 🚧 Coming soon |
 
 ---
 
@@ -215,11 +190,12 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 
 | URL | Description |
 |---|---|
-| `/automiteui/pages/login` | Client login page |
-| `/automiteui/pages/register` | Client registration |
-| `/automiteui/pages/dashboard` | Client dashboard |
-| `/automiteui/pages/mngr-sys-access-78` | Admin login (hidden) |
-| `/automiteui/pages/mngr-sys-access-78/dashboard` | Admin dashboard (hidden) |
+| `/automiteaiapplication/automiteui/pages/landing` | Landing page |
+| `/automiteaiapplication/automiteui/pages/login` | Client login page |
+| `/automiteaiapplication/automiteui/pages/register` | Client registration |
+| `/automiteaiapplication/automiteui/pages/dashboard` | Client dashboard |
+| `/automiteaiapplication/automiteui/pages/mngr-sys-access-78` | Admin login (hidden) |
+| `/automiteaiapplication/automiteui/pages/mngr-sys-access-78/dashboard` | Admin dashboard (hidden) |
 
 ---
 
@@ -236,8 +212,6 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifespan | `7` |
 | `ADMIN_USERNAME` | Admin login identifier | `automite_admin` |
 | `ADMIN_PASSWORD` | Admin login password | `Aut0m!te@Secure#2026` |
-| `VAPI_API_KEY` | Vapi platform API key | — |
-| `VAPI_TEMPLATE_ASSISTANT_ID` | Template assistant to clone | `e8595039-...` |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | — |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | — |
 | `SECRET_KEY` | Fernet encryption key | — |
