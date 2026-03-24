@@ -61,6 +61,29 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Contact Form ────────────────────────────────────── */
   const form = document.getElementById('contactForm');
   const successMsg = document.getElementById('formSuccess');
+
+  function showMsg(text, isError) {
+    if (!successMsg) return;
+    successMsg.textContent = text;
+    successMsg.style.display = 'flex';
+    successMsg.style.alignItems = 'center';
+    successMsg.style.padding = '16px 20px';
+    successMsg.style.borderRadius = '10px';
+    successMsg.style.fontWeight = '600';
+    successMsg.style.fontSize = '15px';
+    successMsg.style.marginTop = '12px';
+    if (isError) {
+      successMsg.style.background = '#fff0f0';
+      successMsg.style.border = '1px solid rgba(192,57,43,0.3)';
+      successMsg.style.color = '#c0392b';
+    } else {
+      successMsg.style.background = '#e8f5ee';
+      successMsg.style.border = '1px solid rgba(26,77,58,0.25)';
+      successMsg.style.color = '#1A4D3A';
+    }
+    setTimeout(() => { successMsg.style.display = 'none'; }, isError ? 8000 : 6000);
+  }
+
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -70,21 +93,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const fd = new FormData(form);
       const data = Object.fromEntries(fd.entries());
       try {
-        const res = await fetch('/api/contact', {
+        const res = await fetch('/automiteaiapplication/automiteui/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        if (res.ok || res.status === 422) {
+        if (res.ok) {
           form.reset();
-          successMsg.classList.add('show');
-          setTimeout(() => successMsg.classList.remove('show'), 6000);
+          showMsg('✅ Message received! We\'ll respond within 24 hours.', false);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showMsg('❌ ' + (err.detail || 'Something went wrong. Please email us at aiautomite@gmail.com'), true);
         }
       } catch (_) {
-        // still show success for demo
-        form.reset();
-        successMsg.classList.add('show');
-        setTimeout(() => successMsg.classList.remove('show'), 6000);
+        showMsg('❌ Could not send message. Please email us at aiautomite@gmail.com', true);
       } finally {
         btn.disabled = false;
         btn.textContent = 'Send Message';

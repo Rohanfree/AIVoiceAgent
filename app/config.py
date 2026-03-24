@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
     whatsapp_business_account_id: str = ""
 
+    # ── Contact Form Email (Gmail SMTP) ─────────────────────────────────────
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""          # The Gmail address used to SEND (needs an App Password)
+    smtp_password: str = ""      # Google App Password (16 chars), NOT your Gmail password
+    contact_email: str = "aiautomite@gmail.com"  # Where contact submissions are received
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

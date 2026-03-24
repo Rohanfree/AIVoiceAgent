@@ -167,6 +167,7 @@ def create_app() -> FastAPI:
         admin_router,
         auth_router,
         client_router,
+        contact_router,
         extraction_router,
         pages_router,
         google_auth_router,
@@ -178,6 +179,7 @@ def create_app() -> FastAPI:
     app.include_router(extraction_router.router, prefix="/automiteaiapplication/automiteui")
     app.include_router(pages_router.router, prefix="/automiteaiapplication/automiteui")
     app.include_router(google_auth_router.router, prefix="/automiteaiapplication")
+    app.include_router(contact_router.router, prefix="/automiteaiapplication/automiteui")
 
     # ── Static files ────────────────────────────────────────────────────────
     app.mount(
