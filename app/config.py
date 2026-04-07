@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
 
+    # ── Google Sheets Integration ────────────────────────────────────────────
+    google_sheet_id: str = ""           # Spreadsheet ID from the sheet URL
+    google_sheet_tab: str = "Call Logs" # Worksheet / tab name to append rows into
+
     # ── Google GenAI ────────────────────────────────────────────────────────
     gemini_api_key: str = ""
 
