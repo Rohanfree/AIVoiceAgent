@@ -21,8 +21,8 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="assistant_name">AI Assistant Name</label>
-            <input type="text" id="assistant_name" class="form-input" placeholder="e.g. Sofia" required>
+            <label class="form-label" for="elevenlabs_agent_id">ElevenLabs Agent ID</label>
+            <input type="text" id="elevenlabs_agent_id" class="form-input" placeholder="e.g. agent_01jxxxxxxxxxxxxxx" required>
         </div>
 
         <div class="form-group">
@@ -37,11 +37,17 @@
                 minlength="8" autocomplete="new-password">
         </div>
 
+        <div class="form-group">
+            <label class="form-label" for="business_info">Business Info <span style="font-weight:400; opacity:0.6;">(optional)</span></label>
+            <textarea id="business_info" class="form-input" rows="5"
+                placeholder="Describe your booking slots, working days, services, policies, etc. This will be added to your agent's knowledge base."></textarea>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-block">Create Account</button>
     </form>
 
     <div class="auth-footer">
-        Already have an account? <a href="/automiteui/pages/login">Sign in</a>
+        Already have an account? <a href="/automiteaiapplication/automiteui/pages/login">Sign in</a>
     </div>
 </div>
 {% endblock %}

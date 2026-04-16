@@ -177,6 +177,32 @@ function initRegisterForm() {
     const form = document.getElementById('register-form');
     if (!form) return;
 
+    const agentIdInput = form.querySelector('#elevenlabs_agent_id');
+    if (agentIdInput) {
+        agentIdInput.addEventListener('blur', async () => {
+            const agentId = agentIdInput.value.trim();
+            if (!agentId) return;
+            try {
+                const resp = await fetch(`${API_BASE}/auth/check-agent?agent_id=${encodeURIComponent(agentId)}`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const existing = document.getElementById('agent-id-error');
+                if (existing) existing.remove();
+                if (data.taken) {
+                    const errEl = document.createElement('p');
+                    errEl.id = 'agent-id-error';
+                    errEl.style.cssText = 'color:#ef4444;font-size:0.85rem;margin-top:0.25rem;';
+                    errEl.textContent = `This agent is already registered to "${data.client_name}".`;
+                    agentIdInput.parentElement.appendChild(errEl);
+                }
+            } catch (_) {}
+        });
+        agentIdInput.addEventListener('input', () => {
+            const existing = document.getElementById('agent-id-error');
+            if (existing) existing.remove();
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideAlert();
@@ -184,11 +210,18 @@ function initRegisterForm() {
         const btn = form.querySelector('button[type="submit"]');
         setLoading(btn, true);
 
+        if (document.getElementById('agent-id-error')) {
+            showAlert('error', 'Please use a different Agent ID before continuing.');
+            setLoading(btn, false);
+            return;
+        }
+
         const body = {
             username: form.querySelector('#username').value.trim(),
             password: form.querySelector('#password').value,
             client_name: form.querySelector('#client_name').value.trim(),
-            assistant_name: form.querySelector('#assistant_name').value.trim(),
+            elevenlabs_agent_id: form.querySelector('#elevenlabs_agent_id').value.trim(),
+            business_info: (form.querySelector('#business_info').value || '').trim(),
         };
 
         const data = await apiCall('POST', '/auth/register', body, false);
@@ -222,7 +255,8 @@ async function initDashboard() {
         currentProfile = profile;
         document.getElementById('business-name').textContent = profile.business_name || 'Unnamed';
         document.getElementById('client-id').textContent = profile.id || '';
-        document.getElementById('assistant-name-display').textContent = profile.assistant_name || 'Sofia';
+        const agentIdEl = document.getElementById('assistant-agent-id-display');
+        if (agentIdEl) agentIdEl.textContent = profile.elevenlabs_agent_id || '—';
 
         // Google Calendar Status
         const calBox = document.getElementById('calendar-status-box');
@@ -293,7 +327,8 @@ function startGoogleAuth() {
     const token = getAccessToken();
     if (!token) return;
     // Redirect to backend auth initiator (no /automiteui prefix for this specific route)
-    window.location.href = `/automiteaiapplication/client/auth/google/login?token=${token}`;
+    const returnTo = encodeURIComponent(window.location.href);
+    window.location.href = `/automiteaiapplication/client/auth/google/login?token=${token}&return_to=${returnTo}`;
 }
 
 // ─── Edit Profile Modal ──────────────────────────────────────────────────────
@@ -304,8 +339,9 @@ function openEditProfileModal() {
     const modal = document.getElementById('edit-profile-modal');
     if (!modal || !currentProfile) return;
 
-    // Reset AI Box
-    document.getElementById('ai-parse-text').value = '';
+    // Populate Knowledge Base textarea with existing content
+    const kbTextarea = document.getElementById('ai-parse-text');
+    if (kbTextarea) kbTextarea.value = currentProfile.knowledge_base_text || '';
 
     // Populate Business Name
     document.getElementById('edit-business-name').value = currentProfile.business_name || '';
@@ -469,10 +505,12 @@ function initEditProfileForm() {
         // Gather Services
         syncServicesFromDOM();
 
+        const kbTextareaEl = document.getElementById('ai-parse-text');
         const updates = {
             business_name: document.getElementById('edit-business-name').value.trim(),
             operating_hours: operating_hours,
-            services: editServices
+            services: editServices,
+            knowledge_base_text: kbTextareaEl ? kbTextareaEl.value.trim() : '',
         };
 
         const result = await apiCall('PUT', '/client-portal/profile', updates);

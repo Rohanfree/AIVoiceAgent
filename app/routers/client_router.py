@@ -56,7 +56,7 @@ async def get_profile(
     "/profile",
     summary="Update client's services, timings, and business info",
 )
-async def update_profile(
+async def update_profile(  # noqa: C901
     updates: dict,
     user: dict = Depends(get_current_user),
     db: Client = Depends(get_db),
@@ -72,7 +72,7 @@ async def update_profile(
             detail="No client profile associated with this account.",
         )
 
-    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency"}
+    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency", "knowledge_base_text"}
     filtered = {k: v for k, v in updates.items() if k in allowed_fields}
 
     if not filtered:
@@ -83,6 +83,43 @@ async def update_profile(
 
     from datetime import datetime, timezone
     filtered["updated_at"] = datetime.now(tz=timezone.utc).isoformat()
+
+    # Sync knowledge base text to ElevenLabs before saving to Firestore
+    if "knowledge_base_text" in filtered:
+        kb_text = filtered["knowledge_base_text"]
+        client_doc = db.collection("clients").document(client_id).get()
+        client_data = client_doc.to_dict() if client_doc.exists else {}
+        agent_id = client_data.get("elevenlabs_agent_id")
+        old_doc_id = client_data.get("kb_doc_id")
+
+        if agent_id and kb_text:
+            try:
+                from app.services.elevenlabs_service import create_or_replace_knowledge_base_doc
+                new_doc_id = await create_or_replace_knowledge_base_doc(
+                    agent_id=agent_id,
+                    text=kb_text,
+                    name=f"Business Info — {client_data.get('business_name', client_id)}",
+                    old_doc_id=old_doc_id,
+                )
+                if new_doc_id:
+                    filtered["kb_doc_id"] = new_doc_id
+                    logger.info("Knowledge base updated for client %s → doc %s", client_id, new_doc_id)
+            except Exception as exc:
+                logger.error("ElevenLabs KB update failed for client %s: %s", client_id, exc)
+        elif agent_id and not kb_text and old_doc_id:
+            # Empty text → delete existing doc from ElevenLabs
+            try:
+                import httpx
+                from app.config import settings as _settings
+                async with httpx.AsyncClient(timeout=15.0) as hclient:
+                    await hclient.delete(
+                        f"https://api.elevenlabs.io/v1/convai/knowledge-base/{old_doc_id}",
+                        headers={"xi-api-key": _settings.elevenlabs_api_key},
+                    )
+                filtered["kb_doc_id"] = None
+                logger.info("Knowledge base doc %s deleted for client %s", old_doc_id, client_id)
+            except Exception as exc:
+                logger.error("ElevenLabs KB delete failed for client %s: %s", client_id, exc)
 
     db.collection("clients").document(client_id).set(filtered, merge=True)
     logger.info("Client %s profile updated: %s", client_id, list(filtered.keys()))

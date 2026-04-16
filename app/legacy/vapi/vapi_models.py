@@ -1,3 +1,6 @@
+# =============================================================================
+# LEGACY — VAPI Integration. Do not import or edit for active features.
+# =============================================================================
 """
 vapi_models.py - Pydantic schemas for parsing Vapi webhook payloads.
 

@@ -1,3 +1,7 @@
+# =============================================================================
+# LEGACY — VAPI Integration. Do not import or edit for active features.
+# Router is NOT registered in main.py. Kept for reference only.
+# =============================================================================
 """
 agent_tools.py - APIRouter for all /agent-tools endpoints.
 
@@ -24,7 +28,7 @@ from google.cloud.firestore import Client
 
 from app.config import settings
 from app.db import get_db
-from app.schemas.vapi_models import VapiToolCallPayload
+from app.legacy.vapi.vapi_models import VapiToolCallPayload
 from app.services.availability_service import (
     check_slot_availability,
     get_service_duration,

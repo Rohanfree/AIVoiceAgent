@@ -1,6 +1,6 @@
 # Automite AI — Intelligent Automation Platform
 
-> AI-powered voice assistant management platform built with FastAPI + Firebase Firestore.
+> AI-powered automation platform built with FastAPI + Firebase Firestore.
 
 ---
 
@@ -44,26 +44,33 @@ docker compose up --build -d
 │   │   ├── password.py          #   Argon2 password hashing
 │   │   └── dependencies.py      #   FastAPI Depends() for auth guards
 │   ├── routers/
-│   │   ├── agent_tools.py       #   /automiteaiapplication/agent-tools/*
-│   │   ├── vapi_webhook.py      #   (inactive — kept for reference)
 │   │   ├── auth_router.py       #   /automiteaiapplication/automiteui/auth/*
 │   │   ├── client_router.py     #   /automiteaiapplication/automiteui/client-portal/*
 │   │   ├── admin_router.py      #   /automiteaiapplication/automiteui/mngr-sys-access-78/*
 │   │   ├── extraction_router.py #   /automiteaiapplication/automiteui/extraction/*
-│   │   └── pages_router.py      #   /automiteaiapplication/automiteui/pages/*
+│   │   ├── pages_router.py      #   /automiteaiapplication/automiteui/pages/*
+│   │   ├── contact_router.py    #   /automiteaiapplication/automiteui/contact/*
+│   │   └── google_auth_router.py#   /automiteaiapplication/client/auth/google/*
 │   ├── schemas/
 │   │   ├── auth_models.py       #   Auth request/response schemas
-│   │   ├── extraction_models.py #   Extraction data models (future use)
-│   │   ├── request_models.py    #   Agent-tools request schemas
-│   │   ├── response_models.py   #   Agent-tools response schemas
-│   │   └── vapi_models.py       #   Vapi webhook payload schemas
+│   │   ├── extraction_models.py #   Extraction data models
+│   │   ├── request_models.py    #   General request schemas
+│   │   └── response_models.py   #   General response schemas
 │   ├── services/
-│   │   ├── availability_service.py
-│   │   ├── booking_service.py
-│   │   ├── call_log_service.py
-│   │   ├── customer_service.py
-│   │   ├── vapi_service.py      #   Vapi assistant clone/update/toggle
-│   │   └── whatsapp_service.py  #   WhatsApp Cloud API messaging
+│   │   ├── availability_service.py  #   Appointment slot checking
+│   │   ├── booking_service.py       #   Appointment creation & call log
+│   │   ├── calendar_service.py      #   Google Calendar sync
+│   │   ├── customer_service.py      #   Customer record management
+│   │   ├── sheets_service.py        #   Google Sheets logging
+│   │   └── whatsapp_service.py      #   WhatsApp Cloud API messaging
+│   ├── legacy/
+│   │   └── vapi/                # ⚠️  LEGACY — Vapi AI integration (disabled)
+│   │       ├── __init__.py      #   Legacy package notice
+│   │       ├── agent_tools.py   #   Was: /agent-tools/* Vapi webhook endpoints
+│   │       ├── vapi_webhook.py  #   Was: /vapi/call-ended webhook handler
+│   │       ├── vapi_service.py  #   Vapi assistant clone/update/toggle (no-op)
+│   │       ├── call_log_service.py  #   Vapi call-end Firestore persistence
+│   │       └── vapi_models.py   #   Vapi webhook payload schemas
 │   ├── static/
 │   │   ├── css/automite.css     #   Brand design system
 │   │   └── js/app.js            #   Frontend JavaScript
@@ -86,6 +93,11 @@ docker compose up --build -d
 └── test_api.sh                  #   Curl-based API tests
 ```
 
+> **Note on `app/legacy/vapi/`:** These files are retained as reference only.
+> No routers from this package are registered in `main.py`. Do not import from
+> or edit these files for new features. To re-enable Vapi, set `VAPI_ENABLED=true`
+> in `.env` and restore the router registrations in `main.py`.
+
 ---
 
 ## 🌐 Context Path Routing
@@ -97,7 +109,6 @@ All routes are prefixed with `/automiteaiapplication` to support multi-applicati
 | `/automiteaiapplication/health` | Health check |
 | `/automiteaiapplication/docs` | Swagger UI |
 | `/automiteaiapplication/redoc` | ReDoc UI |
-| `/automiteaiapplication/agent-tools/*` | Vapi AI tool-call endpoints |
 | `/automiteaiapplication/automiteui/auth/*` | Authentication (login, register, refresh token) |
 | `/automiteaiapplication/automiteui/client-portal/*` | Client dashboard API (profile, appointments, call logs) |
 | `/automiteaiapplication/automiteui/mngr-sys-access-78/*` | Hidden admin panel (client management) |
@@ -105,6 +116,9 @@ All routes are prefixed with `/automiteaiapplication` to support multi-applicati
 | `/automiteaiapplication/automiteui/pages/*` | Jinja2 HTML pages |
 | `/automiteaiapplication/automiteui/static/*` | Static CSS/JS assets |
 | `/automiteaiapplication/client/auth/google/*` | Google OAuth flow |
+
+> **Legacy (disabled):** `/automiteaiapplication/agent-tools/*` and `/automiteaiapplication/vapi/call-ended`
+> were Vapi AI endpoints. They are no longer registered. See `app/legacy/vapi/`.
 
 ---
 
@@ -123,7 +137,7 @@ All routes are prefixed with `/automiteaiapplication` to support multi-applicati
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/automiteaiapplication/automiteui/auth/register` | — | Register user + clone Vapi assistant |
+| `POST` | `/automiteaiapplication/automiteui/auth/register` | — | Register user + create client record |
 | `POST` | `/automiteaiapplication/automiteui/auth/login` | — | Get access + refresh tokens |
 | `POST` | `/automiteaiapplication/automiteui/auth/refresh` | — | Rotate tokens |
 
@@ -145,16 +159,6 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 ---
 
 ## 📡 API Reference
-
-### Agent Tools
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/automiteaiapplication/agent-tools/get-client-by-mobile` | Customer lookup by phone |
-| `POST` | `/automiteaiapplication/agent-tools/get-services-and-prices` | List services for a client |
-| `POST` | `/automiteaiapplication/agent-tools/check-availability` | Check appointment slot |
-| `POST` | `/automiteaiapplication/agent-tools/book-appointment` | Book an appointment |
-| `POST` | `/automiteaiapplication/agent-tools/save-call-log` | Save call log |
 
 ### Client Portal (requires `dashboard` JWT)
 
@@ -183,6 +187,19 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `POST` | `/automiteaiapplication/automiteui/extraction/parse-text` | 🚧 Coming soon |
 | `POST` | `/automiteaiapplication/automiteui/extraction/upload-file` | 🚧 Coming soon |
 | `POST` | `/automiteaiapplication/automiteui/extraction/confirm` | 🚧 Coming soon |
+
+### Legacy — Vapi Agent Tools (disabled)
+
+> These endpoints existed when Vapi was active. They are **not registered** and will return 404.
+> Source: `app/legacy/vapi/agent_tools.py`
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/automiteaiapplication/agent-tools/get-client-by-mobile` | Customer lookup by phone |
+| `POST` | `/automiteaiapplication/agent-tools/get-services-and-prices` | List services for a client |
+| `POST` | `/automiteaiapplication/agent-tools/check-availability` | Check appointment slot |
+| `POST` | `/automiteaiapplication/agent-tools/book-appointment` | Book an appointment |
+| `POST` | `/automiteaiapplication/agent-tools/save-call-log` | Save call log |
 
 ---
 
@@ -219,6 +236,20 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token | — |
 | `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID | — |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID | — |
+| `SMTP_HOST` / `SMTP_PORT` | Email SMTP server | `smtp.gmail.com:587` |
+| `SMTP_USER` / `SMTP_PASSWORD` | Gmail SMTP credentials (App Password) | — |
+| `CONTACT_EMAIL` | Where contact form submissions are sent | `aiautomite@gmail.com` |
+| `GOOGLE_SHEET_ID` | Google Sheets spreadsheet ID | — |
+| `GOOGLE_SHEET_TAB` | Worksheet tab name for call logs | `Call Logs` |
+| `GEMINI_API_KEY` | Google Gemini API key | — |
+
+### Legacy Vapi Variables (inactive — only needed if re-enabling Vapi)
+
+| Variable | Description | Default |
+|---|---|---|
+| `VAPI_ENABLED` | Set to `true` to re-activate Vapi integration | `false` |
+| `VAPI_API_KEY` | Vapi API bearer token | — |
+| `VAPI_TEMPLATE_ASSISTANT_ID` | Template assistant ID to clone from | — |
 
 ---
 
@@ -226,11 +257,11 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 
 | Collection | Document ID Strategy |
 |---|---|
-| `clients` | `{vapi_assistant_id}` or `{uuid4}` |
+| `clients` | `{uuid4}` |
 | `users` | `{uuid4}` (admin = `"admin"`) |
 | `customers` | `{client_id}_{phone}` |
 | `appointments` | `{client_id}_{phone}_{datetime}` |
-| `call_logs` | `{client_id}_{call_id}` |
+| `call_logs` | `{client_id}_{call_id}` (existing records unaffected) |
 | `tokens` | `{uuid4}` (audit log for M2M tokens) |
 
 ---

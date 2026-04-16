@@ -9,6 +9,7 @@ Handles:
 
 import logging
 import uuid
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore import Client
@@ -91,6 +92,23 @@ async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenRespon
     )
 
 
+# ─── CHECK AGENT ───────────────────────────────────────────────────────────
+
+@router.get("/check-agent", summary="Check if an ElevenLabs agent ID is already registered")
+async def check_agent(agent_id: str, db: Client = Depends(get_db)):
+    """Returns {taken: true, client_name: ...} if the agent is already assigned to a client."""
+    docs = (
+        db.collection("users")
+        .where("elevenlabs_agent_id", "==", agent_id)
+        .limit(1)
+        .stream()
+    )
+    for doc in docs:
+        data = doc.to_dict()
+        return {"taken": True, "client_name": data.get("client_name", "another client")}
+    return {"taken": False}
+
+
 # ─── REGISTER ──────────────────────────────────────────────────────────────
 
 @router.post(
@@ -134,18 +152,26 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "subscription_status": "active",
         "client_id": client_id,
         "client_name": body.client_name,
-        "assistant_name": body.assistant_name,
+        "elevenlabs_agent_id": body.elevenlabs_agent_id,
         "created_at": now,
     }
     db.collection("users").document(user_id).set(user_doc)
     logger.info("User '%s' registered with id=%s, client_id=%s", body.username, user_id, client_id)
+
+    # Generate a long-lived tool token (embedded in ElevenLabs agent tool headers)
+    tool_token = create_access_token(
+        {"sub": client_id, "client_id": client_id},
+        scope="tool",
+        expires_delta=timedelta(days=365),
+    )
 
     # Create client document
     client_doc = {
         "id": client_id,
         "user_id": user_id,
         "business_name": body.client_name,
-        "assistant_name": body.assistant_name,
+        "elevenlabs_agent_id": body.elevenlabs_agent_id,
+        "tool_token": tool_token,
         "services": [],
         "operating_hours": {},
         "policies": {},
@@ -156,6 +182,73 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     }
     db.collection("clients").document(client_id).set(client_doc)
     logger.info("Client '%s' created with id=%s", body.client_name, client_id)
+
+    from app.services.elevenlabs_service import setup_agent_tools, create_kb_text_doc, patch_agent_full
+
+    # Step 1: Resolve tool IDs (creates missing tools, no agent PATCH yet)
+    try:
+        tool_ids = await setup_agent_tools(
+            agent_id=body.elevenlabs_agent_id,
+            client_id=client_id,
+        )
+        if tool_ids is None:
+            raise RuntimeError("setup_agent_tools returned None")
+    except Exception as exc:
+        logger.error("setup_agent_tools failed during registration — rolling back: %s", exc)
+        db.collection("users").document(user_id).delete()
+        db.collection("clients").document(client_id).delete()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to configure ElevenLabs agent tools. Please verify your Agent ID and try again.",
+        )
+
+    # Step 2: Create KB docs (no agent PATCH yet)
+    kb_doc_ids: list[str] = []
+    kb_doc_id: str | None = None
+    kb_client_id_doc_id: str | None = None
+
+    if body.business_info.strip():
+        try:
+            kb_doc_id = await create_kb_text_doc(
+                text=body.business_info.strip(),
+                name=f"{body.client_name} — {client_id[:8]}",
+            )
+            if kb_doc_id:
+                kb_doc_ids.append(kb_doc_id)
+        except Exception as exc:
+            logger.error("KB business_info creation failed for client %s: %s", client_id, exc)
+
+    try:
+        kb_client_id_doc_id = await create_kb_text_doc(
+            text=client_id,
+            name=f"client_id — {client_id[:8]}",
+        )
+        if kb_client_id_doc_id:
+            kb_doc_ids.append(kb_client_id_doc_id)
+    except Exception as exc:
+        logger.error("KB client_id creation failed for client %s: %s", client_id, exc)
+
+    # Step 3: Single combined PATCH — tools + all KB docs together
+    try:
+        patch_ok = await patch_agent_full(
+            agent_id=body.elevenlabs_agent_id,
+            tool_ids=tool_ids,
+            kb_doc_ids=kb_doc_ids,
+        )
+        if not patch_ok:
+            logger.error("patch_agent_full failed for client %s — tools/KB may not be attached", client_id)
+    except Exception as exc:
+        logger.error("patch_agent_full error for client %s: %s", client_id, exc)
+
+    # Step 4: Persist KB doc IDs to Firestore
+    kb_update: dict = {}
+    if kb_doc_id:
+        kb_update["kb_doc_id"] = kb_doc_id
+    if kb_client_id_doc_id:
+        kb_update["kb_client_id_doc_id"] = kb_client_id_doc_id
+    if kb_update:
+        db.collection("clients").document(client_id).set(kb_update, merge=True)
+        logger.info("KB doc IDs saved for client %s: %s", client_id, kb_update)
 
     # Issue tokens
     scope = "dashboard"

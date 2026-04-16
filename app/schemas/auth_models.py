@@ -18,7 +18,8 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="Desired username")
     password: str = Field(..., min_length=8, description="Strong password (min 8 chars)")
     client_name: str = Field(..., min_length=1, max_length=100, description="Business/client display name")
-    assistant_name: str = Field(..., min_length=1, max_length=100, description="Name for the Vapi AI assistant")
+    elevenlabs_agent_id: str = Field(..., min_length=1, max_length=200, description="ElevenLabs Conversational AI agent ID")
+    business_info: str = Field(default="", description="Client-specific business info: booking slots, working days, policies")
 
 
 class TokenResponse(BaseModel):

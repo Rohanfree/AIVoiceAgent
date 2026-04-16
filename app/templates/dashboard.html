@@ -10,7 +10,7 @@
             <img src="/automiteaiapplication/automiteui/static/images/icon.jpeg" alt="Icon" class="brand-logo">AUTOMITE<span class="brand-divider">|</span><span class="brand-ai">AI</span>
         </div>
         <ul class="navbar-links">
-            <li><a href="/automiteui/pages/dashboard" class="active">Dashboard</a></li>
+            <li><a href="/automiteaiapplication/automiteui/pages/dashboard" class="active">Dashboard</a></li>
             <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
         </ul>
     </div>
@@ -63,11 +63,10 @@
             <h3 style="font-size: 1rem; margin-bottom: var(--space-md); color: var(--color-magenta); display: flex; align-items: center; gap: 8px;">
                 <span>🤖</span> AI Assistant
             </h3>
-            <p id="assistant-status" style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-md);">
-                Assistant: <strong style="color: white;" id="assistant-name-display">—</strong>
-            </p>
+            <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: 4px;">Agent ID</p>
+            <p id="assistant-agent-id-display" style="font-size: 0.75rem; color: white; word-break: break-all; margin-bottom: var(--space-md);">—</p>
             <div id="assistant-badge-container">
-                <span class="badge badge-active">Live & Ready</span>
+                <span class="badge badge-active">ElevenLabs Connected</span>
             </div>
         </div>
     </div>
@@ -146,14 +145,17 @@
                             <!-- JS will populate Mon-Sun inputs here -->
                         </div>
 
-                        <!-- AI Auto-fill Box (Moved here as a specialized tool) -->
+                        <!-- Knowledge Base (editable, saved to ElevenLabs on profile save) -->
                         <div class="ai-extractor-box" style="margin-top: var(--space-xxl);">
                             <h3 style="color: var(--color-magenta); font-size: 0.95rem; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: 8px;">
-                                <span>✨</span> AI Data Extraction
+                                <span>📚</span> Knowledge Base
                             </h3>
-                            <textarea id="ai-parse-text" class="form-input" rows="3" placeholder="Paste business info here to auto-fill the form..." style="font-size: 0.85rem; background: rgba(0,0,0,0.2);"></textarea>
+                            <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: var(--space-sm);">
+                                Paste or type business info below. This content is saved to your ElevenLabs agent's knowledge base when you save the profile.
+                            </p>
+                            <textarea id="ai-parse-text" class="form-input" rows="5" placeholder="e.g. We are a salon offering haircuts, colouring, and styling. Open Mon–Fri 9am–6pm, Sat 10am–4pm..." style="font-size: 0.85rem; background: rgba(0,0,0,0.2);"></textarea>
                             <div style="text-align: right; margin-top: var(--space-sm);">
-                                <button type="button" class="btn btn-sm" style="background: var(--color-magenta); color: white;" onclick="parseTextWithAI(this)">Extract & Fill</button>
+                                <button type="button" class="btn btn-sm" style="background: var(--color-magenta); color: white;" onclick="parseTextWithAI(this)">✨ Extract &amp; Fill Form</button>
                             </div>
                         </div>
                     </div>

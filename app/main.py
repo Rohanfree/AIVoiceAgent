@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import agent_tools
+# NOTE: agent_tools (VAPI) router has been moved to app/legacy/vapi/ and is no longer registered.
 
 # ─── Logging setup ─────────────────────────────────────────────────────────
 
@@ -68,9 +68,9 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Automite AI — Intelligent Automation Platform",
         description=(
-            "Backend API for the Automite AI ecosystem. Includes Vapi AI integration, "
-            "client portal, admin dashboard, and intelligent extraction tools. "
-            "All new features are served under the /automiteui context path."
+            "Backend API for the Automite AI ecosystem. Includes client portal, "
+            "admin dashboard, and intelligent extraction tools. "
+            "All features are served under the /automiteui context path."
         ),
         version="2.0.0",
         docs_url="/automiteaiapplication/docs",
@@ -159,12 +159,11 @@ def create_app() -> FastAPI:
                 media_type=response.media_type,
             )
 
-    # ── Existing Routers ─────────────────────────────────────────────────────
-    app.include_router(agent_tools.router, prefix="/automiteaiapplication")
-
-    # ── New Routers — all under /automiteui parent prefix ───────────────────
+    # ── Routers — all under /automiteui parent prefix ───────────────────────
+    # NOTE: VAPI agent-tools router removed — see app/legacy/vapi/agent_tools.py
     from app.routers import (
         admin_router,
+        agent_tools_elevenlabs,
         auth_router,
         client_router,
         contact_router,
@@ -180,6 +179,7 @@ def create_app() -> FastAPI:
     app.include_router(pages_router.router, prefix="/automiteaiapplication/automiteui")
     app.include_router(google_auth_router.router, prefix="/automiteaiapplication")
     app.include_router(contact_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(agent_tools_elevenlabs.router, prefix="/automiteaiapplication")
 
     # ── Static files ────────────────────────────────────────────────────────
     app.mount(

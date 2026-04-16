@@ -1,3 +1,6 @@
+# =============================================================================
+# LEGACY — VAPI Integration. Do not import or edit for active features.
+# =============================================================================
 """
 call_log_service.py - Persist Vapi call-end data to Firestore.
 

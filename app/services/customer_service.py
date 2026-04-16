@@ -83,21 +83,20 @@ def get_last_call_summary(
             db.collection("call_logs")
             .where(filter=FieldFilter("client_id", "==", client_id))
             .where(filter=FieldFilter("true_caller_phone", "==", phone))
-            .order_by("created_at", direction="DESCENDING")
-            .limit(1)
             .stream()
         )
-        for doc in docs:
-            data = doc.to_dict()
-            summary = data.get("summary")
-            logger.debug(
-                "Last call summary for client=%s phone=%s: %s",
-                client_id, phone, summary
-            )
-            return summary
+        logs = [doc.to_dict() for doc in docs]
+        if not logs:
+            logger.debug("No call logs found for client=%s phone=%s", client_id, phone)
+            return None
 
-        logger.debug("No call logs found for client=%s phone=%s", client_id, phone)
-        return None
+        logs.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        summary = logs[0].get("summary")
+        logger.debug(
+            "Last call summary for client=%s phone=%s: %s",
+            client_id, phone, summary
+        )
+        return summary
 
     except Exception as exc:
         # Gracefully handle missing composite index — endpoint still works

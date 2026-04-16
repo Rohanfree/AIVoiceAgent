@@ -1,3 +1,7 @@
+# =============================================================================
+# LEGACY — VAPI Integration. Do not import or edit for active features.
+# All outbound HTTP calls to api.vapi.ai are disabled via settings.vapi_enabled.
+# =============================================================================
 """
 vapi_service.py — Vapi AI assistant lifecycle management.
 
@@ -44,6 +48,11 @@ async def clone_assistant(
     Returns:
         The new assistant's ID, or None on failure.
     """
+    # LEGACY: VAPI disabled — no outbound API calls will be made
+    if not settings.vapi_enabled:
+        logger.info("VAPI is disabled (vapi_enabled=False) — skipping clone_assistant")
+        return None
+
     if not settings.vapi_api_key:
         logger.warning("VAPI_API_KEY not configured — skipping assistant clone")
         return None
@@ -133,6 +142,11 @@ async def update_assistant(
     Returns:
         True on success, False on failure.
     """
+    # LEGACY: VAPI disabled — no outbound API calls will be made
+    if not settings.vapi_enabled:
+        logger.info("VAPI is disabled (vapi_enabled=False) — skipping update_assistant")
+        return False
+
     if not settings.vapi_api_key:
         logger.warning("VAPI_API_KEY not configured — skipping assistant update")
         return False

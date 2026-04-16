@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Application environment: "development" enables debug logging
     app_env: str = "production"
 
+    # Enable request/response debug logging for ElevenLabs agent tool calls
+    agent_tools_debug: bool = False
+
     # Server binding
     host: str = "0.0.0.0"
     port: int = 8090
@@ -52,6 +55,15 @@ class Settings(BaseSettings):
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
     whatsapp_business_account_id: str = ""
+
+    # ── ElevenLabs Conversational AI ────────────────────────────────────────
+    elevenlabs_api_key: str = ""
+
+    # ── VAPI AI Integration (LEGACY — disabled) ─────────────────────────────
+    # Set vapi_enabled=true in .env only if re-activating the Vapi integration.
+    vapi_enabled: bool = False
+    vapi_api_key: str = ""
+    vapi_template_assistant_id: str = ""
 
     # ── Contact Form Email (Gmail SMTP) ─────────────────────────────────────
     smtp_host: str = "smtp.gmail.com"

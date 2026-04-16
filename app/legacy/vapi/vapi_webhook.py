@@ -1,3 +1,7 @@
+# =============================================================================
+# LEGACY — VAPI Integration. Do not import or edit for active features.
+# Router is NOT registered in main.py. Kept for reference only.
+# =============================================================================
 """
 vapi_webhook.py - Handles incoming webhook events from Vapi.
 
@@ -16,8 +20,8 @@ from google.cloud.firestore import Client
 
 from app.config import settings
 from app.db import get_db
-from app.schemas.vapi_models import VapiCallEndedPayload
-from app.services.call_log_service import save_vapi_call_log
+from app.legacy.vapi.vapi_models import VapiCallEndedPayload
+from app.legacy.vapi.call_log_service import save_vapi_call_log
 
 logger = logging.getLogger(__name__)
 

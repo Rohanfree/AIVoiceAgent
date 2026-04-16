@@ -8,6 +8,7 @@ Endpoints:
 import logging
 import json
 import os
+import urllib.parse
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
@@ -18,8 +19,8 @@ from app.db import get_db
 from app.auth.dependencies import get_current_user
 from jose import jwt
 
-# Allow insecure transport for local development (http instead of https)
-if settings.debug:
+# Allow insecure transport when base_url uses http (local dev or http-only deployments)
+if settings.base_url.startswith("http://"):
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ def get_client_config():
 async def google_debug(request: Request):
     """Debug info for OAuth."""
     base = settings.base_url.rstrip("/")
-    redirect_uri = f"{base}/client/auth/google/callback"
+    redirect_uri = f"{base}/automiteaiapplication/client/auth/google/callback"
     return {
         "base_url_settings": settings.base_url,
         "computed_redirect_uri": redirect_uri,
@@ -71,24 +72,22 @@ async def google_debug(request: Request):
     }
 
 @router.get("/login")
-async def google_login(request: Request, token: str):
+async def google_login(request: Request, token: str, return_to: str = None):
     """
-    Start Google OAuth flow. 
+    Start Google OAuth flow.
     Expects 'token' (the app's JWT) to be passed in query params.
+    Optional 'return_to' is the URL to redirect back to after OAuth completes.
     """
     try:
         # Validate token first
         jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
-        
+
         client_config = get_client_config()
-        
-        # Use url_for for the callback to ensure it matches the current request host/port
-        redirect_uri = str(request.url_for("google_callback"))
-        
-        # Ensure it's http if insecure transport is allowed
-        if os.environ.get('OAUTHLIB_INSECURE_TRANSPORT') == '1':
-            redirect_uri = redirect_uri.replace("https://", "http://")
-        
+
+        # Build redirect URI from base_url so the scheme (http/https) matches
+        # what is registered in Google Cloud Console, regardless of proxy termination.
+        redirect_uri = settings.base_url.rstrip("/") + "/automiteaiapplication/client/auth/google/callback"
+
         logger.info("Generating Google OAuth URL. Computed redirect_uri: %s", redirect_uri)
 
         flow = Flow.from_client_config(
@@ -97,10 +96,16 @@ async def google_login(request: Request, token: str):
             redirect_uri=redirect_uri
         )
 
+        # Encode token and return_to URL into state so both survive the OAuth round-trip
+        state_data = {"t": token}
+        if return_to:
+            state_data["r"] = return_to
+        state = json.dumps(state_data)
+
         authorization_url, _ = flow.authorization_url(
             access_type="offline",
             include_granted_scopes="true",
-            state=token,  # Pass the JWT as state
+            state=state,
             prompt="consent"
         )
         
@@ -116,17 +121,23 @@ async def google_callback(request: Request, code: str, state: str):
     OAuth callback. Uses 'state' (JWT) to identify the client.
     """
     try:
-        # 1. Validate the JWT from state
-        payload = jwt.decode(state, settings.jwt_secret_key, algorithms=["HS256"])
+        # 1. Parse state: JSON {"t": jwt, "r": return_to} or legacy raw JWT
+        return_to = None
+        try:
+            state_data = json.loads(state)
+            token = state_data["t"]
+            return_to = state_data.get("r")
+        except (json.JSONDecodeError, KeyError):
+            token = state  # backward compat: state was the raw JWT
+
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
         client_id = payload.get("client_id")
         if not client_id:
             raise Exception("Invalid state: no client_id")
 
         # 2. Exchange code for tokens
         client_config = get_client_config()
-        redirect_uri = str(request.url_for("google_callback"))
-        if os.environ.get('OAUTHLIB_INSECURE_TRANSPORT') == '1':
-            redirect_uri = redirect_uri.replace("https://", "http://")
+        redirect_uri = settings.base_url.rstrip("/") + "/automiteaiapplication/client/auth/google/callback"
 
         flow = Flow.from_client_config(
             client_config,
@@ -154,13 +165,22 @@ async def google_callback(request: Request, code: str, state: str):
         }, merge=True)
         logger.info("Successfully updated Firestore document for client: %s", client_id)
 
-        # 4. Redirect back to dashboard (always uses the UI prefix)
+        # 4. Redirect back to the originating page (or fallback to dashboard)
         base = settings.base_url.rstrip("/")
-        return RedirectResponse(url=f"{base}/automiteui/pages/dashboard?google_linked=success")
+        if return_to:
+            sep = "&" if "?" in return_to else "?"
+            success_url = f"{return_to}{sep}google_linked=success"
+        else:
+            success_url = f"{base}/automiteui/pages/dashboard?google_linked=success"
+        return RedirectResponse(url=success_url)
 
     except Exception as e:
         logger.exception("CRITICAL ERROR in Google OAuth callback")
         base = settings.base_url.rstrip("/")
-        # Return the error message in the URL for better user feedback during debug
-        error_msg = str(e).replace(" ", "_")
-        return RedirectResponse(url=f"{base}/automiteui/pages/dashboard?google_linked=error&detail={error_msg}")
+        error_msg = urllib.parse.quote(str(e))
+        if return_to:
+            sep = "&" if "?" in return_to else "?"
+            error_url = f"{return_to}{sep}google_linked=error&detail={error_msg}"
+        else:
+            error_url = f"{base}/automiteui/pages/dashboard?google_linked=error&detail={error_msg}"
+        return RedirectResponse(url=error_url)
