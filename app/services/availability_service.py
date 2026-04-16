@@ -6,7 +6,7 @@ and computing the next available time window.
 import logging
 from datetime import datetime, timedelta, timezone
 
-from google.cloud.firestore import Client
+from google.cloud.firestore import Client, FieldFilter
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def _get_appointments_on_date(
     # Single-field query — no composite index needed
     docs = (
         db.collection("appointments")
-        .where("client_id", "==", client_id)
+        .where(filter=FieldFilter("client_id", "==", client_id))
         .stream()
     )
 

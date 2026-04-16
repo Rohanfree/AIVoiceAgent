@@ -40,10 +40,6 @@
             <div class="stat-value" id="calls-count">—</div>
             <div class="stat-label">Call Logs</div>
         </div>
-        <div class="glass-card stat-card">
-            <div class="stat-value" id="services-count">—</div>
-            <div class="stat-label">Services</div>
-        </div>
     </div>
     
     <!-- Integrations & Settings -->
@@ -69,26 +65,6 @@
                 <span class="badge badge-active">ElevenLabs Connected</span>
             </div>
         </div>
-    </div>
-
-    <!-- Services Table -->
-    <div class="glass-card" style="margin-bottom: var(--space-xl);">
-        <h2 style="margin-bottom: var(--space-lg);">Your Services</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Service</th>
-                    <th>Category</th>
-                    <th>Duration</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody id="services-tbody">
-                <tr>
-                    <td colspan="4" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 
     <!-- Recent Appointments -->
@@ -119,61 +95,48 @@
             
             <div class="modal-header">
                 <h2 style="margin: 0;">Edit Profile</h2>
-                <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin: 4px 0 0 0;">Update your business details and AI assistant focus.</p>
+                <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin: 4px 0 0 0;">Update your business details and policy.</p>
             </div>
-            
+
             <form id="edit-profile-form">
-                <div class="modal-grid">
-                    <!-- Left Column: General & Hours -->
-                    <div>
-                        <div class="modal-section-title">
-                            <span>🏢</span> General Information
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="edit-business-name">Business Name</label>
-                            <input type="text" id="edit-business-name" class="form-input" required placeholder="e.g. Rohan's Salon">
-                        </div>
+                <div class="modal-section-title">
+                    <span>🏢</span> General Information
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-business-name">Business Name</label>
+                    <input type="text" id="edit-business-name" class="form-input" required placeholder="e.g. Rohan's Salon">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-agent-id">ElevenLabs Agent ID</label>
+                    <input type="text" id="edit-agent-id" class="form-input" placeholder="e.g. agent_01jxxxxxxxxxxxxxx">
+                </div>
 
-                        <div class="modal-section-title" style="margin-top: var(--space-xl);">
-                            <span>🕒</span> Operating Hours
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
-                            <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">Set your weekly schedule.</p>
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="setDefaultHours()">Set 9-5</button>
-                        </div>
-                        <div id="operating-hours-container" class="hours-grid">
-                            <!-- JS will populate Mon-Sun inputs here -->
-                        </div>
+                <div class="modal-section-title" style="margin-top: var(--space-xl);">
+                    <span>🕒</span> Operating Hours
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                    <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">Set your weekly schedule.</p>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="setDefaultHours()">Set 9-5</button>
+                </div>
+                <div id="operating-hours-container" class="hours-grid">
+                    <!-- JS will populate Mon-Sun inputs here -->
+                </div>
 
-                        <!-- Knowledge Base (editable, saved to ElevenLabs on profile save) -->
-                        <div class="ai-extractor-box" style="margin-top: var(--space-xxl);">
-                            <h3 style="color: var(--color-magenta); font-size: 0.95rem; margin-bottom: var(--space-sm); display: flex; align-items: center; gap: 8px;">
-                                <span>📚</span> Knowledge Base
-                            </h3>
-                            <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: var(--space-sm);">
-                                Paste or type business info below. This content is saved to your ElevenLabs agent's knowledge base when you save the profile.
-                            </p>
-                            <textarea id="ai-parse-text" class="form-input" rows="5" placeholder="e.g. We are a salon offering haircuts, colouring, and styling. Open Mon–Fri 9am–6pm, Sat 10am–4pm..." style="font-size: 0.85rem; background: rgba(0,0,0,0.2);"></textarea>
-                            <div style="text-align: right; margin-top: var(--space-sm);">
-                                <button type="button" class="btn btn-sm" style="background: var(--color-magenta); color: white;" onclick="parseTextWithAI(this)">✨ Extract &amp; Fill Form</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="modal-section-title" style="margin-top: var(--space-xxl);">
+                    <span>📋</span> Policy and Details
+                </div>
+                <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: var(--space-sm);">
+                    Your business policy, services, and other details provided to the AI agent.
+                </p>
+                <textarea id="ai-parse-text" class="form-input" rows="7" placeholder="e.g. We offer haircuts, colouring, and styling. Cancellations must be made 24 hours in advance..." style="font-size: 0.85rem; background: rgba(0,0,0,0.2);"></textarea>
 
-                    <!-- Right Column: Services -->
-                    <div>
-                        <div class="modal-section-title">
-                            <span>🛠️</span> Services Management
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
-                            <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">Manage what you offer customers.</p>
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="addServiceRow()">+ Add New</button>
-                        </div>
-                        
-                        <div id="edit-services-container" style="max-height: 500px; overflow-y: auto; padding-right: 8px;">
-                            <!-- JS will populate service rows here -->
-                        </div>
-                    </div>
+                <div class="modal-section-title" style="margin-top: var(--space-xxl);">
+                    <span>🔒</span> Change Password
+                </div>
+                <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: var(--space-sm);">Leave blank to keep your current password.</p>
+                <div class="form-group">
+                    <label class="form-label" for="edit-new-password">New Password</label>
+                    <input type="password" id="edit-new-password" class="form-input" placeholder="Min 8 characters" minlength="8" autocomplete="new-password">
                 </div>
 
                 <!-- Footer Actions -->

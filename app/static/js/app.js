@@ -271,18 +271,6 @@ async function initDashboard() {
             }
         }
 
-        // Services table
-        const tbody = document.getElementById('services-tbody');
-        if (tbody && profile.services) {
-            tbody.innerHTML = profile.services.map(svc => `
-                <tr>
-                    <td>${svc.name || ''}</td>
-                    <td>${svc.category || '-'}</td>
-                    <td>${svc.duration || 0} min</td>
-                    <td>${profile.currency || 'INR'} ${svc.price || 0}</td>
-                </tr>
-            `).join('');
-        }
     }
 
     // Load appointments
@@ -337,20 +325,25 @@ const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "S
 
 function openEditProfileModal() {
     const modal = document.getElementById('edit-profile-modal');
-    if (!modal || !currentProfile) return;
+    if (!modal) return;
 
-    // Populate Knowledge Base textarea with existing content
+    if (!currentProfile) {
+        showAlert('error', 'Profile not loaded yet. Please wait a moment and try again.');
+        return;
+    }
+
+    // Populate fields
+    document.getElementById('edit-business-name').value = currentProfile.business_name || '';
+    document.getElementById('edit-agent-id').value = currentProfile.elevenlabs_agent_id || '';
+    document.getElementById('edit-new-password').value = '';
+
     const kbTextarea = document.getElementById('ai-parse-text');
     if (kbTextarea) kbTextarea.value = currentProfile.knowledge_base_text || '';
-
-    // Populate Business Name
-    document.getElementById('edit-business-name').value = currentProfile.business_name || '';
 
     // Populate Operating Hours
     const hoursContainer = document.getElementById('operating-hours-container');
     hoursContainer.innerHTML = '';
-    
-    let hours = currentProfile.operating_hours || {};
+    const hours = currentProfile.operating_hours || {};
     DAYS_OF_WEEK.forEach(day => {
         hoursContainer.innerHTML += `
             <div class="hours-row">
@@ -360,11 +353,7 @@ function openEditProfileModal() {
         `;
     });
 
-    // Populate Services
-    editServices = Array.isArray(currentProfile.services) ? JSON.parse(JSON.stringify(currentProfile.services)) : [];
-    renderEditServices();
-
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
 }
 
 function closeEditProfileModal() {
@@ -384,107 +373,6 @@ function setDefaultHours() {
     });
 }
 
-let editServices = [];
-
-function renderEditServices() {
-    const container = document.getElementById('edit-services-container');
-    container.innerHTML = '';
-    
-    if (editServices.length === 0) {
-        container.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 0.9rem;">No services added yet.</p>';
-        return;
-    }
-
-    editServices.forEach((svc, index) => {
-        container.innerHTML += `
-            <div class="service-manager-card animate-in">
-                <span class="remove-svc" onclick="removeServiceRow(${index})">🗑️ Remove</span>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; margin-top: 8px;">
-                    <div>
-                        <label class="form-label" style="font-size: 0.7rem;">Service Name</label>
-                        <input type="text" class="form-input" id="svc-name-${index}" value="${svc.name || ''}" required placeholder="Name">
-                    </div>
-                    <div>
-                        <label class="form-label" style="font-size: 0.7rem;">Category</label>
-                        <input type="text" class="form-input" id="svc-cat-${index}" value="${svc.category || ''}" placeholder="Category">
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label class="form-label" style="font-size: 0.7rem;">Duration (mins)</label>
-                        <input type="number" class="form-input" id="svc-dur-${index}" value="${svc.duration || 30}" min="1" required>
-                    </div>
-                    <div>
-                        <label class="form-label" style="font-size: 0.7rem;">Price</label>
-                        <div style="position: relative;">
-                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--color-text-secondary);">${currentProfile.currency || 'INR'}</span>
-                            <input type="number" class="form-input" id="svc-price-${index}" value="${svc.price || 0}" min="0" step="0.01" required style="padding-left: 45px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function addServiceRow() {
-    syncServicesFromDOM();
-    editServices.push({ name: '', category: 'General', duration: 30, price: 0 });
-    renderEditServices();
-}
-
-function removeServiceRow(index) {
-    syncServicesFromDOM();
-    editServices.splice(index, 1);
-    renderEditServices();
-}
-
-function syncServicesFromDOM() {
-    editServices.forEach((_, index) => {
-        const nameEl = document.getElementById(`svc-name-${index}`);
-        if (nameEl) {
-            editServices[index].name = nameEl.value;
-            editServices[index].category = document.getElementById(`svc-cat-${index}`).value;
-            editServices[index].duration = parseInt(document.getElementById(`svc-dur-${index}`).value) || 30;
-            editServices[index].price = parseFloat(document.getElementById(`svc-price-${index}`).value) || 0;
-        }
-    });
-}
-
-async function parseTextWithAI(btn) {
-    const textEl = document.getElementById('ai-parse-text');
-    const text = textEl.value.trim();
-    if (!text) {
-        showAlert('alert', 'Please paste some text first!');
-        return;
-    }
-
-    setLoading(btn, true);
-    try {
-        const data = await apiCall('POST', '/client-portal/parse-text', { text });
-        if (data) {
-            // Populate Form from AI response
-            if (data.operating_hours) {
-                DAYS_OF_WEEK.forEach(day => {
-                    const inp = document.getElementById(`hours-${day}`);
-                    if (inp && data.operating_hours[day]) {
-                        inp.value = data.operating_hours[day];
-                    }
-                });
-            }
-            if (data.services && Array.isArray(data.services)) {
-                editServices = data.services;
-                renderEditServices();
-            }
-            showAlert('success', '✨ Extracted data successfully! Review the form below.');
-        }
-    } catch (e) {
-        console.error(e);
-        showAlert('error', 'Failed to extract data. Check console.');
-    } finally {
-        setLoading(btn, false);
-    }
-}
 
 function initEditProfileForm() {
     const form = document.getElementById('edit-profile-form');
@@ -502,23 +390,30 @@ function initEditProfileForm() {
             operating_hours[day] = document.getElementById(`hours-${day}`).value.trim() || 'Closed';
         });
 
-        // Gather Services
-        syncServicesFromDOM();
-
         const kbTextareaEl = document.getElementById('ai-parse-text');
         const updates = {
             business_name: document.getElementById('edit-business-name').value.trim(),
             operating_hours: operating_hours,
-            services: editServices,
             knowledge_base_text: kbTextareaEl ? kbTextareaEl.value.trim() : '',
+            elevenlabs_agent_id: document.getElementById('edit-agent-id').value.trim(),
         };
 
         const result = await apiCall('PUT', '/client-portal/profile', updates);
-        
+
+        // Handle password change if filled in
+        const newPassword = document.getElementById('edit-new-password').value;
+        if (newPassword) {
+            const pwResult = await apiCall('POST', '/client-portal/change-password', { new_password: newPassword });
+            if (!pwResult || pwResult.status !== 'password_updated') {
+                showAlert('error', pwResult?.detail || 'Profile saved but password change failed.');
+                setLoading(btn, false);
+                return;
+            }
+        }
+
         if (result && result.status === 'updated') {
             showAlert('success', 'Profile updated successfully!');
             closeEditProfileModal();
-            // Refresh dashboard data
             initDashboard();
         } else {
             showAlert('error', 'Failed to update profile.');

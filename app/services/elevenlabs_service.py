@@ -21,7 +21,6 @@ def _headers() -> dict:
 
 
 async def create_or_replace_knowledge_base_doc(
-    agent_id: str,
     text: str,
     name: str = "Business Info",
     old_doc_id: str | None = None,
@@ -40,14 +39,16 @@ async def create_or_replace_knowledge_base_doc(
                         headers=_headers(),
                     )
                     if del_resp.is_error:
-                        logger.warning(
+                        logger.error(
                             "Failed to delete old knowledge base doc %s: %s %s",
                             old_doc_id,
                             del_resp.status_code,
                             del_resp.text,
                         )
+                    else:
+                        logger.info("Deleted old KB doc %s", old_doc_id)
                 except Exception as exc:
-                    logger.warning("Exception deleting old knowledge base doc %s: %s", old_doc_id, exc)
+                    logger.error("Exception deleting old knowledge base doc %s: %s", old_doc_id, exc)
 
             # Step 2: Create new knowledge base document
             create_resp = await client.post(
@@ -66,30 +67,6 @@ async def create_or_replace_knowledge_base_doc(
             doc_id = create_resp.json().get("id")
             if not doc_id:
                 logger.error("No 'id' in knowledge base create response: %s", create_resp.text)
-                return None
-
-            # Step 3: Attach document to agent
-            patch_resp = await client.patch(
-                f"{ELEVENLABS_BASE_URL}/convai/agents/{agent_id}",
-                headers=_headers(),
-                json={
-                    "conversation_config": {
-                        "agent": {
-                            "prompt": {
-                                "knowledge_base": [{"type": "file", "id": doc_id}]
-                            }
-                        }
-                    }
-                },
-            )
-            if patch_resp.is_error:
-                logger.error(
-                    "Failed to attach knowledge base doc %s to agent %s: %s %s",
-                    doc_id,
-                    agent_id,
-                    patch_resp.status_code,
-                    patch_resp.text,
-                )
                 return None
 
             return doc_id
@@ -287,8 +264,10 @@ async def create_kb_text_doc(text: str, name: str = "Business Info") -> str | No
         return None
 
 
-async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_doc_ids: list[str]) -> bool:
-    """Single PATCH that sets both tool_ids and knowledge_base on an agent."""
+async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_docs: list[dict]) -> bool:
+    """Single PATCH that sets both tool_ids and knowledge_base on an agent.
+    kb_docs: list of {"id": str, "name": str}
+    """
     if not settings.elevenlabs_api_key:
         logger.warning("elevenlabs_api_key is not set — skipping patch_agent_full")
         return False
@@ -302,7 +281,7 @@ async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_doc_ids: list[
                         "agent": {
                             "prompt": {
                                 "tool_ids": tool_ids,
-                                "knowledge_base": [{"type": "file", "id": did} for did in kb_doc_ids],
+                                "knowledge_base": [{"type": "file", "id": doc["id"], "name": doc["name"]} for doc in kb_docs],
                             }
                         }
                     }
@@ -314,8 +293,37 @@ async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_doc_ids: list[
                     agent_id, resp.status_code, resp.text,
                 )
                 return False
-            logger.info("patch_agent_full: agent %s updated with %d tools and %d KB docs", agent_id, len(tool_ids), len(kb_doc_ids))
+            logger.info("patch_agent_full: agent %s updated with %d tools and %d KB docs", agent_id, len(tool_ids), len(kb_docs))
             return True
     except Exception as exc:
         logger.error("patch_agent_full error for agent %s: %s", agent_id, exc)
+        return False
+
+
+async def patch_agent_kb(agent_id: str, kb_docs: list[dict]) -> bool:
+    """PATCH only the knowledge_base of an agent without touching tool_ids."""
+    if not settings.elevenlabs_api_key:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.patch(
+                f"{ELEVENLABS_BASE_URL}/convai/agents/{agent_id}",
+                headers=_headers(),
+                json={
+                    "conversation_config": {
+                        "agent": {
+                            "prompt": {
+                                "knowledge_base": [{"type": "file", "id": doc["id"], "name": doc["name"]} for doc in kb_docs]
+                            }
+                        }
+                    }
+                },
+            )
+            if resp.is_error:
+                logger.error("patch_agent_kb failed for agent %s: %s %s", agent_id, resp.status_code, resp.text)
+                return False
+            logger.info("patch_agent_kb: agent %s updated with %d KB docs", agent_id, len(kb_docs))
+            return True
+    except Exception as exc:
+        logger.error("patch_agent_kb error for agent %s: %s", agent_id, exc)
         return False

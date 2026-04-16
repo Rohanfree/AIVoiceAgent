@@ -12,7 +12,7 @@ import uuid
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from google.cloud.firestore import Client
+from google.cloud.firestore import Client, FieldFilter
 
 from app.auth.jwt_handler import create_access_token, create_refresh_token, verify_token
 from app.auth.password import hash_password, verify_password
@@ -99,7 +99,7 @@ async def check_agent(agent_id: str, db: Client = Depends(get_db)):
     """Returns {taken: true, client_name: ...} if the agent is already assigned to a client."""
     docs = (
         db.collection("users")
-        .where("elevenlabs_agent_id", "==", agent_id)
+        .where(filter=FieldFilter("elevenlabs_agent_id", "==", agent_id))
         .limit(1)
         .stream()
     )
@@ -176,6 +176,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "operating_hours": {},
         "policies": {},
         "currency": "INR",
+        "knowledge_base_text": body.business_info.strip(),
         "is_active": True,
         "subscription_status": "active",
         "created_at": now,
@@ -220,7 +221,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
 
     try:
         kb_client_id_doc_id = await create_kb_text_doc(
-            text=client_id,
+            text=f"client_id is {client_id}",
             name=f"client_id — {client_id[:8]}",
         )
         if kb_client_id_doc_id:
@@ -229,11 +230,17 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         logger.error("KB client_id creation failed for client %s: %s", client_id, exc)
 
     # Step 3: Single combined PATCH — tools + all KB docs together
+    kb_docs = []
+    if kb_doc_id:
+        kb_docs.append({"id": kb_doc_id, "name": f"{body.client_name} — {client_id[:8]}"})
+    if kb_client_id_doc_id:
+        kb_docs.append({"id": kb_client_id_doc_id, "name": f"client_id — {client_id[:8]}"})
+
     try:
         patch_ok = await patch_agent_full(
             agent_id=body.elevenlabs_agent_id,
             tool_ids=tool_ids,
-            kb_doc_ids=kb_doc_ids,
+            kb_docs=kb_docs,
         )
         if not patch_ok:
             logger.error("patch_agent_full failed for client %s — tools/KB may not be attached", client_id)
@@ -312,7 +319,7 @@ def _find_user_by_username(db: Client, username: str) -> dict | None:
     """Look up a user document by username. Returns dict or None."""
     docs = (
         db.collection("users")
-        .where("username", "==", username)
+        .where(filter=FieldFilter("username", "==", username))
         .limit(1)
         .stream()
     )

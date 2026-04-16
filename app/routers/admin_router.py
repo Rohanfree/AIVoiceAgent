@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from google.cloud.firestore import Client
+from google.cloud.firestore import Client, FieldFilter
 
 from app.auth.dependencies import require_admin
 from app.auth.password import hash_password
@@ -150,7 +150,7 @@ async def update_subscription(
     doc_ref.set({"subscription_status": new_status, "updated_at": now}, merge=True)
 
     # Also update the linked user document
-    users = db.collection("users").where("client_id", "==", client_id).limit(1).stream()
+    users = db.collection("users").where(filter=FieldFilter("client_id", "==", client_id)).limit(1).stream()
     for user_doc in users:
         db.collection("users").document(user_doc.id).set(
             {"subscription_status": new_status, "updated_at": now}, merge=True
@@ -189,7 +189,7 @@ async def add_client_manually(
         )
 
     # Check for duplicate username
-    existing = db.collection("users").where("username", "==", username).limit(1).stream()
+    existing = db.collection("users").where(filter=FieldFilter("username", "==", username)).limit(1).stream()
     if any(True for _ in existing):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
