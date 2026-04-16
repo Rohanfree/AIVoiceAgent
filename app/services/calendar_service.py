@@ -72,20 +72,25 @@ async def create_calendar_event(db, client_id: str, appointment_data: dict) -> b
         # 4. Prepare Event
         start_dt_str = appointment_data.get("date_time")
         duration = appointment_data.get("duration_minutes", 30)
-        
-        start_dt = datetime.fromisoformat(start_dt_str)
+
+        # Strip any timezone offset so the time is treated as local (not UTC-converted)
+        start_dt = datetime.fromisoformat(start_dt_str).replace(tzinfo=None)
         end_dt = start_dt + timedelta(minutes=duration)
+
+        # Use the calendar's own timezone so the time displays without conversion
+        calendar_info = service.calendars().get(calendarId='primary').execute()
+        calendar_tz = calendar_info.get('timeZone', 'UTC')
 
         event = {
             'summary': f"Appointment: {appointment_data.get('customer_name')} - {appointment_data.get('service_name')}",
             'description': f"Automated booking for {appointment_data.get('customer_name')}\nPhone: {appointment_data.get('customer_phone')}",
             'start': {
                 'dateTime': start_dt.isoformat(),
-                'timeZone': 'UTC',
+                'timeZone': calendar_tz,
             },
             'end': {
                 'dateTime': end_dt.isoformat(),
-                'timeZone': 'UTC',
+                'timeZone': calendar_tz,
             },
             'reminders': {
                 'useDefault': True,
