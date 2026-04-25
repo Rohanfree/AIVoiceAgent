@@ -17,6 +17,7 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from app.config import settings
 from app.db import get_db
 from app.auth.dependencies import get_current_user
+from app.services.sheets_service import create_client_sheet
 from jose import jwt
 
 # Allow insecure transport when base_url uses http (local dev or http-only deployments)
@@ -33,6 +34,7 @@ router = APIRouter(
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/spreadsheets",
     "openid",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
@@ -155,9 +157,9 @@ async def google_callback(request: Request, code: str, state: str):
             "token_uri": credentials.token_uri,
             "client_id": credentials.client_id,
             "client_secret": credentials.client_secret,
-            "scopes": credentials.scopes,
+            "scopes": list(credentials.scopes) if credentials.scopes else [],
         }
-        
+
         logger.info("Attempting to save tokens to Firestore for client: %s", client_id)
         db.collection("clients").document(client_id).set({
             "google_calendar_linked": True,
@@ -165,7 +167,20 @@ async def google_callback(request: Request, code: str, state: str):
         }, merge=True)
         logger.info("Successfully updated Firestore document for client: %s", client_id)
 
-        # 4. Redirect back to the originating page (or fallback to dashboard)
+        # 4. Create a Google Sheet in the client's own Drive
+        try:
+            client_doc = db.collection("clients").document(client_id).get()
+            business_name = (client_doc.to_dict() or {}).get("business_name", "Client")
+            sheet_id = create_client_sheet(client_id, business_name, token_data)
+            if sheet_id:
+                db.collection("clients").document(client_id).set(
+                    {"google_sheet_id": sheet_id}, merge=True
+                )
+                logger.info("Google Sheet saved to Firestore | client=%s | sheet_id=%s", client_id, sheet_id)
+        except Exception as sheet_exc:
+            logger.error("Sheet creation failed for client %s (non-fatal): %s", client_id, sheet_exc)
+
+        # 5. Redirect back to the originating page (or fallback to dashboard)
         base = settings.base_url.rstrip("/")
         if return_to:
             sep = "&" if "?" in return_to else "?"
