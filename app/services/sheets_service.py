@@ -11,11 +11,10 @@ Authentication
 create_client_sheet uses per-client OAuth2 credentials supplied as a dict.
 append_call_to_sheet uses the Firebase Service Account JSON (FIREBASE_CREDENTIAL_PATH).
 
-Sheet format (columns A-J) created by create_client_sheet
+Sheet format (columns A-H) created by create_client_sheet
 ----------------------------------------------------------
-    Timestamp (UTC) | Call ID | Vapi Call ID | True Caller Phone |
-    Direct Caller Phone | Forwarded From | Ended Reason | Duration (s) |
-    Summary | Transcript
+    Timestamp (UTC) | Call ID | True Caller Phone | Direct Caller Phone |
+    Forwarded From | Duration (s) | Summary | Transcript
 """
 
 import logging
@@ -37,11 +36,9 @@ _SHEETS_SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
 _HEADER_ROW = [
     "Timestamp (UTC)",
     "Call ID",
-    "Vapi Call ID",
     "True Caller Phone",
     "Direct Caller Phone",
     "Forwarded From",
-    "Ended Reason",
     "Duration (s)",
     "Summary",
     "Transcript",
