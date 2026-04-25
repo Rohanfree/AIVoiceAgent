@@ -1,26 +1,29 @@
 """
-sheets_service.py - Append Vapi call details to a Google Sheet.
+sheets_service.py - Google Sheets utilities for the voice-agent platform.
 
 Public API
 ----------
+    create_client_sheet(client_id, business_name, token_data) -> str | None
     append_call_to_sheet(call_id, phone, email, duration_seconds, summary)
 
 Authentication
 --------------
-Uses the same Firebase Service Account JSON that already authenticates
-Firestore (FIREBASE_CREDENTIAL_PATH).  The service account must be granted
-Editor access to the target spreadsheet and the Google Sheets API must be
-enabled on the GCP project.
+create_client_sheet uses per-client OAuth2 credentials supplied as a dict.
+append_call_to_sheet uses the Firebase Service Account JSON (FIREBASE_CREDENTIAL_PATH).
 
-Sheet format (columns A-F)
---------------------------
-    Timestamp (UTC) | Call ID | Phone | Email | Duration (s) | Summary
+Sheet format (columns A-J) created by create_client_sheet
+----------------------------------------------------------
+    Timestamp (UTC) | Call ID | Vapi Call ID | True Caller Phone |
+    Direct Caller Phone | Forwarded From | Ended Reason | Duration (s) |
+    Summary | Transcript
 """
 
 import logging
 from datetime import datetime, timezone
 
+from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -30,6 +33,113 @@ logger = logging.getLogger(__name__)
 
 # The only OAuth scope needed for appending rows
 _SHEETS_SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
+
+_HEADER_ROW = [
+    "Timestamp (UTC)",
+    "Call ID",
+    "Vapi Call ID",
+    "True Caller Phone",
+    "Direct Caller Phone",
+    "Forwarded From",
+    "Ended Reason",
+    "Duration (s)",
+    "Summary",
+    "Transcript",
+]
+
+
+def create_client_sheet(
+    client_id: str,
+    business_name: str,
+    token_data: dict,
+) -> str | None:
+    """
+    Create a new Google Sheet in the client's own Google Drive and write a
+    bold header row with all call-log columns.
+
+    Args:
+        client_id:     Client identifier (used only for logging).
+        business_name: Used as part of the spreadsheet title.
+        token_data:    Dict with keys: token, refresh_token, token_uri,
+                       client_id, client_secret, scopes.
+
+    Returns:
+        The new spreadsheetId on success, None on any error.
+    """
+    try:
+        creds = Credentials(
+            token=token_data["token"],
+            refresh_token=token_data.get("refresh_token"),
+            token_uri=token_data["token_uri"],
+            client_id=token_data["client_id"],
+            client_secret=token_data["client_secret"],
+            scopes=list(token_data.get("scopes") or _SHEETS_SCOPE),
+        )
+
+        if not creds.valid:
+            creds.refresh(GoogleAuthRequest())
+
+        service = build("sheets", "v4", credentials=creds, cache_discovery=False)
+        spreadsheets = service.spreadsheets()
+
+        title = f"{business_name} - Call Logs"
+        create_resp = spreadsheets.create(
+            body={"properties": {"title": title}},
+            fields="spreadsheetId",
+        ).execute()
+        sheet_id = create_resp["spreadsheetId"]
+
+        # Write header row
+        spreadsheets.values().update(
+            spreadsheetId=sheet_id,
+            range="Sheet1!A1",
+            valueInputOption="RAW",
+            body={"values": [_HEADER_ROW]},
+        ).execute()
+
+        # Bold the header row
+        num_cols = len(_HEADER_ROW)
+        spreadsheets.batchUpdate(
+            spreadsheetId=sheet_id,
+            body={
+                "requests": [
+                    {
+                        "repeatCell": {
+                            "range": {
+                                "sheetId": 0,
+                                "startRowIndex": 0,
+                                "endRowIndex": 1,
+                                "startColumnIndex": 0,
+                                "endColumnIndex": num_cols,
+                            },
+                            "cell": {
+                                "userEnteredFormat": {
+                                    "textFormat": {"bold": True}
+                                }
+                            },
+                            "fields": "userEnteredFormat.textFormat.bold",
+                        }
+                    }
+                ]
+            },
+        ).execute()
+
+        logger.info(
+            "Google Sheet created | client=%s | sheet_id=%s | title=%s",
+            client_id,
+            sheet_id,
+            title,
+        )
+        return sheet_id
+
+    except Exception as exc:  # noqa: BLE001
+        logger.error(
+            "Failed to create Google Sheet for client %s: %s",
+            client_id,
+            exc,
+            exc_info=True,
+        )
+        return None
 
 
 def _get_sheets_client():
