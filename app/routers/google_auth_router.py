@@ -8,6 +8,11 @@ Endpoints:
 import logging
 import json
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import requests as http_requests
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
@@ -156,16 +161,23 @@ async def google_callback(request: Request, code: str, state: str):
         }, merge=True)
         logger.info("Successfully updated Firestore document for client: %s", client_id)
 
-        # 4. Create a Google Sheet in the client's own Drive
+        # 4. Create a Google Sheet — only if one hasn't been created yet
         try:
             client_doc = db.collection("clients").document(client_id).get()
-            business_name = (client_doc.to_dict() or {}).get("business_name", "Client")
-            sheet_id = create_client_sheet(client_id, business_name, token_data)
-            if sheet_id:
-                db.collection("clients").document(client_id).set(
-                    {"google_sheet_id": sheet_id}, merge=True
-                )
-                logger.info("Google Sheet saved to Firestore | client=%s | sheet_id=%s", client_id, sheet_id)
+            client_data = client_doc.to_dict() or {}
+            existing_sheet_id = client_data.get("google_sheet_id")
+
+            if existing_sheet_id:
+                logger.info("Sheet already exists for client %s, skipping creation", client_id)
+            else:
+                business_name = client_data.get("business_name", "Client")
+                sheet_id = create_client_sheet(client_id, business_name, token_data)
+                if sheet_id:
+                    db.collection("clients").document(client_id).set(
+                        {"google_sheet_id": sheet_id}, merge=True
+                    )
+                    logger.info("Google Sheet saved to Firestore | client=%s | sheet_id=%s", client_id, sheet_id)
+                    _send_sheet_notification(credentials, client_id, business_name, sheet_id, db)
         except Exception as sheet_exc:
             logger.error("Sheet creation failed for client %s (non-fatal): %s", client_id, sheet_exc)
 
@@ -179,3 +191,59 @@ async def google_callback(request: Request, code: str, state: str):
         # Return the error message in the URL for better user feedback during debug
         error_msg = str(e).replace(" ", "_")
         return RedirectResponse(url=f"{base}/automiteui/pages/dashboard?google_linked=error&detail={error_msg}")
+
+
+def _send_sheet_notification(credentials, client_id: str, business_name: str, sheet_id: str, db) -> None:
+    """Fetch client's Google email via userinfo API and send a sheet-created notification."""
+    try:
+        resp = http_requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {credentials.token}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        client_email = resp.json().get("email")
+        if not client_email:
+            logger.warning("Could not retrieve Google email for client %s", client_id)
+            return
+
+        db.collection("clients").document(client_id).set(
+            {"google_user_email": client_email}, merge=True
+        )
+
+        if not settings.smtp_user or not settings.smtp_password:
+            logger.warning("SMTP not configured — skipping sheet notification email")
+            return
+
+        sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
+        html_body = f"""
+        <html><body style="font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:600px;margin:0 auto;">
+          <div style="background:#1A4D3A;padding:24px 32px;border-radius:12px 12px 0 0;">
+            <h1 style="margin:0;color:#fff;font-size:22px;">Your Call Log Sheet is Ready</h1>
+          </div>
+          <div style="background:#f9f9f9;padding:32px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;">
+            <p>Hi <strong>{business_name}</strong>,</p>
+            <p>Your Google Sheet for call logs has been created successfully in your Google Drive.</p>
+            <p><a href="{sheet_url}" style="background:#1A4D3A;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Open Your Sheet</a></p>
+            <p style="margin-top:24px;font-size:13px;color:#666;">This sheet will automatically receive call log entries from your Automite AI assistant.</p>
+          </div>
+          <p style="font-size:12px;color:#999;text-align:center;margin-top:16px;">Sent by Automite AI</p>
+        </body></html>
+        """
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"Your Automite AI Call Log Sheet is Ready — {business_name}"
+        msg["From"] = f"Automite AI <{settings.smtp_user}>"
+        msg["To"] = client_email
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(settings.smtp_user, settings.smtp_password)
+            server.sendmail(settings.smtp_user, client_email, msg.as_string())
+
+        logger.info("Sheet notification email sent to %s for client %s", client_email, client_id)
+
+    except Exception as exc:
+        logger.error("Failed to send sheet notification email for client %s: %s", client_id, exc)
