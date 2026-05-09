@@ -178,7 +178,6 @@ function initRegisterForm() {
     if (!form) return;
 
     const agentIdInput = form.querySelector('#elevenlabs_agent_id');
-    const firstMsgGroup = document.getElementById('first-message-group');
     const firstMsgInput = document.getElementById('first_message');
     const firstMsgLoading = document.getElementById('first-message-loading');
 
@@ -200,10 +199,9 @@ function initRegisterForm() {
                     errEl.style.cssText = 'color:#ef4444;font-size:0.85rem;margin-top:0.25rem;';
                     errEl.textContent = `This agent is already registered to "${data.client_name}".`;
                     agentIdInput.parentElement.appendChild(errEl);
-                    if (firstMsgGroup) firstMsgGroup.style.display = 'none';
+                    if (firstMsgInput) firstMsgInput.value = '';
                 } else {
                     if (firstMsgInput) firstMsgInput.value = data.first_message || '';
-                    if (firstMsgGroup) firstMsgGroup.style.display = 'block';
                 }
             } catch (_) {
                 if (firstMsgLoading) firstMsgLoading.style.display = 'none';
@@ -212,7 +210,6 @@ function initRegisterForm() {
         agentIdInput.addEventListener('input', () => {
             const existing = document.getElementById('agent-id-error');
             if (existing) existing.remove();
-            if (firstMsgGroup) firstMsgGroup.style.display = 'none';
         });
     }
 
