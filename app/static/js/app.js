@@ -454,9 +454,12 @@ async function initAdminDashboard() {
                     <td><code style="font-size:0.75rem;color:var(--color-text-secondary)">${c.id}</code></td>
                     <td><span class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span></td>
                     <td>${c.subscription_status || 'active'}</td>
-                    <td>
+                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
                         <button class="btn btn-sm btn-secondary" onclick="toggleClient('${c.id}', ${c.is_active === false})">
                             ${c.is_active === false ? 'Activate' : 'Deactivate'}
+                        </button>
+                        <button class="btn btn-sm" style="background:var(--color-error,#e53e3e);color:#fff;border:none;" onclick="deleteClient('${c.id}', '${(c.business_name || 'this client').replace(/'/g, "\\'")}')">
+                            Delete
                         </button>
                     </td>
                 </tr>
@@ -472,6 +475,15 @@ async function toggleClient(clientId, activate) {
     if (data) {
         showAlert('success', `Client ${data.status} successfully.`);
         setTimeout(() => location.reload(), 1000);
+    }
+}
+
+async function deleteClient(clientId, businessName) {
+    if (!confirm(`Permanently delete "${businessName}"?\n\nThis will remove the client, their user account, appointments, call logs, and customers. This cannot be undone.`)) return;
+    const data = await apiCall('DELETE', `/mngr-sys-access-78/clients/${clientId}`);
+    if (data) {
+        showAlert('success', `Client "${businessName}" deleted.`);
+        setTimeout(() => location.reload(), 1200);
     }
 }
 
