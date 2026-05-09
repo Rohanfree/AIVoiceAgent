@@ -20,61 +20,6 @@ def _headers() -> dict:
     }
 
 
-async def create_or_replace_knowledge_base_doc(
-    text: str,
-    name: str = "Business Info",
-    old_doc_id: str | None = None,
-) -> str | None:
-    if not settings.elevenlabs_api_key:
-        logger.warning("elevenlabs_api_key is not set — skipping knowledge base update")
-        return None
-
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # Step 1: Delete old document if provided
-            if old_doc_id:
-                try:
-                    del_resp = await client.delete(
-                        f"{ELEVENLABS_BASE_URL}/convai/knowledge-base/{old_doc_id}",
-                        headers=_headers(),
-                    )
-                    if del_resp.is_error:
-                        logger.error(
-                            "Failed to delete old knowledge base doc %s: %s %s",
-                            old_doc_id,
-                            del_resp.status_code,
-                            del_resp.text,
-                        )
-                    else:
-                        logger.info("Deleted old KB doc %s", old_doc_id)
-                except Exception as exc:
-                    logger.error("Exception deleting old knowledge base doc %s: %s", old_doc_id, exc)
-
-            # Step 2: Create new knowledge base document
-            create_resp = await client.post(
-                f"{ELEVENLABS_BASE_URL}/convai/knowledge-base/text",
-                headers=_headers(),
-                json={"text": text, "name": name},
-            )
-            if create_resp.is_error:
-                logger.error(
-                    "Failed to create knowledge base doc: %s %s",
-                    create_resp.status_code,
-                    create_resp.text,
-                )
-                return None
-
-            doc_id = create_resp.json().get("id")
-            if not doc_id:
-                logger.error("No 'id' in knowledge base create response: %s", create_resp.text)
-                return None
-
-            return doc_id
-
-    except Exception as exc:
-        logger.error("create_or_replace_knowledge_base_doc error: %s", exc)
-        return None
-
 
 async def get_agent(agent_id: str) -> dict | None:
     if not settings.elevenlabs_api_key:
@@ -239,37 +184,10 @@ async def setup_agent_tools(agent_id: str, client_id: str) -> list[str] | None:
         return None
 
 
-async def create_kb_text_doc(text: str, name: str = "Business Info") -> str | None:
-    """Create a knowledge base text document and return its ID. Does not attach to any agent."""
+async def patch_agent_tools(agent_id: str, tool_ids: list[str]) -> bool:
+    """PATCH only the tool_ids on an agent. Does not touch knowledge_base."""
     if not settings.elevenlabs_api_key:
-        logger.warning("elevenlabs_api_key is not set — skipping create_kb_text_doc")
-        return None
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                f"{ELEVENLABS_BASE_URL}/convai/knowledge-base/text",
-                headers=_headers(),
-                json={"text": text, "name": name},
-            )
-            if resp.is_error:
-                logger.error("create_kb_text_doc failed: %s %s", resp.status_code, resp.text)
-                return None
-            doc_id = resp.json().get("id")
-            if not doc_id:
-                logger.error("No 'id' in KB create response: %s", resp.text)
-                return None
-            return doc_id
-    except Exception as exc:
-        logger.error("create_kb_text_doc error: %s", exc)
-        return None
-
-
-async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_docs: list[dict]) -> bool:
-    """Single PATCH that sets both tool_ids and knowledge_base on an agent.
-    kb_docs: list of {"id": str, "name": str}
-    """
-    if not settings.elevenlabs_api_key:
-        logger.warning("elevenlabs_api_key is not set — skipping patch_agent_full")
+        logger.warning("elevenlabs_api_key is not set — skipping patch_agent_tools")
         return False
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -281,7 +199,6 @@ async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_docs: list[dic
                         "agent": {
                             "prompt": {
                                 "tool_ids": tool_ids,
-                                "knowledge_base": [{"type": "file", "id": doc["id"], "name": doc["name"]} for doc in kb_docs],
                             }
                         }
                     }
@@ -289,41 +206,92 @@ async def patch_agent_full(agent_id: str, tool_ids: list[str], kb_docs: list[dic
             )
             if resp.is_error:
                 logger.error(
-                    "patch_agent_full failed for agent %s: %s %s",
+                    "patch_agent_tools failed for agent %s: %s %s",
                     agent_id, resp.status_code, resp.text,
                 )
                 return False
-            logger.info("patch_agent_full: agent %s updated with %d tools and %d KB docs", agent_id, len(tool_ids), len(kb_docs))
+            logger.info("patch_agent_tools: agent %s updated with %d tools", agent_id, len(tool_ids))
             return True
     except Exception as exc:
-        logger.error("patch_agent_full error for agent %s: %s", agent_id, exc)
+        logger.error("patch_agent_tools error for agent %s: %s", agent_id, exc)
         return False
 
 
-async def patch_agent_kb(agent_id: str, kb_docs: list[dict]) -> bool:
-    """PATCH only the knowledge_base of an agent without touching tool_ids."""
+_BLOCK_START = "--- Automite Client Config ---"
+_BLOCK_END = "--- End Automite Client Config ---"
+
+
+async def inject_client_context_into_prompt(
+    agent_id: str,
+    client_id: str,
+    business_info: str = "",
+) -> bool:
+    """
+    Inject client_id and business_info into the agent's system prompt.
+    Replaces any previously injected Automite block so re-runs are idempotent.
+    """
+    import re
+
     if not settings.elevenlabs_api_key:
+        logger.warning("elevenlabs_api_key is not set — skipping inject_client_context_into_prompt")
         return False
+
+    agent_data = await get_agent(agent_id)
+    if not agent_data:
+        logger.error("inject_client_context_into_prompt: could not fetch agent %s", agent_id)
+        return False
+
+    current_prompt = (
+        agent_data
+        .get("conversation_config", {})
+        .get("agent", {})
+        .get("prompt", {})
+        .get("prompt", "")
+    ) or ""
+
+    # Strip any existing injected block
+    cleaned = re.sub(
+        rf"\n*{re.escape(_BLOCK_START)}.*?{re.escape(_BLOCK_END)}",
+        "",
+        current_prompt,
+        flags=re.DOTALL,
+    ).rstrip()
+
+    # Build the new block
+    block_parts = [f"Your client_id is: {client_id}"]
+    if business_info.strip():
+        block_parts.append(business_info.strip())
+
+    new_block = (
+        f"\n\n{_BLOCK_START}\n"
+        + "\n\n".join(block_parts)
+        + f"\n{_BLOCK_END}"
+    )
+    new_prompt = cleaned + new_block
+
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.patch(
+        async with httpx.AsyncClient(timeout=30.0) as http:
+            resp = await http.patch(
                 f"{ELEVENLABS_BASE_URL}/convai/agents/{agent_id}",
                 headers=_headers(),
                 json={
                     "conversation_config": {
                         "agent": {
-                            "prompt": {
-                                "knowledge_base": [{"type": "file", "id": doc["id"], "name": doc["name"]} for doc in kb_docs]
-                            }
+                            "prompt": {"prompt": new_prompt}
                         }
                     }
                 },
             )
             if resp.is_error:
-                logger.error("patch_agent_kb failed for agent %s: %s %s", agent_id, resp.status_code, resp.text)
+                logger.error(
+                    "inject_client_context_into_prompt failed for agent %s: %s %s",
+                    agent_id, resp.status_code, resp.text,
+                )
                 return False
-            logger.info("patch_agent_kb: agent %s updated with %d KB docs", agent_id, len(kb_docs))
+            logger.info("Client context injected into prompt for agent %s", agent_id)
             return True
     except Exception as exc:
-        logger.error("patch_agent_kb error for agent %s: %s", agent_id, exc)
+        logger.error("inject_client_context_into_prompt error for agent %s: %s", agent_id, exc)
         return False
+
+

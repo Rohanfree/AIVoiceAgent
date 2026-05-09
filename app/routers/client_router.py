@@ -72,7 +72,7 @@ async def update_profile(  # noqa: C901
             detail="No client profile associated with this account.",
         )
 
-    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency", "knowledge_base_text", "elevenlabs_agent_id"}
+    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency", "elevenlabs_agent_id"}
     filtered = {k: v for k, v in updates.items() if k in allowed_fields}
 
     if not filtered:
@@ -84,71 +84,24 @@ async def update_profile(  # noqa: C901
     from datetime import datetime, timezone
     filtered["updated_at"] = datetime.now(tz=timezone.utc).isoformat()
 
-    # Fetch current client data once — used by both KB and agent ID update paths
+    # Fetch current client data — used by agent ID update path
     client_doc = db.collection("clients").document(client_id).get()
     client_data = client_doc.to_dict() if client_doc.exists else {}
 
-    # Effective agent_id: use the new one if it's being changed, otherwise existing
-    agent_id = filtered.get("elevenlabs_agent_id") or client_data.get("elevenlabs_agent_id")
-
-    # ── Knowledge base text update ──────────────────────────────────────────
-    if "knowledge_base_text" in filtered:
-        kb_text = filtered["knowledge_base_text"]
-        old_doc_id = client_data.get("kb_doc_id")
-
-        if agent_id and kb_text:
-            try:
-                from app.services.elevenlabs_service import create_or_replace_knowledge_base_doc, patch_agent_kb
-                kb_client_id_doc_id = client_data.get("kb_client_id_doc_id")
-                kb_name = f"Business Info — {client_data.get('business_name', client_id)}"
-
-                # Step 1: Force delete old doc + create new doc
-                new_doc_id = await create_or_replace_knowledge_base_doc(
-                    text=kb_text,
-                    name=kb_name,
-                    old_doc_id=old_doc_id,
-                )
-
-                # Step 3: Attach new doc + client_id doc to agent
-                if new_doc_id:
-                    filtered["kb_doc_id"] = new_doc_id
-                    logger.info("Knowledge base updated for client %s → doc %s", client_id, new_doc_id)
-                    all_kb_docs = [{"id": new_doc_id, "name": kb_name}]
-                    if kb_client_id_doc_id:
-                        all_kb_docs.append({"id": kb_client_id_doc_id, "name": f"client_id — {client_id[:8]}"})
-                    await patch_agent_kb(agent_id=agent_id, kb_docs=all_kb_docs)
-            except Exception as exc:
-                logger.error("ElevenLabs KB update failed for client %s: %s", client_id, exc)
-        elif agent_id and not kb_text and old_doc_id:
-            try:
-                import httpx
-                from app.config import settings as _settings
-                async with httpx.AsyncClient(timeout=15.0) as hclient:
-                    await hclient.delete(
-                        f"https://api.elevenlabs.io/v1/convai/knowledge-base/{old_doc_id}",
-                        headers={"xi-api-key": _settings.elevenlabs_api_key},
-                    )
-                filtered["kb_doc_id"] = None
-                logger.info("Knowledge base doc %s deleted for client %s", old_doc_id, client_id)
-            except Exception as exc:
-                logger.error("ElevenLabs KB delete failed for client %s: %s", client_id, exc)
-
-    # ── Agent ID change: set up tools + attach all KB docs on new agent ────
+    # ── Agent ID change: set up tools + inject client_id into prompt ────────
     if "elevenlabs_agent_id" in filtered:
         new_agent_id = filtered["elevenlabs_agent_id"]
         if new_agent_id and new_agent_id != client_data.get("elevenlabs_agent_id"):
             try:
-                from app.services.elevenlabs_service import setup_agent_tools, patch_agent_full
+                from app.services.elevenlabs_service import setup_agent_tools, patch_agent_tools, inject_client_context_into_prompt
                 tool_ids = await setup_agent_tools(agent_id=new_agent_id, client_id=client_id)
                 if tool_ids:
-                    kb_docs = []
-                    kb_doc_id = filtered.get("kb_doc_id") or client_data.get("kb_doc_id")
-                    if kb_doc_id:
-                        kb_docs.append({"id": kb_doc_id, "name": f"Business Info — {client_data.get('business_name', client_id)}"})
-                    kb_client_id_doc_id = client_data.get("kb_client_id_doc_id")
-                    if kb_client_id_doc_id:
-                        kb_docs.append({"id": kb_client_id_doc_id, "name": f"client_id — {client_id[:8]}"})
-                    await patch_agent_full(agent_id=new_agent_id, tool_ids=tool_ids, kb_docs=kb_docs)
+                    await patch_agent_tools(agent_id=new_agent_id, tool_ids=tool_ids)
+                    await inject_client_context_into_prompt(
+                        agent_id=new_agent_id,
+                        client_id=client_id,
+                        business_info=client_data.get("knowledge_base_text", ""),
+                    )
                     logger.info("New agent %s configured for client %s", new_agent_id, client_id)
             except Exception as exc:
                 logger.error("ElevenLabs agent ID update failed for client %s: %s", client_id, exc)

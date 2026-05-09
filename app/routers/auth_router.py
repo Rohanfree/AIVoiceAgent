@@ -184,7 +184,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     db.collection("clients").document(client_id).set(client_doc)
     logger.info("Client '%s' created with id=%s", body.client_name, client_id)
 
-    from app.services.elevenlabs_service import setup_agent_tools, create_kb_text_doc, patch_agent_full
+    from app.services.elevenlabs_service import setup_agent_tools, patch_agent_tools, inject_client_context_into_prompt
 
     # Step 1: Resolve tool IDs (creates missing tools, no agent PATCH yet)
     try:
@@ -203,59 +203,26 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
             detail="Failed to configure ElevenLabs agent tools. Please verify your Agent ID and try again.",
         )
 
-    # Step 2: Create KB docs (no agent PATCH yet)
-    kb_doc_ids: list[str] = []
-    kb_doc_id: str | None = None
-    kb_client_id_doc_id: str | None = None
-
-    if body.business_info.strip():
-        try:
-            kb_doc_id = await create_kb_text_doc(
-                text=body.business_info.strip(),
-                name=f"{body.client_name} — {client_id[:8]}",
-            )
-            if kb_doc_id:
-                kb_doc_ids.append(kb_doc_id)
-        except Exception as exc:
-            logger.error("KB business_info creation failed for client %s: %s", client_id, exc)
-
+    # Step 2: PATCH agent with tool_ids only (no KB)
     try:
-        kb_client_id_doc_id = await create_kb_text_doc(
-            text=f"client_id is {client_id}",
-            name=f"client_id — {client_id[:8]}",
-        )
-        if kb_client_id_doc_id:
-            kb_doc_ids.append(kb_client_id_doc_id)
-    except Exception as exc:
-        logger.error("KB client_id creation failed for client %s: %s", client_id, exc)
-
-    # Step 3: Single combined PATCH — tools + all KB docs together
-    kb_docs = []
-    if kb_doc_id:
-        kb_docs.append({"id": kb_doc_id, "name": f"{body.client_name} — {client_id[:8]}"})
-    if kb_client_id_doc_id:
-        kb_docs.append({"id": kb_client_id_doc_id, "name": f"client_id — {client_id[:8]}"})
-
-    try:
-        patch_ok = await patch_agent_full(
+        patch_ok = await patch_agent_tools(
             agent_id=body.elevenlabs_agent_id,
             tool_ids=tool_ids,
-            kb_docs=kb_docs,
         )
         if not patch_ok:
-            logger.error("patch_agent_full failed for client %s — tools/KB may not be attached", client_id)
+            logger.error("patch_agent_tools failed for client %s — tools may not be attached", client_id)
     except Exception as exc:
-        logger.error("patch_agent_full error for client %s: %s", client_id, exc)
+        logger.error("patch_agent_tools error for client %s: %s", client_id, exc)
 
-    # Step 4: Persist KB doc IDs to Firestore
-    kb_update: dict = {}
-    if kb_doc_id:
-        kb_update["kb_doc_id"] = kb_doc_id
-    if kb_client_id_doc_id:
-        kb_update["kb_client_id_doc_id"] = kb_client_id_doc_id
-    if kb_update:
-        db.collection("clients").document(client_id).set(kb_update, merge=True)
-        logger.info("KB doc IDs saved for client %s: %s", client_id, kb_update)
+    # Step 3: Inject client_id + business_info directly into the agent's system prompt
+    try:
+        await inject_client_context_into_prompt(
+            agent_id=body.elevenlabs_agent_id,
+            client_id=client_id,
+            business_info=body.business_info,
+        )
+    except Exception as exc:
+        logger.error("inject_client_context_into_prompt failed for client %s: %s", client_id, exc)
 
     # Issue tokens
     scope = "dashboard"
