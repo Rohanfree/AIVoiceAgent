@@ -51,7 +51,11 @@
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
             <h2>Registered Clients</h2>
-            <button class="btn btn-secondary btn-sm" onclick="refreshToolTokens()">🔄 Refresh Tool Tokens</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-secondary btn-sm" onclick="openPricingModal()">💰 Token Pricing</button>
+                <button class="btn btn-primary btn-sm" onclick="openNewAgentModal()">➕ Add Agent</button>
+                <button class="btn btn-secondary btn-sm" onclick="refreshToolTokens()">🔄 Refresh Tool Tokens</button>
+            </div>
         </div>
         <table class="data-table">
             <thead>
@@ -71,4 +75,170 @@
         </table>
     </div>
 </div>
+
+<!-- Admin Token Usage Modal -->
+<div id="admin-usage-modal" class="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;">
+  <div class="glass-card modal-content modal-content--large animate-in" style="max-width:900px;">
+    <span class="modal-close" onclick="closeAdminUsageModal()">&times;</span>
+    <div class="modal-header">
+      <h2 style="margin:0;">Token Usage — <span id="admin-usage-client-name">Client</span></h2>
+      <p style="font-size:0.9rem;color:var(--color-text-secondary);margin:4px 0 0 0;">ElevenLabs character usage for this client's agent</p>
+    </div>
+
+    <!-- Date Range -->
+    <div style="display:flex;gap:12px;align-items:flex-end;margin-top:var(--space-lg);flex-wrap:wrap;">
+      <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+        <label class="form-label">From</label>
+        <input type="date" id="admin-usage-start-date" class="form-input">
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+        <label class="form-label">To</label>
+        <input type="date" id="admin-usage-end-date" class="form-input">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="fetchAdminUsage()" style="white-space:nowrap;">Fetch Usage</button>
+    </div>
+
+    <!-- Per-client price override -->
+    <div style="display:flex;gap:12px;align-items:flex-end;margin-top:var(--space-md);flex-wrap:wrap;">
+      <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+        <label class="form-label">Price per Character Override</label>
+        <input type="number" id="admin-usage-price-override" class="form-input" step="0.000001" min="0" placeholder="Leave blank to use global">
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="saveClientPriceOverride()" style="white-space:nowrap;">Save Price</button>
+    </div>
+
+    <!-- Summary Stats -->
+    <div id="admin-usage-stats" style="display:none;margin-top:var(--space-lg);">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:var(--space-lg);">
+        <div class="glass-card stat-card" style="padding:var(--space-md);">
+          <div class="stat-value" id="admin-stat-characters" style="font-size:1.4rem;">—</div>
+          <div class="stat-label">Credits Used</div>
+        </div>
+        <div class="glass-card stat-card" style="padding:var(--space-md);">
+          <div class="stat-value" id="admin-stat-conversations" style="font-size:1.4rem;">—</div>
+          <div class="stat-label">Conversations</div>
+        </div>
+        <div class="glass-card stat-card" style="padding:var(--space-md);">
+          <div class="stat-value" id="admin-stat-duration" style="font-size:1.4rem;">—</div>
+          <div class="stat-label">Duration</div>
+        </div>
+        <div class="glass-card stat-card glass-card--magenta" style="padding:var(--space-md);">
+          <div class="stat-value" id="admin-stat-cost" style="font-size:1.4rem;">—</div>
+          <div class="stat-label" id="admin-stat-cost-label">Est. Cost</div>
+        </div>
+      </div>
+
+      <!-- Conversation Breakdown -->
+      <div class="modal-section-title"><span>📋</span> Conversation Breakdown</div>
+      <div style="overflow-x:auto;margin-top:var(--space-md);">
+        <table class="data-table" id="admin-usage-conversations-table">
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Duration</th>
+              <th>Credits Used</th>
+              <th>Summary</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-usage-conversations-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="admin-usage-loading" style="display:none;text-align:center;padding:var(--space-xl);color:var(--color-text-secondary);">
+      <span class="spinner"></span> Fetching usage data from ElevenLabs...
+    </div>
+    <div id="admin-usage-empty" style="display:none;text-align:center;padding:var(--space-xl);color:var(--color-text-secondary);">No conversations found for this period.</div>
+  </div>
+</div>
+
+<!-- Pricing Config Modal -->
+<div id="pricing-modal" class="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;">
+  <div class="glass-card modal-content modal-content--large animate-in" style="max-width:700px;">
+    <span class="modal-close" onclick="closePricingModal()">&times;</span>
+    <div class="modal-header">
+      <h2 style="margin:0;">Token Pricing Configuration</h2>
+      <p style="font-size:0.9rem;color:var(--color-text-secondary);margin:4px 0 0 0;">Set the global price per character (ElevenLabs billing unit)</p>
+    </div>
+
+    <div class="modal-section-title" style="margin-top:var(--space-xl);"><span>🌐</span> Global Price</div>
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+        <label class="form-label">Price per Character</label>
+        <input type="number" id="global-price-input" class="form-input" step="0.000001" min="0" placeholder="e.g. 0.0001">
+      </div>
+      <div class="form-group" style="margin:0;min-width:100px;">
+        <label class="form-label">Currency</label>
+        <select id="global-currency-select" class="form-input">
+          <option value="USD">USD</option>
+          <option value="INR">INR</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-md);display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="apply-to-all-checkbox" style="width:16px;height:16px;">
+      <label style="font-size:0.85rem;color:var(--color-text-secondary);">Remove all per-client price overrides (apply global to everyone)</label>
+    </div>
+    <div style="margin-top:var(--space-md);">
+      <button class="btn btn-primary btn-sm" onclick="savePricingConfig()">Save Global Price</button>
+    </div>
+
+    <div class="modal-section-title" style="margin-top:var(--space-xxl);"><span>👤</span> Per-Client Overrides</div>
+    <p style="font-size:0.8rem;color:var(--color-text-secondary);margin-bottom:var(--space-md);">Clients listed here have a custom price override. Blank = use global.</p>
+    <div id="pricing-overrides-container">
+      <p style="color:var(--color-text-secondary);font-size:0.85rem;">Loading...</p>
+    </div>
+  </div>
+</div>
+
+<!-- New Agent Modal -->
+<div id="new-agent-modal" class="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;">
+  <div class="glass-card modal-content modal-content--large animate-in" style="max-width:750px;">
+    <span class="modal-close" onclick="closeNewAgentModal()">&times;</span>
+    <div class="modal-header">
+      <h2 style="margin:0;">Create New ElevenLabs Agent</h2>
+      <p style="font-size:0.9rem;color:var(--color-text-secondary);margin:4px 0 0 0;">Duplicate an existing agent and customise its prompt</p>
+    </div>
+
+    <div class="modal-section-title" style="margin-top:var(--space-xl);"><span>🔍</span> Select Source Agent</div>
+    <div class="form-group">
+      <label class="form-label">Search Agents</label>
+      <input type="text" id="agent-search-input" class="form-input" placeholder="Type to search..." oninput="searchAgentsList(this.value)">
+    </div>
+    <div id="agents-list-container" style="max-height:220px;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin-top:var(--space-sm);">
+      <p style="padding:var(--space-md);color:var(--color-text-secondary);font-size:0.85rem;">Loading agents...</p>
+    </div>
+
+    <div id="selected-agent-section" style="display:none;">
+      <div style="margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(0,255,254,0.05);border:1px solid rgba(0,255,254,0.2);">
+        <p style="font-size:0.85rem;color:var(--color-cyan);margin:0;">Selected: <strong id="selected-agent-name-label">—</strong></p>
+        <p style="font-size:0.75rem;color:var(--color-text-secondary);margin:4px 0 0 0;word-break:break-all;">ID: <span id="selected-agent-id-label">—</span></p>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:var(--space-xl);"><span>✏️</span> New Agent Details</div>
+      <div class="form-group">
+        <label class="form-label">New Agent Name</label>
+        <input type="text" id="new-agent-name-input" class="form-input" placeholder="e.g. Rohan Salon Agent">
+      </div>
+      <div class="form-group">
+        <label class="form-label">System Prompt <span style="font-size:0.75rem;color:var(--color-text-secondary);">(editable — changes will be applied to the new agent)</span></label>
+        <textarea id="new-agent-prompt-input" class="form-input" rows="8" style="font-size:0.82rem;background:rgba(0,0,0,0.2);resize:vertical;" placeholder="Loading prompt..."></textarea>
+      </div>
+
+      <div style="text-align:right;margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:1px solid var(--border-subtle);">
+        <button type="button" class="btn btn-secondary" onclick="closeNewAgentModal()" style="margin-right:var(--space-md);">Cancel</button>
+        <button type="button" id="create-agent-btn" class="btn btn-primary" onclick="createNewAgent()">Create Agent</button>
+      </div>
+    </div>
+
+    <div id="new-agent-result" style="display:none;margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);">
+      <p style="color:#00E676;font-size:0.9rem;margin:0 0 8px 0;">Agent created successfully!</p>
+      <p style="font-size:0.8rem;color:var(--color-text-secondary);margin:0;">New Agent ID: <code id="new-agent-result-id" style="color:var(--color-cyan);word-break:break-all;"></code></p>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

@@ -7,7 +7,7 @@ and access call logs. All routes require a 'dashboard' scope JWT.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from google.cloud.firestore import Client, FieldFilter
 
 from app.auth.dependencies import get_current_user
@@ -271,3 +271,78 @@ async def parse_text(
             detail=f"AI extraction failed: {str(exc)}"
         )
 
+
+# ─── TOKEN USAGE ─────────────────────────────────────────────────────────────
+
+@router.get(
+    "/token-usage",
+    summary="Get character/token usage for the current client's ElevenLabs agent",
+)
+async def get_token_usage(
+    start_date: str = Query(None),
+    end_date: str = Query(None),
+    user: dict = Depends(get_current_user),
+    db: Client = Depends(get_db),
+) -> dict:
+    from datetime import datetime, timezone
+    from app.services.elevenlabs_service import get_agent_usage
+
+    client_id = user.get("client_id")
+    if not client_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No client profile associated with this account.",
+        )
+
+    now = datetime.now(tz=timezone.utc)
+    if not start_date:
+        start_date = now.replace(day=1).strftime("%Y-%m-%d")
+    if not end_date:
+        end_date = now.strftime("%Y-%m-%d")
+
+    start_unix = int(datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp())
+    end_unix = int(datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp()) + 86399
+
+    client_doc = db.collection("clients").document(client_id).get()
+    client_data = client_doc.to_dict() if client_doc.exists else {}
+
+    agent_id = client_data.get("elevenlabs_agent_id")
+    if not agent_id:
+        return {
+            "agent_id": None,
+            "start_date": start_date,
+            "end_date": end_date,
+            "total_characters": 0,
+            "conversation_count": 0,
+            "total_duration_secs": 0,
+            "price_per_character": 0.0,
+            "currency": "USD",
+            "estimated_cost": 0.0,
+            "conversations": [],
+        }
+
+    usage = await get_agent_usage(agent_id, start_unix, end_unix)
+
+    price_per_character = client_data.get("price_per_character")
+    if price_per_character is None:
+        pricing_doc = db.collection("pricing_config").document("global").get()
+        if pricing_doc.exists:
+            price_per_character = pricing_doc.to_dict().get("price_per_character", 0.0)
+        else:
+            price_per_character = 0.0
+
+    total_characters = usage.get("total_characters", 0)
+    estimated_cost = round(total_characters * price_per_character, 6)
+
+    return {
+        "agent_id": agent_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_characters": total_characters,
+        "conversation_count": usage.get("conversation_count", 0),
+        "total_duration_secs": usage.get("total_duration_secs", 0),
+        "price_per_character": price_per_character,
+        "currency": "USD",
+        "estimated_cost": estimated_cost,
+        "conversations": usage.get("conversations", []),
+    }

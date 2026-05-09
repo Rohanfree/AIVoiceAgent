@@ -351,3 +351,256 @@ async def refresh_tool_tokens(
 
     logger.info("Admin rotated tool tokens for %d clients", rotated_count)
     return {"status": "rotated", "clients_affected": rotated_count}
+
+
+# ─── TOKEN USAGE ─────────────────────────────────────────────────────────────
+
+@router.get(
+    "/token-usage/{client_id}",
+    summary="Get ElevenLabs token usage for a client",
+    include_in_schema=False,
+)
+async def get_token_usage(
+    client_id: str,
+    start_date: str = None,
+    end_date: str = None,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    from fastapi import Query as _Query
+    from app.services.elevenlabs_service import get_agent_usage
+
+    now_utc = datetime.now(tz=timezone.utc)
+    if start_date is None:
+        start_date = now_utc.replace(day=1).strftime("%Y-%m-%d")
+    if end_date is None:
+        end_date = now_utc.strftime("%Y-%m-%d")
+
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    start_unix = int(start_dt.timestamp())
+    end_unix = int(end_dt.timestamp()) + 86399  # include full end day
+
+    client_ref = db.collection("clients").document(client_id)
+    client_doc = client_ref.get()
+    if not client_doc.exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    client_data = client_doc.to_dict()
+    agent_id = client_data.get("elevenlabs_agent_id")
+    if not agent_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client has no ElevenLabs agent configured.",
+        )
+
+    usage = await get_agent_usage(agent_id, start_unix, end_unix)
+
+    price_per_character = client_data.get("price_per_character")
+    currency = "USD"
+    if price_per_character is None:
+        pricing_doc = db.collection("pricing_config").document("global").get()
+        if pricing_doc.exists:
+            pricing_data = pricing_doc.to_dict()
+            price_per_character = pricing_data.get("price_per_character", 0.0)
+            currency = pricing_data.get("currency", "USD")
+        else:
+            price_per_character = 0.0
+
+    total_characters = usage.get("total_characters", 0)
+    estimated_cost = total_characters * price_per_character
+
+    return {
+        "client_id": client_id,
+        "agent_id": agent_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_characters": total_characters,
+        "conversation_count": usage.get("conversation_count", 0),
+        "total_duration_secs": usage.get("total_duration_secs", 0),
+        "price_per_character": price_per_character,
+        "currency": currency,
+        "estimated_cost": estimated_cost,
+        "conversations": usage.get("conversations", []),
+    }
+
+
+# ─── PRICING — GET ───────────────────────────────────────────────────────────
+
+@router.get(
+    "/pricing",
+    summary="Get global pricing config and per-client overrides",
+    include_in_schema=False,
+)
+async def get_pricing(
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    pricing_doc = db.collection("pricing_config").document("global").get()
+    if pricing_doc.exists:
+        global_data = pricing_doc.to_dict()
+        global_pricing = {
+            "price_per_character": global_data.get("price_per_character", 0.0),
+            "currency": global_data.get("currency", "USD"),
+            "updated_at": global_data.get("updated_at"),
+        }
+    else:
+        global_pricing = {"price_per_character": 0.0, "currency": "USD", "updated_at": None}
+
+    client_overrides = []
+    for doc in db.collection("clients").stream():
+        data = doc.to_dict()
+        ppc = data.get("price_per_character")
+        if ppc is not None:
+            client_overrides.append({
+                "client_id": doc.id,
+                "business_name": data.get("business_name", ""),
+                "price_per_character": ppc,
+            })
+
+    return {"global": global_pricing, "client_overrides": client_overrides}
+
+
+# ─── PRICING — PUT ───────────────────────────────────────────────────────────
+
+@router.put(
+    "/pricing",
+    summary="Update global pricing config",
+    include_in_schema=False,
+)
+async def update_pricing(
+    body: dict,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    price_per_character = body.get("price_per_character")
+    if price_per_character is None or price_per_character < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'price_per_character' must be a non-negative number.",
+        )
+
+    currency = body.get("currency", "USD")
+    apply_to_all = body.get("apply_to_all", False)
+
+    now = datetime.now(tz=timezone.utc).isoformat()
+    db.collection("pricing_config").document("global").set({
+        "price_per_character": price_per_character,
+        "currency": currency,
+        "updated_at": now,
+    })
+
+    if apply_to_all:
+        for doc in db.collection("clients").stream():
+            db.collection("clients").document(doc.id).set(
+                {"price_per_character": None}, merge=True
+            )
+
+    return {"status": "updated", "applied_to_all": apply_to_all}
+
+
+# ─── PER-CLIENT PRICING ──────────────────────────────────────────────────────
+
+@router.patch(
+    "/clients/{client_id}/pricing",
+    summary="Set or clear per-client price override",
+    include_in_schema=False,
+)
+async def update_client_pricing(
+    client_id: str,
+    body: dict,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    client_ref = db.collection("clients").document(client_id)
+    if not client_ref.get().exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    price_per_character = body.get("price_per_character")
+    client_ref.set({"price_per_character": price_per_character}, merge=True)
+
+    return {"status": "updated", "client_id": client_id, "price_per_character": price_per_character}
+
+
+# ─── ELEVENLABS AGENTS — LIST ────────────────────────────────────────────────
+
+@router.get(
+    "/elevenlabs/agents",
+    summary="List ElevenLabs agents",
+    include_in_schema=False,
+)
+async def list_elevenlabs_agents(
+    search: str = None,
+    cursor: str = None,
+    page_size: int = 30,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    from app.services.elevenlabs_service import list_agents
+
+    result = await list_agents(search, cursor, page_size)
+    return result
+
+
+# ─── ELEVENLABS AGENTS — GET ─────────────────────────────────────────────────
+
+@router.get(
+    "/elevenlabs/agents/{agent_id}",
+    summary="Get a single ElevenLabs agent",
+    include_in_schema=False,
+)
+async def get_elevenlabs_agent(
+    agent_id: str,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    from app.services.elevenlabs_service import get_agent
+
+    agent = await get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found.")
+
+    conv_config = agent.get("conversation_config", {})
+    agent_section = conv_config.get("agent", {})
+    prompt_section = agent_section.get("prompt", {})
+
+    return {
+        "agent_id": agent.get("agent_id", agent_id),
+        "name": agent.get("name", ""),
+        "prompt": prompt_section.get("prompt", ""),
+        "first_message": agent_section.get("first_message", ""),
+    }
+
+
+# ─── ELEVENLABS AGENTS — DUPLICATE ───────────────────────────────────────────
+
+@router.post(
+    "/elevenlabs/agents/duplicate",
+    summary="Duplicate an ElevenLabs agent",
+    include_in_schema=False,
+)
+async def duplicate_elevenlabs_agent(
+    body: dict,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    from app.services.elevenlabs_service import duplicate_agent, update_agent_system_prompt
+
+    source_agent_id = body.get("source_agent_id")
+    if not source_agent_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'source_agent_id' is required.",
+        )
+
+    name = body.get("name")
+    prompt = body.get("prompt")
+
+    new_agent_id = await duplicate_agent(source_agent_id, name)
+    if not new_agent_id:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="ElevenLabs agent duplication failed.")
+
+    if prompt:
+        await update_agent_system_prompt(new_agent_id, prompt)
+
+    return {"status": "created", "new_agent_id": new_agent_id, "name": name}

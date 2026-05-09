@@ -141,6 +141,29 @@ function setLoading(btn, loading) {
     }
 }
 
+function formatDuration(secs) {
+    if (!secs) return '—';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function formatUnixTs(unix_secs) {
+    if (!unix_secs) return '—';
+    const d = new Date(unix_secs * 1000);
+    return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function localDateStr(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
 // ─── Auth Forms ──────────────────────────────────────────────────────────────
 
 function initLoginForm() {
@@ -467,6 +490,9 @@ async function initAdminDashboard() {
                     <td><span class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span></td>
                     <td>${c.subscription_status || 'active'}</td>
                     <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="openAdminUsageModal('${c.id}', '${(c.business_name || 'Client').replace(/'/g, "\\'")}')">
+                            Usage
+                        </button>
                         <button class="btn btn-sm btn-secondary" onclick="toggleClient('${c.id}', ${c.is_active === false})">
                             ${c.is_active === false ? 'Activate' : 'Deactivate'}
                         </button>
@@ -509,6 +535,311 @@ async function refreshToolTokens() {
 function logout() {
     clearTokens();
     window.location.href = `${API_BASE}/pages/login`;
+}
+
+// ─── Client Token Usage Modal ────────────────────────────────────────────────
+
+function openClientUsageModal() {
+    const modal = document.getElementById('client-usage-modal');
+    if (!modal) return;
+
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById('client-usage-start-date').value = localDateStr(firstOfMonth);
+    document.getElementById('client-usage-end-date').value = localDateStr(now);
+
+    document.getElementById('client-usage-stats').style.display = 'none';
+    document.getElementById('client-usage-loading').style.display = 'none';
+    document.getElementById('client-usage-empty').style.display = 'none';
+    modal.style.display = 'flex';
+}
+
+function closeClientUsageModal() {
+    const modal = document.getElementById('client-usage-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function fetchClientUsage() {
+    const startDate = document.getElementById('client-usage-start-date').value;
+    const endDate = document.getElementById('client-usage-end-date').value;
+    if (!startDate || !endDate) { showAlert('error', 'Please select a date range.'); return; }
+
+    document.getElementById('client-usage-stats').style.display = 'none';
+    document.getElementById('client-usage-empty').style.display = 'none';
+    document.getElementById('client-usage-loading').style.display = 'block';
+
+    const data = await apiCall('GET', `/client-portal/token-usage?start_date=${startDate}&end_date=${endDate}`);
+    document.getElementById('client-usage-loading').style.display = 'none';
+
+    if (!data) return;
+
+    const convos = data.conversations || [];
+    if (data.conversation_count === 0) {
+        document.getElementById('client-usage-empty').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('client-stat-characters').textContent = (data.total_characters || 0).toLocaleString();
+    document.getElementById('client-stat-conversations').textContent = data.conversation_count || 0;
+    document.getElementById('client-stat-duration').textContent = formatDuration(data.total_duration_secs);
+    const costLabel = `Est. Cost (${data.currency || 'USD'})`;
+    document.getElementById('client-stat-cost-label').textContent = costLabel;
+    document.getElementById('client-stat-cost').textContent = data.estimated_cost != null
+        ? `${data.currency || ''} ${Number(data.estimated_cost).toFixed(4)}`
+        : '—';
+
+    const tbody = document.getElementById('client-usage-conversations-tbody');
+    if (tbody) {
+        tbody.innerHTML = convos.map(c => `
+            <tr>
+                <td style="white-space:nowrap;">${formatUnixTs(c.start_time_unix_secs)}</td>
+                <td>${formatDuration(c.call_duration_secs)}</td>
+                <td>${(c.characters || 0).toLocaleString()}</td>
+                <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(c.call_summary_title || '').replace(/"/g,'&quot;')}">${c.call_summary_title || '—'}</td>
+                <td><span class="badge ${c.call_successful === 'success' ? 'badge-active' : 'badge-inactive'}">${c.call_successful || c.status || '—'}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('client-usage-stats').style.display = 'block';
+}
+
+// ─── Admin Token Usage Modal ─────────────────────────────────────────────────
+
+let _adminUsageClientId = null;
+
+function openAdminUsageModal(clientId, businessName) {
+    _adminUsageClientId = clientId;
+    document.getElementById('admin-usage-client-name').textContent = businessName || clientId;
+
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById('admin-usage-start-date').value = localDateStr(firstOfMonth);
+    document.getElementById('admin-usage-end-date').value = localDateStr(now);
+    document.getElementById('admin-usage-price-override').value = '';
+
+    document.getElementById('admin-usage-stats').style.display = 'none';
+    document.getElementById('admin-usage-loading').style.display = 'none';
+    document.getElementById('admin-usage-empty').style.display = 'none';
+    document.getElementById('admin-usage-modal').style.display = 'flex';
+}
+
+function closeAdminUsageModal() {
+    document.getElementById('admin-usage-modal').style.display = 'none';
+    _adminUsageClientId = null;
+}
+
+async function fetchAdminUsage() {
+    if (!_adminUsageClientId) return;
+    const startDate = document.getElementById('admin-usage-start-date').value;
+    const endDate = document.getElementById('admin-usage-end-date').value;
+    if (!startDate || !endDate) { showAlert('error', 'Please select a date range.'); return; }
+
+    document.getElementById('admin-usage-stats').style.display = 'none';
+    document.getElementById('admin-usage-empty').style.display = 'none';
+    document.getElementById('admin-usage-loading').style.display = 'block';
+
+    const data = await apiCall('GET', `/mngr-sys-access-78/token-usage/${_adminUsageClientId}?start_date=${startDate}&end_date=${endDate}`);
+    document.getElementById('admin-usage-loading').style.display = 'none';
+
+    if (!data) return;
+
+    const convos = data.conversations || [];
+    if (data.conversation_count === 0) {
+        document.getElementById('admin-usage-empty').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('admin-stat-characters').textContent = (data.total_characters || 0).toLocaleString();
+    document.getElementById('admin-stat-conversations').textContent = data.conversation_count || 0;
+    document.getElementById('admin-stat-duration').textContent = formatDuration(data.total_duration_secs);
+    document.getElementById('admin-stat-cost-label').textContent = `Est. Cost (${data.currency || 'USD'})`;
+    document.getElementById('admin-stat-cost').textContent = data.estimated_cost != null
+        ? `${data.currency || ''} ${Number(data.estimated_cost).toFixed(4)}`
+        : '—';
+    if (data.price_per_character != null) {
+        document.getElementById('admin-usage-price-override').placeholder = `Current: ${data.price_per_character}`;
+    }
+
+    const tbody = document.getElementById('admin-usage-conversations-tbody');
+    if (tbody) {
+        tbody.innerHTML = convos.map(c => `
+            <tr>
+                <td style="white-space:nowrap;">${formatUnixTs(c.start_time_unix_secs)}</td>
+                <td>${formatDuration(c.call_duration_secs)}</td>
+                <td>${(c.characters || 0).toLocaleString()}</td>
+                <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(c.call_summary_title || '').replace(/"/g,'&quot;')}">${c.call_summary_title || '—'}</td>
+                <td><span class="badge ${c.call_successful === 'success' ? 'badge-active' : 'badge-inactive'}">${c.call_successful || c.status || '—'}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('admin-usage-stats').style.display = 'block';
+}
+
+async function saveClientPriceOverride() {
+    if (!_adminUsageClientId) return;
+    const val = document.getElementById('admin-usage-price-override').value.trim();
+    const price = val === '' ? null : parseFloat(val);
+    const data = await apiCall('PATCH', `/mngr-sys-access-78/clients/${_adminUsageClientId}/pricing`, { price_per_character: price });
+    if (data && data.status === 'updated') {
+        showAlert('success', 'Price override saved.');
+    }
+}
+
+// ─── Pricing Config Modal ─────────────────────────────────────────────────────
+
+async function openPricingModal() {
+    document.getElementById('pricing-modal').style.display = 'flex';
+    const data = await apiCall('GET', '/mngr-sys-access-78/pricing');
+    if (!data) return;
+
+    const g = data.global || {};
+    document.getElementById('global-price-input').value = g.price_per_character != null ? g.price_per_character : '';
+    const currSelect = document.getElementById('global-currency-select');
+    if (currSelect && g.currency) currSelect.value = g.currency;
+
+    const overrides = data.client_overrides || [];
+    const container = document.getElementById('pricing-overrides-container');
+    if (container) {
+        if (overrides.length === 0) {
+            container.innerHTML = '<p style="color:var(--color-text-secondary);font-size:0.85rem;">No per-client overrides set.</p>';
+        } else {
+            container.innerHTML = `<table class="data-table"><thead><tr><th>Business</th><th>Client ID</th><th>Price/Char</th><th>Action</th></tr></thead><tbody>
+                ${overrides.map(o => `
+                    <tr>
+                        <td>${o.business_name || '—'}</td>
+                        <td><code style="font-size:0.7rem;color:var(--color-text-secondary)">${o.client_id}</code></td>
+                        <td>${o.price_per_character}</td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="clearClientOverride('${o.client_id}')">Clear</button></td>
+                    </tr>
+                `).join('')}
+            </tbody></table>`;
+        }
+    }
+}
+
+function closePricingModal() {
+    document.getElementById('pricing-modal').style.display = 'none';
+}
+
+async function savePricingConfig() {
+    const price = parseFloat(document.getElementById('global-price-input').value);
+    if (isNaN(price) || price < 0) { showAlert('error', 'Enter a valid price (>= 0).'); return; }
+    const currency = document.getElementById('global-currency-select').value;
+    const applyToAll = document.getElementById('apply-to-all-checkbox').checked;
+
+    const data = await apiCall('PUT', '/mngr-sys-access-78/pricing', {
+        price_per_character: price,
+        currency,
+        apply_to_all: applyToAll,
+    });
+    if (data && data.status === 'updated') {
+        showAlert('success', applyToAll ? 'Global price saved and applied to all clients.' : 'Global price saved.');
+        openPricingModal();
+    }
+}
+
+async function clearClientOverride(clientId) {
+    const data = await apiCall('PATCH', `/mngr-sys-access-78/clients/${clientId}/pricing`, { price_per_character: null });
+    if (data && data.status === 'updated') {
+        openPricingModal();
+    }
+}
+
+// ─── New Agent Modal ──────────────────────────────────────────────────────────
+
+let _selectedAgentId = null;
+let _agentSearchTimeout = null;
+
+async function openNewAgentModal() {
+    _selectedAgentId = null;
+    document.getElementById('agent-search-input').value = '';
+    document.getElementById('selected-agent-section').style.display = 'none';
+    document.getElementById('new-agent-result').style.display = 'none';
+    document.getElementById('new-agent-modal').style.display = 'flex';
+    await loadAgentsList('');
+}
+
+function closeNewAgentModal() {
+    document.getElementById('new-agent-modal').style.display = 'none';
+    _selectedAgentId = null;
+}
+
+async function loadAgentsList(search) {
+    const container = document.getElementById('agents-list-container');
+    if (!container) return;
+    container.innerHTML = '<p style="padding:var(--space-md);color:var(--color-text-secondary);font-size:0.85rem;">Loading...</p>';
+
+    const qs = search ? `?search=${encodeURIComponent(search)}&page_size=50` : '?page_size=50';
+    const data = await apiCall('GET', `/mngr-sys-access-78/elevenlabs/agents${qs}`);
+    if (!data || !data.agents) {
+        container.innerHTML = '<p style="padding:var(--space-md);color:var(--color-error,#f44);font-size:0.85rem;">Failed to load agents.</p>';
+        return;
+    }
+
+    if (data.agents.length === 0) {
+        container.innerHTML = '<p style="padding:var(--space-md);color:var(--color-text-secondary);font-size:0.85rem;">No agents found.</p>';
+        return;
+    }
+
+    container.innerHTML = data.agents.map(a => {
+        const safeName = (a.name || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const safeId   = (a.agent_id || '').replace(/"/g,'&quot;');
+        return `
+        <div data-agent-id="${safeId}" data-agent-name="${safeName}"
+             onclick="selectAgent(this.dataset.agentId, this.dataset.agentName)"
+             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.15s;"
+             onmouseover="this.style.background='rgba(0,255,254,0.07)'" onmouseout="this.style.background=''">
+            <p style="margin:0;font-size:0.88rem;color:var(--color-text-primary);">${a.name || '(unnamed)'}</p>
+            <p style="margin:2px 0 0 0;font-size:0.72rem;color:var(--color-text-secondary);">${a.agent_id}</p>
+        </div>`;
+    }).join('');
+}
+
+function searchAgentsList(value) {
+    clearTimeout(_agentSearchTimeout);
+    _agentSearchTimeout = setTimeout(() => loadAgentsList(value), 350);
+}
+
+async function selectAgent(agentId, agentName) {
+    _selectedAgentId = agentId;
+    document.getElementById('selected-agent-name-label').textContent = agentName || agentId;
+    document.getElementById('selected-agent-id-label').textContent = agentId;
+    document.getElementById('new-agent-name-input').value = agentName ? `Copy of ${agentName}` : '';
+    document.getElementById('new-agent-prompt-input').value = 'Loading prompt...';
+    document.getElementById('selected-agent-section').style.display = 'block';
+    document.getElementById('new-agent-result').style.display = 'none';
+
+    const data = await apiCall('GET', `/mngr-sys-access-78/elevenlabs/agents/${agentId}`);
+    if (data && data.prompt != null) {
+        document.getElementById('new-agent-prompt-input').value = data.prompt;
+    } else {
+        document.getElementById('new-agent-prompt-input').value = '';
+    }
+}
+
+async function createNewAgent() {
+    if (!_selectedAgentId) return;
+    const name = document.getElementById('new-agent-name-input').value.trim();
+    const prompt = document.getElementById('new-agent-prompt-input').value.trim();
+    const btn = document.getElementById('create-agent-btn');
+    setLoading(btn, true);
+
+    const data = await apiCall('POST', '/mngr-sys-access-78/elevenlabs/agents/duplicate', {
+        source_agent_id: _selectedAgentId,
+        name: name || null,
+        prompt: prompt || null,
+    });
+    setLoading(btn, false);
+
+    if (data && data.status === 'created') {
+        document.getElementById('new-agent-result-id').textContent = data.new_agent_id;
+        document.getElementById('new-agent-result').style.display = 'block';
+        document.getElementById('selected-agent-section').style.display = 'none';
+    } else {
+        showAlert('error', (data && data.detail) || 'Failed to create agent.');
+    }
 }
 
 // ─── Init ────────────────────────────────────────────────────────────────────
