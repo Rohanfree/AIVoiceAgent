@@ -184,6 +184,37 @@ async def setup_agent_tools(agent_id: str, client_id: str) -> list[str] | None:
         return None
 
 
+async def patch_agent_first_message(agent_id: str, first_message: str) -> bool:
+    """Update the agent's opening first_message."""
+    if not settings.elevenlabs_api_key:
+        logger.warning("elevenlabs_api_key is not set — skipping patch_agent_first_message")
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.patch(
+                f"{ELEVENLABS_BASE_URL}/convai/agents/{agent_id}",
+                headers=_headers(),
+                json={
+                    "conversation_config": {
+                        "agent": {
+                            "first_message": first_message,
+                        }
+                    }
+                },
+            )
+            if resp.is_error:
+                logger.error(
+                    "patch_agent_first_message failed for agent %s: %s %s",
+                    agent_id, resp.status_code, resp.text,
+                )
+                return False
+            logger.info("First message updated for agent %s", agent_id)
+            return True
+    except Exception as exc:
+        logger.error("patch_agent_first_message error for agent %s: %s", agent_id, exc)
+        return False
+
+
 async def patch_agent_tools(agent_id: str, tool_ids: list[str]) -> bool:
     """PATCH only the tool_ids on an agent. Does not touch knowledge_base."""
     if not settings.elevenlabs_api_key:

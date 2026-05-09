@@ -178,12 +178,18 @@ function initRegisterForm() {
     if (!form) return;
 
     const agentIdInput = form.querySelector('#elevenlabs_agent_id');
+    const firstMsgGroup = document.getElementById('first-message-group');
+    const firstMsgInput = document.getElementById('first_message');
+    const firstMsgLoading = document.getElementById('first-message-loading');
+
     if (agentIdInput) {
         agentIdInput.addEventListener('blur', async () => {
             const agentId = agentIdInput.value.trim();
             if (!agentId) return;
             try {
+                if (firstMsgLoading) firstMsgLoading.style.display = 'inline';
                 const resp = await fetch(`${API_BASE}/auth/check-agent?agent_id=${encodeURIComponent(agentId)}`);
+                if (firstMsgLoading) firstMsgLoading.style.display = 'none';
                 if (!resp.ok) return;
                 const data = await resp.json();
                 const existing = document.getElementById('agent-id-error');
@@ -194,12 +200,19 @@ function initRegisterForm() {
                     errEl.style.cssText = 'color:#ef4444;font-size:0.85rem;margin-top:0.25rem;';
                     errEl.textContent = `This agent is already registered to "${data.client_name}".`;
                     agentIdInput.parentElement.appendChild(errEl);
+                    if (firstMsgGroup) firstMsgGroup.style.display = 'none';
+                } else {
+                    if (firstMsgInput) firstMsgInput.value = data.first_message || '';
+                    if (firstMsgGroup) firstMsgGroup.style.display = 'block';
                 }
-            } catch (_) {}
+            } catch (_) {
+                if (firstMsgLoading) firstMsgLoading.style.display = 'none';
+            }
         });
         agentIdInput.addEventListener('input', () => {
             const existing = document.getElementById('agent-id-error');
             if (existing) existing.remove();
+            if (firstMsgGroup) firstMsgGroup.style.display = 'none';
         });
     }
 
@@ -222,6 +235,7 @@ function initRegisterForm() {
             client_name: form.querySelector('#client_name').value.trim(),
             elevenlabs_agent_id: form.querySelector('#elevenlabs_agent_id').value.trim(),
             business_info: (form.querySelector('#business_info').value || '').trim(),
+            first_message: (form.querySelector('#first_message') ? form.querySelector('#first_message').value.trim() : ''),
         };
 
         const data = await apiCall('POST', '/auth/register', body, false);

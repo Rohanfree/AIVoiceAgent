@@ -96,7 +96,9 @@ async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenRespon
 
 @router.get("/check-agent", summary="Check if an ElevenLabs agent ID is already registered")
 async def check_agent(agent_id: str, db: Client = Depends(get_db)):
-    """Returns {taken: true, client_name: ...} if the agent is already assigned to a client."""
+    """Returns {taken, client_name, first_message} for the given agent ID."""
+    from app.services.elevenlabs_service import get_agent as el_get_agent
+
     docs = (
         db.collection("users")
         .where(filter=FieldFilter("elevenlabs_agent_id", "==", agent_id))
@@ -105,8 +107,23 @@ async def check_agent(agent_id: str, db: Client = Depends(get_db)):
     )
     for doc in docs:
         data = doc.to_dict()
-        return {"taken": True, "client_name": data.get("client_name", "another client")}
-    return {"taken": False}
+        return {"taken": True, "client_name": data.get("client_name", "another client"), "first_message": ""}
+
+    # Not taken — fetch first_message from ElevenLabs
+    first_message = ""
+    try:
+        agent_data = await el_get_agent(agent_id)
+        if agent_data:
+            first_message = (
+                agent_data
+                .get("conversation_config", {})
+                .get("agent", {})
+                .get("first_message", "")
+            ) or ""
+    except Exception:
+        pass
+
+    return {"taken": False, "first_message": first_message}
 
 
 # ─── REGISTER ──────────────────────────────────────────────────────────────
@@ -184,7 +201,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     db.collection("clients").document(client_id).set(client_doc)
     logger.info("Client '%s' created with id=%s", body.client_name, client_id)
 
-    from app.services.elevenlabs_service import setup_agent_tools, patch_agent_tools, inject_client_context_into_prompt
+    from app.services.elevenlabs_service import setup_agent_tools, patch_agent_tools, inject_client_context_into_prompt, patch_agent_first_message
 
     # Step 1: Resolve tool IDs (creates missing tools, no agent PATCH yet)
     try:
@@ -223,6 +240,16 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         )
     except Exception as exc:
         logger.error("inject_client_context_into_prompt failed for client %s: %s", client_id, exc)
+
+    # Step 4: Update agent's first message if provided
+    if body.first_message.strip():
+        try:
+            await patch_agent_first_message(
+                agent_id=body.elevenlabs_agent_id,
+                first_message=body.first_message.strip(),
+            )
+        except Exception as exc:
+            logger.error("patch_agent_first_message failed for client %s: %s", client_id, exc)
 
     # Issue tokens
     scope = "dashboard"

@@ -20,6 +20,7 @@ class RegisterRequest(BaseModel):
     client_name: str = Field(..., min_length=1, max_length=100, description="Business/client display name")
     elevenlabs_agent_id: str = Field(..., min_length=1, max_length=200, description="ElevenLabs Conversational AI agent ID")
     business_info: str = Field(default="", description="Client-specific business info: booking slots, working days, policies")
+    first_message: str = Field(default="", description="Agent's opening message spoken at the start of every call")
 
 
 class TokenResponse(BaseModel):
