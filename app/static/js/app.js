@@ -178,13 +178,12 @@ function initRegisterForm() {
     if (!form) return;
 
     const agentIdInput = form.querySelector('#elevenlabs_agent_id');
-    const firstMsgInput = document.getElementById('first_message');
-    const firstMsgLoading = document.getElementById('first-message-loading');
-
     if (agentIdInput) {
         agentIdInput.addEventListener('blur', async () => {
             const agentId = agentIdInput.value.trim();
             if (!agentId) return;
+            const firstMsgInput = document.getElementById('first_message');
+            const firstMsgLoading = document.getElementById('first-message-loading');
             try {
                 if (firstMsgLoading) firstMsgLoading.style.display = 'inline';
                 const resp = await fetch(`${API_BASE}/auth/check-agent?agent_id=${encodeURIComponent(agentId)}`);
@@ -201,7 +200,9 @@ function initRegisterForm() {
                     agentIdInput.parentElement.appendChild(errEl);
                     if (firstMsgInput) firstMsgInput.value = '';
                 } else {
-                    if (firstMsgInput) firstMsgInput.value = data.first_message || '';
+                    if (firstMsgInput && data.first_message != null) {
+                        firstMsgInput.value = data.first_message;
+                    }
                 }
             } catch (_) {
                 if (firstMsgLoading) firstMsgLoading.style.display = 'none';
