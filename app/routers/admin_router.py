@@ -235,6 +235,73 @@ async def add_client_manually(
     return {"status": "created", "user_id": user_id, "client_id": client_id, "username": username}
 
 
+# ─── DELETE CLIENT ──────────────────────────────────────────────────────────
+
+@router.delete(
+    "/clients/{client_id}",
+    summary="Permanently delete a client and all associated data",
+    include_in_schema=False,
+)
+async def delete_client(
+    client_id: str,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    """
+    Permanently delete a client. Removes:
+    - clients/{client_id}
+    - users document linked via client_id
+    - appointments, call_logs, customers documents for this client
+    """
+    client_ref = db.collection("clients").document(client_id)
+    if not client_ref.get().exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    # Delete linked user document
+    users = db.collection("users").where(filter=FieldFilter("client_id", "==", client_id)).stream()
+    for user_doc in users:
+        db.collection("users").document(user_doc.id).delete()
+        logger.info("Deleted user %s for client %s", user_doc.id, client_id)
+
+    # Delete appointments
+    appointments = db.collection("appointments").where(filter=FieldFilter("client_id", "==", client_id)).stream()
+    appt_count = 0
+    for doc in appointments:
+        doc.reference.delete()
+        appt_count += 1
+
+    # Delete call logs
+    call_logs = db.collection("call_logs").where(filter=FieldFilter("client_id", "==", client_id)).stream()
+    log_count = 0
+    for doc in call_logs:
+        doc.reference.delete()
+        log_count += 1
+
+    # Delete customers
+    customers = db.collection("customers").where(filter=FieldFilter("client_id", "==", client_id)).stream()
+    cust_count = 0
+    for doc in customers:
+        doc.reference.delete()
+        cust_count += 1
+
+    # Delete client document last
+    client_ref.delete()
+
+    logger.info(
+        "Admin deleted client %s — appointments=%d, call_logs=%d, customers=%d",
+        client_id, appt_count, log_count, cust_count,
+    )
+    return {
+        "status": "deleted",
+        "client_id": client_id,
+        "deleted": {
+            "appointments": appt_count,
+            "call_logs": log_count,
+            "customers": cust_count,
+        },
+    }
+
+
 # ─── REFRESH TOOL TOKENS ────────────────────────────────────────────────────
 
 @router.post(
