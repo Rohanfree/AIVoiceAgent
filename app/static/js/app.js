@@ -644,11 +644,11 @@ async function initAdminDashboard() {
                     : '';
                 const safeName = (c.business_name || 'Client').replace(/'/g, "\\'");
                 return `
-                <tr>
+                <tr data-client-id="${c.id}">
                     <td>${c.business_name || 'Unnamed'}</td>
                     <td><code style="font-size:0.75rem;color:var(--color-text-secondary)">${c.id}</code></td>
                     <td>
-                        <span class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span>
+                        <span data-status-badge class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span>
                         ${deactReason}
                     </td>
                     <td>${c.subscription_status || 'active'}</td>
@@ -658,7 +658,7 @@ async function initAdminDashboard() {
                             Set / Add
                         </button>
                     </td>
-                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <td data-toggle-actions style="display:flex;gap:6px;flex-wrap:wrap;">
                         <button class="btn btn-sm btn-secondary" onclick="openAdminUsageModal('${c.id}', '${safeName}')">
                             Usage
                         </button>
