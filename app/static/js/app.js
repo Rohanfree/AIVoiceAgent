@@ -678,6 +678,15 @@ async function initAdminDashboard() {
     hidePageLoader();
 }
 
+async function refreshAdminStats() {
+    const stats = await apiCall('GET', '/mngr-sys-access-78/dashboard');
+    if (!stats) return;
+    animateCount(document.getElementById('total-clients'),    stats.total_clients   || 0);
+    animateCount(document.getElementById('active-clients'),   stats.active_clients   || 0);
+    animateCount(document.getElementById('inactive-clients'), stats.inactive_clients || 0);
+    animateCount(document.getElementById('total-calls'),      stats.total_call_logs  || 0);
+}
+
 async function toggleClient(clientId, activate) {
     const data = await apiCall('PATCH', `/mngr-sys-access-78/clients/${clientId}/status`, {
         is_active: activate,
