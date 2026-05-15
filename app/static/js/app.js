@@ -688,12 +688,58 @@ async function refreshAdminStats() {
 }
 
 async function toggleClient(clientId, activate) {
+    // ── Optimistic update (synchronous — instant feedback) ───────────────────
+    const row         = document.querySelector(`tr[data-client-id="${clientId}"]`);
+    const badge       = row && row.querySelector('[data-status-badge]');
+    const actionsCell = row && row.querySelector('[data-toggle-actions]');
+
+    // Snapshot current badge state for rollback
+    const prevBadgeClass = badge ? badge.className   : null;
+    const prevBadgeText  = badge ? badge.textContent : null;
+
+    // Flip badge immediately
+    if (badge) {
+        badge.className   = activate ? 'badge badge-active' : 'badge badge-inactive';
+        badge.textContent = activate ? 'Active' : 'Inactive';
+    }
+
+    // Swap toggle button with a disabled spinner
+    let prevToggleHtml = null;
+    if (actionsCell) {
+        const toggleBtn = actionsCell.querySelector('button[onclick*="toggleClient"]');
+        if (toggleBtn) {
+            prevToggleHtml = toggleBtn.outerHTML;
+            toggleBtn.outerHTML = `<button class="btn btn-sm btn-secondary" disabled style="min-width:80px;"><span class="spinner" style="width:13px;height:13px;border-width:2px;vertical-align:middle;margin-right:4px;"></span></button>`;
+        }
+    }
+
+    // ── API call ─────────────────────────────────────────────────────────────
     const data = await apiCall('PATCH', `/mngr-sys-access-78/clients/${clientId}/status`, {
         is_active: activate,
     });
+
+    // ── Reconcile ────────────────────────────────────────────────────────────
     if (data) {
-        showAlert('success', `Client ${data.status} successfully.`);
-        setTimeout(() => location.reload(), 1000);
+        // Swap spinner for the correct new-state button
+        if (actionsCell) {
+            const spinner = actionsCell.querySelector('button[disabled]');
+            if (spinner) {
+                spinner.outerHTML = `<button class="btn btn-sm btn-secondary" onclick="toggleClient('${clientId}', ${!activate})">${activate ? 'Deactivate' : 'Activate'}</button>`;
+            }
+        }
+        await refreshAdminStats();
+    } else {
+        // Revert badge
+        if (badge) {
+            badge.className   = prevBadgeClass;
+            badge.textContent = prevBadgeText;
+        }
+        // Revert button
+        if (actionsCell && prevToggleHtml) {
+            const spinner = actionsCell.querySelector('button[disabled]');
+            if (spinner) spinner.outerHTML = prevToggleHtml;
+        }
+        showAlert('error', 'Failed to update client status. Please try again.');
     }
 }
 
