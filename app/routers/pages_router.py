@@ -5,7 +5,9 @@ These are server-rendered pages for the Automite AI dashboard UI.
 API calls from the pages are handled by the other routers (auth, client-portal, admin).
 """
 
+import hashlib
 import logging
+import os
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
@@ -14,6 +16,19 @@ from fastapi.templating import Jinja2Templates
 logger = logging.getLogger(__name__)
 
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _static_hash(relative_path: str) -> str:
+    """Return an 8-char MD5 of the file's contents for cache-busting."""
+    full = os.path.join("app/static", relative_path)
+    try:
+        digest = hashlib.md5(open(full, "rb").read()).hexdigest()[:8]
+        return digest
+    except OSError:
+        return "0"
+
+
+templates.env.globals["static_hash"] = _static_hash
 
 router = APIRouter(
     prefix="/pages",

@@ -7,17 +7,39 @@
     <meta name="description" content="{% block meta_description %}Automite AI — Intelligent Automation. Simplified.{% endblock %}">
     {% block meta_extra %}{% endblock %}
     <link rel="icon" type="image/jpeg" href="/automiteaiapplication/automiteui/static/images/icon.jpeg">
-    <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/automite.css">
+    <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/automite.css?v={{ static_hash('css/automite.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
 <body>
+    <!-- Full-page loader — hidden by JS once data is ready -->
+    <div id="page-loader" role="status" aria-label="Loading">
+        <div class="loader-brand">
+            <img class="loader-logo" src="/automiteaiapplication/automiteui/static/images/logo.png" alt="Automite AI">
+            <span class="loader-wordmark">Automite AI</span>
+        </div>
+        <div class="loader-wave" aria-hidden="true">
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+            <div class="loader-wave-bar"></div>
+        </div>
+    </div>
+
+    <!-- Full-screen tint overlay — JS applies .tint-warning / .tint-critical / .tint-deactivated -->
+    <div id="page-tint" aria-hidden="true"></div>
+
     {% block navbar %}{% endblock %}
 
     <main class="{% block main_class %}main-content{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
-    <script src="/automiteaiapplication/automiteui/static/js/app.js?v=6"></script>
+    <script src="/automiteaiapplication/automiteui/static/js/app.js?v={{ static_hash('js/app.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -11,29 +11,47 @@
 const API_BASE = '/automiteaiapplication/automiteui';
 
 // ─── Token Management ────────────────────────────────────────────────────────
+// Admin and client tokens are stored under separate localStorage namespaces so
+// both sessions can coexist in the same browser without overwriting each other.
+//   admin  → admin_access_token / admin_refresh_token / admin_token_scope
+//   client → client_access_token / client_refresh_token / client_token_scope
+
+function _tokenPrefix() {
+    return window.location.href.includes('mngr-sys-access-78') ? 'admin' : 'client';
+}
+
+function _loginUrl() {
+    return window.location.href.includes('mngr-sys-access-78')
+        ? `${API_BASE}/pages/mngr-sys-access-78`
+        : `${API_BASE}/pages/login`;
+}
 
 function saveTokens(data) {
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('refresh_token', data.refresh_token);
-    localStorage.setItem('token_scope', data.scope || 'dashboard');
+    // Use the scope from the server response to pick the correct namespace,
+    // regardless of which page the login form is on.
+    const prefix = (data.scope === 'admin:all') ? 'admin' : 'client';
+    localStorage.setItem(`${prefix}_access_token`,  data.access_token);
+    localStorage.setItem(`${prefix}_refresh_token`, data.refresh_token);
+    localStorage.setItem(`${prefix}_token_scope`,   data.scope || 'dashboard');
 }
 
 function getAccessToken() {
-    return localStorage.getItem('access_token');
+    return localStorage.getItem(`${_tokenPrefix()}_access_token`);
 }
 
 function getRefreshToken() {
-    return localStorage.getItem('refresh_token');
+    return localStorage.getItem(`${_tokenPrefix()}_refresh_token`);
 }
 
 function getTokenScope() {
-    return localStorage.getItem('token_scope') || '';
+    return localStorage.getItem(`${_tokenPrefix()}_token_scope`) || '';
 }
 
 function clearTokens() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('token_scope');
+    const prefix = _tokenPrefix();
+    localStorage.removeItem(`${prefix}_access_token`);
+    localStorage.removeItem(`${prefix}_refresh_token`);
+    localStorage.removeItem(`${prefix}_token_scope`);
 }
 
 function isLoggedIn() {
@@ -52,7 +70,7 @@ async function apiCall(method, path, body = null, requireAuth = true) {
     if (requireAuth) {
         const token = getAccessToken();
         if (!token) {
-            window.location.href = `${API_BASE}/pages/login`;
+            window.location.href = _loginUrl();
             return null;
         }
         headers['Authorization'] = `Bearer ${token}`;
@@ -75,7 +93,7 @@ async function apiCall(method, path, body = null, requireAuth = true) {
                 return await retry.json();
             } else {
                 clearTokens();
-                window.location.href = `${API_BASE}/pages/login`;
+                window.location.href = _loginUrl();
                 return null;
             }
         }
@@ -130,6 +148,24 @@ function hideAlert() {
     if (alert) alert.classList.remove('show');
 }
 
+let _loaderTimeout = null;
+
+function showPageLoader() {
+    const el = document.getElementById('page-loader');
+    if (!el) return;
+    el.classList.remove('loader-hidden');
+    // Safety: never block the UI for more than 8 s
+    clearTimeout(_loaderTimeout);
+    _loaderTimeout = setTimeout(hidePageLoader, 8000);
+}
+
+function hidePageLoader() {
+    clearTimeout(_loaderTimeout);
+    const el = document.getElementById('page-loader');
+    if (!el) return;
+    el.classList.add('loader-hidden');
+}
+
 function setLoading(btn, loading) {
     if (loading) {
         btn.dataset.originalText = btn.textContent;
@@ -162,6 +198,26 @@ function localDateStr(d) {
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
+}
+
+function animateCount(el, target, duration = 900, fmt = null) {
+    if (!el || typeof target !== 'number' || isNaN(target)) return;
+    const start = performance.now();
+    const format = fmt || (n => String(Math.round(n)));
+    function step(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(target * eased);
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function fmtChars(n) {
+    const v = Math.round(n);
+    if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+    if (v >= 1000)    return (v / 1000).toFixed(1) + 'K';
+    return String(v);
 }
 
 // ─── Auth Forms ──────────────────────────────────────────────────────────────
@@ -280,9 +336,11 @@ async function initDashboard() {
     if (!profileSection) return;
 
     if (!isLoggedIn()) {
-        window.location.href = `${API_BASE}/pages/login`;
+        window.location.href = _loginUrl();
         return;
     }
+
+    showPageLoader();
 
     // Load profile
     const profile = await apiCall('GET', '/client-portal/profile');
@@ -292,6 +350,13 @@ async function initDashboard() {
         document.getElementById('client-id').textContent = profile.id || '';
         const agentIdEl = document.getElementById('assistant-agent-id-display');
         if (agentIdEl) agentIdEl.textContent = profile.elevenlabs_agent_id || '—';
+
+        // Limit-exceeded state — show banner, tint screen, update agent card immediately
+        if (profile.is_active === false && profile.deactivation_reason === 'limit_exceeded') {
+            setPageTint('deactivated');
+            showLimitBanner();
+            updateAgentCardForLimit();
+        }
 
         // Google Calendar Status
         const calBox = document.getElementById('calendar-status-box');
@@ -308,10 +373,50 @@ async function initDashboard() {
 
     }
 
+    // Load this month's character usage
+    const now = new Date();
+    const monthStart = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    const today = localDateStr(now);
+    const usage = await apiCall('GET', `/client-portal/token-usage?start_date=${monthStart}&end_date=${today}&summary_only=true`);
+    if (usage) {
+        const chars = usage.total_characters || 0;
+        const usageEl = document.getElementById('usage-chars-count');
+        if (usageEl) animateCount(usageEl, chars, 900, fmtChars);
+
+        const limit = currentProfile && currentProfile.monthly_character_limit;
+        if (limit) {
+            const pct = Math.min(100, Math.round((chars / limit) * 100));
+            const barEl  = document.getElementById('usage-limit-bar');
+            const fillEl = document.getElementById('usage-limit-fill');
+            const textEl = document.getElementById('usage-limit-text');
+            if (barEl)  barEl.style.display = 'block';
+            if (fillEl) setTimeout(() => { fillEl.style.width = pct + '%'; }, 300);
+            if (textEl) textEl.textContent = `${chars.toLocaleString()} / ${limit.toLocaleString()} chars (${pct}%)`;
+            if (pct >= 90 && fillEl) {
+                fillEl.style.background = '#e53e3e';
+                fillEl.classList.add('fill-critical');
+            } else if (pct >= 70 && fillEl) {
+                fillEl.style.background = '#f39c12';
+            }
+
+            // Tint the screen based on usage (only if not already showing deactivated tint)
+            const alreadyDeactivated = currentProfile.is_active === false
+                && currentProfile.deactivation_reason === 'limit_exceeded';
+            if (!alreadyDeactivated) {
+                if (pct >= 90)      setPageTint('critical');
+                else if (pct >= 70) setPageTint('warning');
+                else                setPageTint('none');
+            }
+        }
+    }
+
+    // Profile + usage loaded — reveal the page
+    hidePageLoader();
+
     // Load appointments
     const appts = await apiCall('GET', '/client-portal/appointments');
     if (appts && appts.appointments) {
-        document.getElementById('appointments-count').textContent = appts.total;
+        animateCount(document.getElementById('appointments-count'), appts.total || 0);
         const tbody = document.getElementById('appointments-tbody');
         if (tbody) {
             tbody.innerHTML = appts.appointments.slice(0, 10).map(a => `
@@ -328,7 +433,7 @@ async function initDashboard() {
     // Load call logs
     const logs = await apiCall('GET', '/client-portal/call-logs');
     if (logs && logs.call_logs) {
-        document.getElementById('calls-count').textContent = logs.total;
+        animateCount(document.getElementById('calls-count'), logs.total || 0);
     }
 
     // Check for URL pulses (success/error from OAuth)
@@ -393,6 +498,50 @@ function openEditProfileModal() {
 
 function closeEditProfileModal() {
     document.getElementById('edit-profile-modal').style.display = 'none';
+}
+
+// ─── Talk to Agent Modal ──────────────────────────────────────────────────────
+
+const ELEVENLABS_WIDGET_SCRIPT_ID = 'elevenlabs-convai-script';
+const ELEVENLABS_WIDGET_SRC = 'https://elevenlabs.io/convai-widget/index.js';
+
+function openTalkModal() {
+    const agentId = currentProfile && currentProfile.elevenlabs_agent_id
+        ? currentProfile.elevenlabs_agent_id.trim()
+        : '';
+
+    if (!agentId) {
+        showAlert('error', 'No Agent ID configured. Please add your ElevenLabs Agent ID in Edit Profile first.');
+        return;
+    }
+
+    const modal = document.getElementById('talk-agent-modal');
+    const container = document.getElementById('talk-agent-widget-container');
+    if (!modal || !container) return;
+
+    container.innerHTML = '';
+
+    const widget = document.createElement('elevenlabs-convai');
+    widget.setAttribute('agent-id', agentId);
+    container.appendChild(widget);
+
+    if (!document.getElementById(ELEVENLABS_WIDGET_SCRIPT_ID)) {
+        const script = document.createElement('script');
+        script.id = ELEVENLABS_WIDGET_SCRIPT_ID;
+        script.src = ELEVENLABS_WIDGET_SRC;
+        script.async = true;
+        script.type = 'text/javascript';
+        document.body.appendChild(script);
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeTalkModal() {
+    const modal = document.getElementById('talk-agent-modal');
+    const container = document.getElementById('talk-agent-widget-container');
+    if (modal) modal.style.display = 'none';
+    if (container) container.innerHTML = '';
 }
 
 function setDefaultHours() {
@@ -469,13 +618,15 @@ async function initAdminDashboard() {
         return;
     }
 
+    showPageLoader();
+
     // Load overview stats
     const stats = await apiCall('GET', '/mngr-sys-access-78/dashboard');
     if (stats) {
-        document.getElementById('total-clients').textContent = stats.total_clients || 0;
-        document.getElementById('active-clients').textContent = stats.active_clients || 0;
-        document.getElementById('inactive-clients').textContent = stats.inactive_clients || 0;
-        document.getElementById('total-calls').textContent = stats.total_call_logs || 0;
+        animateCount(document.getElementById('total-clients'), stats.total_clients || 0);
+        animateCount(document.getElementById('active-clients'), stats.active_clients || 0);
+        animateCount(document.getElementById('inactive-clients'), stats.inactive_clients || 0);
+        animateCount(document.getElementById('total-calls'), stats.total_call_logs || 0);
     }
 
     // Load clients table
@@ -483,27 +634,48 @@ async function initAdminDashboard() {
     if (clientsData && clientsData.clients) {
         const tbody = document.getElementById('clients-tbody');
         if (tbody) {
-            tbody.innerHTML = clientsData.clients.map(c => `
+            tbody.innerHTML = clientsData.clients.map(c => {
+                const limit = c.monthly_character_limit;
+                const limitLabel = limit != null
+                    ? `<span style="font-size:0.8rem;">${limit.toLocaleString()}</span>`
+                    : `<span style="color:var(--color-text-secondary);font-size:0.75rem;">Unlimited</span>`;
+                const deactReason = c.deactivation_reason === 'limit_exceeded'
+                    ? `<span style="display:block;font-size:0.7rem;color:var(--color-magenta);">Limit exceeded</span>`
+                    : '';
+                const safeName = (c.business_name || 'Client').replace(/'/g, "\\'");
+                return `
                 <tr>
                     <td>${c.business_name || 'Unnamed'}</td>
                     <td><code style="font-size:0.75rem;color:var(--color-text-secondary)">${c.id}</code></td>
-                    <td><span class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <span class="badge ${c.is_active !== false ? 'badge-active' : 'badge-inactive'}">${c.is_active !== false ? 'Active' : 'Inactive'}</span>
+                        ${deactReason}
+                    </td>
                     <td>${c.subscription_status || 'active'}</td>
+                    <td>
+                        ${limitLabel}
+                        <button class="btn btn-sm btn-secondary" style="margin-top:4px;font-size:0.7rem;padding:2px 8px;" onclick="openCharLimitModal('${c.id}', '${safeName}', ${limit != null ? limit : 'null'})">
+                            Set / Add
+                        </button>
+                    </td>
                     <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="openAdminUsageModal('${c.id}', '${(c.business_name || 'Client').replace(/'/g, "\\'")}')">
+                        <button class="btn btn-sm btn-secondary" onclick="openAdminUsageModal('${c.id}', '${safeName}')">
                             Usage
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="toggleClient('${c.id}', ${c.is_active === false})">
-                            ${c.is_active === false ? 'Activate' : 'Deactivate'}
-                        </button>
-                        <button class="btn btn-sm" style="background:var(--color-error,#e53e3e);color:#fff;border:none;" onclick="deleteClient('${c.id}', '${(c.business_name || 'this client').replace(/'/g, "\\'")}')">
+                        ${c.is_active === false && c.deactivation_reason === 'limit_exceeded'
+                            ? `<button class="btn btn-sm btn-primary" onclick="openCharLimitModal('${c.id}', '${safeName}', ${limit != null ? limit : 'null'})" title="Limit exceeded — add characters to reactivate">Add Characters →</button>`
+                            : `<button class="btn btn-sm btn-secondary" onclick="toggleClient('${c.id}', ${c.is_active === false})">${c.is_active === false ? 'Activate' : 'Deactivate'}</button>`
+                        }
+                        <button class="btn btn-sm" style="background:var(--color-error,#e53e3e);color:#fff;border:none;" onclick="deleteClient('${c.id}', '${safeName}')">
                             Delete
                         </button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
     }
+
+    hidePageLoader();
 }
 
 async function toggleClient(clientId, activate) {
@@ -532,9 +704,65 @@ async function refreshToolTokens() {
     }
 }
 
+// ─── Character Limit Modal ───────────────────────────────────────────────────
+
+let _charLimitClientId = null;
+
+function openCharLimitModal(clientId, clientName, currentLimit) {
+    _charLimitClientId = clientId;
+    document.getElementById('char-limit-client-name').textContent = clientName;
+    document.getElementById('char-limit-input').value = currentLimit != null ? currentLimit : '';
+    document.getElementById('add-chars-input').value = '';
+    document.getElementById('char-limit-modal').style.display = 'flex';
+}
+
+function closeCharLimitModal() {
+    _charLimitClientId = null;
+    document.getElementById('char-limit-modal').style.display = 'none';
+}
+
+async function saveCharLimit() {
+    if (!_charLimitClientId) return;
+    const raw = document.getElementById('char-limit-input').value.trim();
+    const limit = raw === '' ? null : parseInt(raw, 10);
+    if (raw !== '' && (isNaN(limit) || limit < 0)) {
+        showAlert('error', 'Please enter a valid non-negative number, or leave blank for unlimited.');
+        return;
+    }
+    const data = await apiCall('PATCH', `/mngr-sys-access-78/clients/${_charLimitClientId}/character-limit`, {
+        monthly_character_limit: limit,
+    });
+    if (data) {
+        const base = limit != null ? `Limit set to ${limit.toLocaleString()} characters.` : 'Limit removed (unlimited).';
+        showAlert('success', data.reactivated ? `${base} Client reactivated.` : base);
+        closeCharLimitModal();
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+async function addClientCharacters() {
+    if (!_charLimitClientId) return;
+    const amount = parseInt(document.getElementById('add-chars-input').value, 10);
+    if (isNaN(amount) || amount <= 0) {
+        showAlert('error', 'Please enter a positive number of characters to add.');
+        return;
+    }
+    const data = await apiCall('POST', `/mngr-sys-access-78/clients/${_charLimitClientId}/add-characters`, {
+        characters: amount,
+    });
+    if (data) {
+        const msg = data.reactivated
+            ? `Added ${amount.toLocaleString()} chars. New limit: ${data.new_limit.toLocaleString()}. Client reactivated.`
+            : `Added ${amount.toLocaleString()} chars. New limit: ${data.new_limit.toLocaleString()}.`;
+        showAlert('success', msg);
+        closeCharLimitModal();
+        setTimeout(() => location.reload(), 1200);
+    }
+}
+
 function logout() {
     clearTokens();
-    window.location.href = `${API_BASE}/pages/login`;
+    window.location.href = _loginUrl();
 }
 
 // ─── Client Token Usage Modal ────────────────────────────────────────────────
@@ -789,8 +1017,8 @@ async function loadAgentsList(search) {
         return `
         <div data-agent-id="${safeId}" data-agent-name="${safeName}"
              onclick="selectAgent(this.dataset.agentId, this.dataset.agentName)"
-             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.15s;"
-             onmouseover="this.style.background='rgba(0,255,254,0.07)'" onmouseout="this.style.background=''">
+             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(26,77,58,0.10);transition:background 0.15s;"
+             onmouseover="this.style.background='rgba(26,77,58,0.05)'" onmouseout="this.style.background=''">
             <p style="margin:0;font-size:0.88rem;color:var(--color-text-primary);">${a.name || '(unnamed)'}</p>
             <p style="margin:2px 0 0 0;font-size:0.72rem;color:var(--color-text-secondary);">${a.agent_id}</p>
         </div>`;
@@ -842,11 +1070,106 @@ async function createNewAgent() {
     }
 }
 
+// ─── Limit Banner & Coming Soon ──────────────────────────────────────────────
+
+function setPageTint(level) {
+    const el = document.getElementById('page-tint');
+    if (!el) return;
+    el.className = level === 'none' ? '' : `tint-${level}`;
+}
+
+function showLimitBanner() {
+    const banner = document.getElementById('limit-banner');
+    if (banner) banner.style.display = 'block';
+}
+
+function dismissLimitBanner() {
+    const banner = document.getElementById('limit-banner');
+    if (!banner) return;
+    banner.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-16px)';
+    setTimeout(() => { banner.style.display = 'none'; }, 300);
+}
+
+function updateAgentCardForLimit() {
+    const card = document.getElementById('ai-assistant-card');
+    if (card) card.classList.add('agent-card--paused');
+
+    const badgeContainer = document.getElementById('assistant-badge-container');
+    if (badgeContainer) {
+        badgeContainer.innerHTML = `
+            <span class="badge badge-inactive" style="font-size:0.75rem;">⚠️ Agent Paused</span>
+            <button class="btn btn-sm limit-banner-topup" onclick="showComingSoon()" style="margin-top:4px;">💳 Top Up Credits</button>
+        `;
+    }
+}
+
+function showComingSoon() {
+    const existing = document.querySelector('.coming-soon-toast');
+    if (existing) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'coming-soon-toast';
+    toast.innerHTML = `<span class="toast-emoji">😊</span> Payment gateway coming soon!`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 320);
+    }, 2800);
+}
+
+// ─── Page Animations ─────────────────────────────────────────────────────────
+
+function initAnimations() {
+    // Navbar deepens shadow on scroll
+    const nav = document.querySelector('.navbar');
+    if (nav) {
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 20);
+        }, { passive: true });
+    }
+
+    // Staggered scroll-reveal for main page cards
+    if (!('IntersectionObserver' in window)) return;
+
+    const cards = [];
+    document.querySelectorAll('.container').forEach(container => {
+        // Skip containers inside modals
+        if (container.closest('.modal-overlay')) return;
+        container.querySelectorAll(':scope > .glass-card, :scope > .dashboard-grid > .glass-card').forEach(el => {
+            cards.push(el);
+        });
+    });
+
+    if (!cards.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+
+    cards.forEach((el, i) => {
+        el.classList.add('reveal');
+        el.style.transitionDelay = `${i * 0.07}s`;
+        observer.observe(el);
+    });
+}
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    initAnimations();
     initLoginForm();
     initRegisterForm();
+    // On non-dashboard pages (login, register) hide the loader immediately
+    const hasDashboard = document.getElementById('profile-data') || document.getElementById('admin-dashboard');
+    if (!hasDashboard) hidePageLoader();
     initDashboard();
     initAdminDashboard();
 });

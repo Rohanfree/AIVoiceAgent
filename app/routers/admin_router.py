@@ -109,8 +109,30 @@ async def toggle_client_status(
     if not doc.exists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
 
+    client_data = doc.to_dict()
     now = datetime.now(tz=timezone.utc).isoformat()
-    doc_ref.set({"is_active": is_active, "updated_at": now}, merge=True)
+
+    update_payload: dict = {"is_active": is_active, "updated_at": now}
+    if is_active:
+        # Clear any automated deactivation reason when manually reactivating
+        update_payload["deactivation_reason"] = None
+    else:
+        update_payload["deactivation_reason"] = "admin_deactivated"
+
+    doc_ref.set(update_payload, merge=True)
+
+    # Propagate to ElevenLabs agent prompt
+    agent_id = client_data.get("elevenlabs_agent_id")
+    if agent_id:
+        from app.services.elevenlabs_service import deactivate_agent_prompt, reactivate_agent_prompt
+        if is_active:
+            await reactivate_agent_prompt(
+                agent_id,
+                client_id,
+                client_data.get("knowledge_base_text", ""),
+            )
+        else:
+            await deactivate_agent_prompt(agent_id, client_id)
 
     action = "activated" if is_active else "deactivated"
     logger.info("Client %s %s by admin", client_id, action)
@@ -604,3 +626,141 @@ async def duplicate_elevenlabs_agent(
         await update_agent_system_prompt(new_agent_id, prompt)
 
     return {"status": "created", "new_agent_id": new_agent_id, "name": name}
+
+
+# ─── CHARACTER LIMIT — SET ────────────────────────────────────────────────────
+
+@router.patch(
+    "/clients/{client_id}/character-limit",
+    summary="Set or clear a client's monthly character limit",
+    include_in_schema=False,
+)
+async def set_character_limit(
+    client_id: str,
+    body: dict,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    """
+    Body: { "monthly_character_limit": 50000 }
+    Pass null to remove the limit (unlimited).
+    """
+    if "monthly_character_limit" not in body:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'monthly_character_limit' field is required (int or null).",
+        )
+
+    limit = body["monthly_character_limit"]
+    if limit is not None and (not isinstance(limit, int) or limit < 0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'monthly_character_limit' must be a non-negative integer or null.",
+        )
+
+    doc_ref = db.collection("clients").document(client_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    client_data = doc.to_dict() or {}
+    now = datetime.now(tz=timezone.utc).isoformat()
+    update_payload: dict = {"monthly_character_limit": limit, "updated_at": now}
+
+    # If client was deactivated due to limit exhaustion, reactivate them now that
+    # the admin has set a new (presumably higher) limit or removed it entirely.
+    was_limit_deactivated = (
+        not client_data.get("is_active", True)
+        and client_data.get("deactivation_reason") == "limit_exceeded"
+    )
+    if was_limit_deactivated:
+        update_payload["is_active"] = True
+        update_payload["deactivation_reason"] = None
+
+    doc_ref.set(update_payload, merge=True)
+
+    if was_limit_deactivated:
+        agent_id = client_data.get("elevenlabs_agent_id")
+        if agent_id:
+            from app.services.elevenlabs_service import reactivate_agent_prompt
+            await reactivate_agent_prompt(
+                agent_id,
+                client_id,
+                client_data.get("knowledge_base_text", ""),
+            )
+        logger.info("Client %s reactivated after limit change to %s", client_id, limit)
+
+    logger.info("Character limit for client %s set to %s by admin", client_id, limit)
+    return {
+        "client_id": client_id,
+        "monthly_character_limit": limit,
+        "reactivated": was_limit_deactivated,
+    }
+
+
+# ─── CHARACTER LIMIT — ADD ────────────────────────────────────────────────────
+
+@router.post(
+    "/clients/{client_id}/add-characters",
+    summary="Add characters to a client's monthly limit and reactivate if needed",
+    include_in_schema=False,
+)
+async def add_characters(
+    client_id: str,
+    body: dict,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    """
+    Body: { "characters": 20000 }
+    Increases the client's monthly_character_limit by the given amount.
+    If the client was deactivated due to limit exhaustion, reactivates them.
+    """
+    amount = body.get("characters")
+    if not isinstance(amount, int) or amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'characters' must be a positive integer.",
+        )
+
+    doc_ref = db.collection("clients").document(client_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    client_data = doc.to_dict()
+    current_limit = client_data.get("monthly_character_limit")
+    new_limit = (current_limit or 0) + amount
+
+    now = datetime.now(tz=timezone.utc).isoformat()
+    update_payload: dict = {"monthly_character_limit": new_limit, "updated_at": now}
+
+    # Reactivate if previously deactivated due to limit exhaustion
+    was_limit_deactivated = (
+        not client_data.get("is_active", True)
+        and client_data.get("deactivation_reason") == "limit_exceeded"
+    )
+    if was_limit_deactivated:
+        update_payload["is_active"] = True
+        update_payload["deactivation_reason"] = None
+
+    doc_ref.set(update_payload, merge=True)
+
+    if was_limit_deactivated:
+        agent_id = client_data.get("elevenlabs_agent_id")
+        if agent_id:
+            from app.services.elevenlabs_service import reactivate_agent_prompt
+            await reactivate_agent_prompt(
+                agent_id,
+                client_id,
+                client_data.get("knowledge_base_text", ""),
+            )
+        logger.info("Client %s reactivated after character top-up (+%d)", client_id, amount)
+
+    logger.info("Character limit for client %s increased by %d → %d", client_id, amount, new_limit)
+    return {
+        "client_id": client_id,
+        "added": amount,
+        "new_limit": new_limit,
+        "reactivated": was_limit_deactivated,
+    }

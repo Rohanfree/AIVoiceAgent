@@ -281,6 +281,7 @@ async def parse_text(
 async def get_token_usage(
     start_date: str = Query(None),
     end_date: str = Query(None),
+    summary_only: bool = Query(False),
     user: dict = Depends(get_current_user),
     db: Client = Depends(get_db),
 ) -> dict:
@@ -321,7 +322,7 @@ async def get_token_usage(
             "conversations": [],
         }
 
-    usage = await get_agent_usage(agent_id, start_unix, end_unix)
+    usage = await get_agent_usage(agent_id, start_unix, end_unix, summary_only=summary_only)
 
     price_per_character = client_data.get("price_per_character")
     if price_per_character is None:

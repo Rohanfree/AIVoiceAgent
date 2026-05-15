@@ -8,7 +8,7 @@
 <nav class="navbar">
     <div class="container">
         <div class="navbar-brand">
-            <img src="/automiteaiapplication/automiteui/static/images/icon.jpeg" alt="Icon" class="brand-logo">AUTOMITE<span class="brand-divider">|</span><span class="brand-ai">AI</span>
+            <img src="/automiteaiapplication/automiteui/static/images/logo.png" alt="Automite AI" class="brand-logo">Automite AI
             <span class="badge badge-beta" style="margin-left: 8px;">ADMIN</span>
         </div>
         <ul class="navbar-links">
@@ -64,12 +64,13 @@
                     <th>Client ID</th>
                     <th>Status</th>
                     <th>Subscription</th>
+                    <th>Char Limit</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="clients-tbody">
                 <tr>
-                    <td colspan="5" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
+                    <td colspan="6" style="text-align:center; color: var(--color-text-secondary);">Loading...</td>
                 </tr>
             </tbody>
         </table>
@@ -208,13 +209,13 @@
       <label class="form-label">Search Agents</label>
       <input type="text" id="agent-search-input" class="form-input" placeholder="Type to search..." oninput="searchAgentsList(this.value)">
     </div>
-    <div id="agents-list-container" style="max-height:220px;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin-top:var(--space-sm);">
+    <div id="agents-list-container" style="max-height:220px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:8px;margin-top:var(--space-sm);">
       <p style="padding:var(--space-md);color:var(--color-text-secondary);font-size:0.85rem;">Loading agents...</p>
     </div>
 
     <div id="selected-agent-section" style="display:none;">
-      <div style="margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(0,255,254,0.05);border:1px solid rgba(0,255,254,0.2);">
-        <p style="font-size:0.85rem;color:var(--color-cyan);margin:0;">Selected: <strong id="selected-agent-name-label">—</strong></p>
+      <div style="margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(26,77,58,0.06);border:1px solid rgba(26,77,58,0.20);">
+        <p style="font-size:0.85rem;color:var(--color-primary);margin:0;">Selected: <strong id="selected-agent-name-label">—</strong></p>
         <p style="font-size:0.75rem;color:var(--color-text-secondary);margin:4px 0 0 0;word-break:break-all;">ID: <span id="selected-agent-id-label">—</span></p>
       </div>
 
@@ -225,7 +226,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">System Prompt <span style="font-size:0.75rem;color:var(--color-text-secondary);">(editable — changes will be applied to the new agent)</span></label>
-        <textarea id="new-agent-prompt-input" class="form-input" rows="8" style="font-size:0.82rem;background:rgba(0,0,0,0.2);resize:vertical;" placeholder="Loading prompt..."></textarea>
+        <textarea id="new-agent-prompt-input" class="form-input" rows="8" style="font-size:0.82rem;resize:vertical;" placeholder="Loading prompt..."></textarea>
       </div>
 
       <div style="text-align:right;margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:1px solid var(--border-subtle);">
@@ -234,9 +235,39 @@
       </div>
     </div>
 
-    <div id="new-agent-result" style="display:none;margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);">
-      <p style="color:#00E676;font-size:0.9rem;margin:0 0 8px 0;">Agent created successfully!</p>
-      <p style="font-size:0.8rem;color:var(--color-text-secondary);margin:0;">New Agent ID: <code id="new-agent-result-id" style="color:var(--color-cyan);word-break:break-all;"></code></p>
+    <div id="new-agent-result" style="display:none;margin-top:var(--space-lg);padding:var(--space-md);border-radius:8px;background:rgba(26,77,58,0.08);border:1px solid rgba(26,77,58,0.25);">
+      <p style="color:var(--color-primary);font-size:0.9rem;margin:0 0 8px 0;">Agent created successfully!</p>
+      <p style="font-size:0.8rem;color:var(--color-text-secondary);margin:0;">New Agent ID: <code id="new-agent-result-id" style="color:var(--color-primary);word-break:break-all;"></code></p>
+    </div>
+  </div>
+</div>
+
+<!-- Character Limit Modal -->
+<div id="char-limit-modal" class="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;">
+  <div class="glass-card modal-content animate-in" style="max-width:480px;">
+    <span class="modal-close" onclick="closeCharLimitModal()">&times;</span>
+    <div class="modal-header">
+      <h2 style="margin:0;">Character Limit — <span id="char-limit-client-name">Client</span></h2>
+      <p style="font-size:0.9rem;color:var(--color-text-secondary);margin:4px 0 0 0;">Monthly ElevenLabs character allowance for this client</p>
+    </div>
+
+    <div class="modal-section-title" style="margin-top:var(--space-xl);"><span>🔢</span> Set Limit</div>
+    <div class="form-group">
+      <label class="form-label">Monthly Character Limit</label>
+      <input type="number" id="char-limit-input" class="form-input" min="0" step="1000" placeholder="e.g. 50000 (leave blank for unlimited)">
+    </div>
+    <div style="margin-top:var(--space-md);">
+      <button class="btn btn-primary btn-sm" onclick="saveCharLimit()">Save Limit</button>
+    </div>
+
+    <div class="modal-section-title" style="margin-top:var(--space-xl);"><span>➕</span> Add Characters</div>
+    <p style="font-size:0.8rem;color:var(--color-text-secondary);margin-bottom:var(--space-md);">Top up the limit by this amount. If the client was deactivated due to limit exhaustion, they will be reactivated automatically.</p>
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+        <label class="form-label">Characters to Add</label>
+        <input type="number" id="add-chars-input" class="form-input" min="1" step="1000" placeholder="e.g. 20000">
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="addClientCharacters()" style="white-space:nowrap;">Add Characters</button>
     </div>
   </div>
 </div>
