@@ -4,7 +4,7 @@ sheets_service.py - Google Sheets utilities for the voice-agent platform.
 Public API
 ----------
     create_client_sheet(client_id, business_name, token_data) -> str | None
-    append_call_to_sheet(call_id, phone, email, duration_seconds, summary)
+    append_call_to_sheet(call_id, phone, summary)
 
 Authentication
 --------------
@@ -33,15 +33,17 @@ logger = logging.getLogger(__name__)
 # The only OAuth scope needed for appending rows
 _SHEETS_SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
 
+# Service account that appends rows — must be an editor on every client sheet
+_SERVICE_ACCOUNT_EMAIL = "firebase-adminsdk-fbsvc@automite-cebae.iam.gserviceaccount.com"
+
+_SHEET_TAB = "Call Logs"
+
 _HEADER_ROW = [
+    "No.",
     "Timestamp (UTC)",
     "Call ID",
-    "True Caller Phone",
-    "Direct Caller Phone",
-    "Forwarded From",
-    "Duration (s)",
+    "Phone",
     "Summary",
-    "Transcript",
 ]
 
 
@@ -86,20 +88,18 @@ def create_client_sheet(
         ).execute()
         sheet_id = create_resp["spreadsheetId"]
 
-        # Write header row
-        spreadsheets.values().update(
-            spreadsheetId=sheet_id,
-            range="Sheet1!A1",
-            valueInputOption="RAW",
-            body={"values": [_HEADER_ROW]},
-        ).execute()
-
-        # Bold the header row
+        # Rename default "Sheet1" tab and bold the header in one batchUpdate
         num_cols = len(_HEADER_ROW)
         spreadsheets.batchUpdate(
             spreadsheetId=sheet_id,
             body={
                 "requests": [
+                    {
+                        "updateSheetProperties": {
+                            "properties": {"sheetId": 0, "title": _SHEET_TAB},
+                            "fields": "title",
+                        }
+                    },
                     {
                         "repeatCell": {
                             "range": {
@@ -110,16 +110,39 @@ def create_client_sheet(
                                 "endColumnIndex": num_cols,
                             },
                             "cell": {
-                                "userEnteredFormat": {
-                                    "textFormat": {"bold": True}
-                                }
+                                "userEnteredFormat": {"textFormat": {"bold": True}}
                             },
                             "fields": "userEnteredFormat.textFormat.bold",
                         }
-                    }
+                    },
                 ]
             },
         ).execute()
+
+        # Write header row to the renamed tab
+        spreadsheets.values().update(
+            spreadsheetId=sheet_id,
+            range=f"{_SHEET_TAB}!A1",
+            valueInputOption="RAW",
+            body={"values": [_HEADER_ROW]},
+        ).execute()
+
+        # Share with the service account so it can append rows on every call
+        drive_service = build("drive", "v3", credentials=creds, cache_discovery=False)
+        drive_service.permissions().create(
+            fileId=sheet_id,
+            body={
+                "type": "user",
+                "role": "writer",
+                "emailAddress": _SERVICE_ACCOUNT_EMAIL,
+            },
+            sendNotificationEmail=False,
+        ).execute()
+        logger.info(
+            "Sheet shared with service account | client=%s | sheet_id=%s",
+            client_id,
+            sheet_id,
+        )
 
         logger.info(
             "Google Sheet created | client=%s | sheet_id=%s | title=%s",
@@ -156,9 +179,8 @@ def _get_sheets_client():
 def append_call_to_sheet(
     call_id: str,
     phone: str,
-    email: str | None,
-    duration_seconds: float | None,
     summary: str | None,
+    sheet_id_override: str | None = None,
 ) -> bool:
     """
     Append a single call-log row to the configured Google Sheet.
@@ -200,12 +222,12 @@ def append_call_to_sheet(
         ... )
         True
     """
-    sheet_id = settings.google_sheet_id
-    sheet_tab = settings.google_sheet_tab
+    sheet_id = sheet_id_override or settings.google_sheet_id
+    sheet_tab = _SHEET_TAB
 
     if not sheet_id:
         logger.warning(
-            "GOOGLE_SHEET_ID is not configured — skipping Sheets append for call %s",
+            "No sheet ID available — skipping Sheets append for call %s",
             call_id,
         )
         return False
@@ -213,15 +235,14 @@ def append_call_to_sheet(
     timestamp = datetime.now(tz=timezone.utc).isoformat()
 
     row = [
+        "=ROW()-1",
         timestamp,
         call_id,
         phone or "",
-        email or "",
-        duration_seconds if duration_seconds is not None else "",
         summary or "",
     ]
 
-    range_notation = f"{sheet_tab}!A:F"
+    range_notation = f"{sheet_tab}!A:E"
 
     try:
         client = _get_sheets_client()

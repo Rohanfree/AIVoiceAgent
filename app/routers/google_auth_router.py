@@ -40,6 +40,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/calendar.events",
     "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
     "openid",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
@@ -178,10 +179,11 @@ async def google_callback(request: Request, code: str, state: str):
             client_data = client_doc.to_dict() or {}
             existing_sheet_id = client_data.get("google_sheet_id")
 
+            business_name = client_data.get("business_name", "Client")
             if existing_sheet_id:
-                logger.info("Sheet already exists for client %s, skipping creation", client_id)
+                logger.info("Sheet already exists for client %s — re-sending notification", client_id)
+                _send_sheet_notification(credentials, client_id, business_name, existing_sheet_id, db)
             else:
-                business_name = client_data.get("business_name", "Client")
                 sheet_id = create_client_sheet(client_id, business_name, token_data)
                 if sheet_id:
                     db.collection("clients").document(client_id).set(

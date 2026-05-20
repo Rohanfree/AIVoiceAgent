@@ -218,14 +218,22 @@ async def save_call_summary(
         extracted_customer_name=customer_name or None,
     )
 
+    # Look up the client's own sheet (falls back to global sheet if not linked)
+    client_sheet_id: str | None = None
+    try:
+        client_doc = db.collection("clients").document(client_id).get()
+        if client_doc.exists:
+            client_sheet_id = (client_doc.to_dict() or {}).get("google_sheet_id")
+    except Exception as exc:
+        logger.warning("Could not fetch client sheet_id for %s: %s", client_id, exc)
+
     # Build a unique call ID for the Sheets row
     call_id = f"el_{client_id}_{caller_phone}_{str(uuid.uuid4())[:8]}"
     append_call_to_sheet(
         call_id=call_id,
         phone=caller_phone,
-        email=None,
-        duration_seconds=duration_seconds,
         summary=summary,
+        sheet_id_override=client_sheet_id,
     )
 
     result = {
