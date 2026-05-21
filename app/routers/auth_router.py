@@ -8,8 +8,11 @@ Handles:
 """
 
 import logging
+import smtplib
 import uuid
 from datetime import timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore import Client, FieldFilter
@@ -169,6 +172,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "subscription_status": "active",
         "client_id": client_id,
         "client_name": body.client_name,
+        "email": body.email,
         "elevenlabs_agent_id": body.elevenlabs_agent_id,
         "created_at": now,
     }
@@ -187,6 +191,8 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "id": client_id,
         "user_id": user_id,
         "business_name": body.client_name,
+        "email": body.email,
+        "timezone": body.timezone,
         "elevenlabs_agent_id": body.elevenlabs_agent_id,
         "tool_token": tool_token,
         "services": [],
@@ -200,6 +206,9 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     }
     db.collection("clients").document(client_id).set(client_doc)
     logger.info("Client '%s' created with id=%s", body.client_name, client_id)
+
+    # Send welcome email to the registered email address
+    _send_welcome_email(body.email, body.client_name)
 
     from app.services.elevenlabs_service import setup_agent_tools, patch_agent_tools, inject_client_context_into_prompt, patch_agent_first_message
 
@@ -308,6 +317,48 @@ async def refresh_token(body: RefreshRequest) -> TokenResponse:
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
+
+def _send_welcome_email(client_email: str, business_name: str) -> None:
+    """Send a welcome email to the newly registered client."""
+    try:
+        if not settings.smtp_user or not settings.smtp_password:
+            logger.warning("SMTP not configured — skipping welcome email for %s", client_email)
+            return
+
+        dashboard_url = settings.base_url.rstrip("/") + "/automiteui/pages/dashboard"
+        html_body = f"""
+        <html><body style="font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:600px;margin:0 auto;">
+          <div style="background:#1A4D3A;padding:24px 32px;border-radius:12px 12px 0 0;">
+            <h1 style="margin:0;color:#fff;font-size:22px;">Welcome to Automite AI!</h1>
+          </div>
+          <div style="background:#f9f9f9;padding:32px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;">
+            <p>Hi <strong>{business_name}</strong>,</p>
+            <p>Your Automite AI account has been created successfully. Your AI voice assistant is ready to be configured.</p>
+            <p><a href="{dashboard_url}" style="background:#1A4D3A;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Go to Dashboard</a></p>
+            <p style="margin-top:24px;font-size:13px;color:#666;">
+              Next step: Connect your Google Calendar from the dashboard to enable automated call log sheets and appointment booking.
+            </p>
+          </div>
+          <p style="font-size:12px;color:#999;text-align:center;margin-top:16px;">Sent by Automite AI</p>
+        </body></html>
+        """
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"Welcome to Automite AI — {business_name}"
+        msg["From"] = f"Automite AI <{settings.smtp_user}>"
+        msg["To"] = client_email
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(settings.smtp_user, settings.smtp_password)
+            server.sendmail(settings.smtp_user, client_email, msg.as_string())
+
+        logger.info("Welcome email sent to %s for business '%s'", client_email, business_name)
+    except Exception as exc:
+        logger.error("Failed to send welcome email to %s: %s", client_email, exc)
+
 
 def _find_user_by_username(db: Client, username: str) -> dict | None:
     """Look up a user document by username. Returns dict or None."""
