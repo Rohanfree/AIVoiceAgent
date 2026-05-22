@@ -35,6 +35,16 @@
         </div>
 
         <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-input" placeholder="e.g. you@example.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="timezone">Timezone</label>
+            <select id="timezone" class="form-input"></select>
+        </div>
+
+        <div class="form-group">
             <label class="form-label" for="username">Username</label>
             <input type="text" id="username" class="form-input" placeholder="Choose a username" required minlength="3"
                 autocomplete="username">
@@ -59,4 +69,27 @@
         Already have an account? <a href="/automiteaiapplication/automiteui/pages/login">Sign in</a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const sel = document.getElementById('timezone');
+    if (!sel) return;
+    const zones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
+        'Africa/Cairo','America/Chicago','America/Los_Angeles','America/New_York','America/Sao_Paulo',
+        'Asia/Colombo','Asia/Dubai','Asia/Karachi','Asia/Kolkata','Asia/Singapore','Asia/Tokyo',
+        'Australia/Sydney','Europe/London','Europe/Paris','Pacific/Auckland','UTC'
+    ];
+    const preferred = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+    zones.forEach(tz => {
+        const opt = document.createElement('option');
+        opt.value = tz;
+        opt.textContent = tz.replace(/_/g, ' ');
+        if (tz === preferred) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    if (!sel.value) sel.value = 'Asia/Kolkata';
+})();
+</script>
 {% endblock %}

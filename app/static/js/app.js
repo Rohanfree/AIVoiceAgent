@@ -311,6 +311,8 @@ function initRegisterForm() {
             password: form.querySelector('#password').value,
             client_name: form.querySelector('#client_name').value.trim(),
             elevenlabs_agent_id: form.querySelector('#elevenlabs_agent_id').value.trim(),
+            email: form.querySelector('#email').value.trim(),
+            timezone: form.querySelector('#timezone').value || 'Asia/Kolkata',
             business_info: (form.querySelector('#business_info').value || '').trim(),
             first_message: (form.querySelector('#first_message') ? form.querySelector('#first_message').value.trim() : ''),
         };

@@ -2,7 +2,7 @@
 auth_models.py — Pydantic schemas for authentication endpoints.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
@@ -19,6 +19,8 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, description="Strong password (min 8 chars)")
     client_name: str = Field(..., min_length=1, max_length=100, description="Business/client display name")
     elevenlabs_agent_id: str = Field(..., min_length=1, max_length=200, description="ElevenLabs Conversational AI agent ID")
+    email: EmailStr = Field(..., description="Client email address for account communications")
+    timezone: str = Field(default="Asia/Kolkata", description="IANA timezone (e.g. Asia/Kolkata, America/New_York)")
     business_info: str = Field(default="", description="Client-specific business info: booking slots, working days, policies")
     first_message: str = Field(default="", description="Agent's opening message spoken at the start of every call")
 

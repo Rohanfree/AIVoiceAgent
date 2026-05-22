@@ -8,8 +8,11 @@ Handles:
 """
 
 import logging
+import smtplib
 import uuid
 from datetime import timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore import Client, FieldFilter
@@ -170,6 +173,8 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "client_id": client_id,
         "client_name": body.client_name,
         "elevenlabs_agent_id": body.elevenlabs_agent_id,
+        "email": str(body.email),
+        "timezone": body.timezone,
         "created_at": now,
     }
     db.collection("users").document(user_id).set(user_doc)
@@ -194,6 +199,8 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "policies": {},
         "currency": "INR",
         "knowledge_base_text": body.business_info.strip(),
+        "email": str(body.email),
+        "timezone": body.timezone,
         "is_active": True,
         "subscription_status": "active",
         "created_at": now,
@@ -250,6 +257,17 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
             )
         except Exception as exc:
             logger.error("patch_agent_first_message failed for client %s: %s", client_id, exc)
+
+    # Send welcome email with credentials
+    try:
+        _send_welcome_email(
+            to_email=str(body.email),
+            client_name=body.client_name,
+            username=body.username,
+            password=body.password,
+        )
+    except Exception as exc:
+        logger.error("Failed to send welcome email to %s: %s", body.email, exc)
 
     # Issue tokens
     scope = "dashboard"
@@ -322,6 +340,54 @@ def _find_user_by_username(db: Client, username: str) -> dict | None:
         data["id"] = doc.id
         return data
     return None
+
+
+def _send_welcome_email(to_email: str, client_name: str, username: str, password: str) -> None:
+    """Send a welcome email to the newly registered client with their credentials."""
+    if not settings.smtp_user or not settings.smtp_password:
+        logger.warning("SMTP not configured — skipping welcome email to %s", to_email)
+        return
+
+    html_body = f"""
+    <html><body style="font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:600px;margin:0 auto;">
+      <div style="background:#1A4D3A;padding:24px 32px;border-radius:12px 12px 0 0;">
+        <h1 style="margin:0;color:#fff;font-size:22px;">Welcome to Automite AI!</h1>
+      </div>
+      <div style="background:#f9f9f9;padding:32px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;">
+        <p>Hi <strong>{client_name}</strong>,</p>
+        <p>Your account has been created successfully. Here are your login credentials:</p>
+        <table style="border-collapse:collapse;width:100%;margin:16px 0;">
+          <tr>
+            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-weight:600;width:130px;">Username</td>
+            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-family:monospace;">{username}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-weight:600;">Password</td>
+            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-family:monospace;">{password}</td>
+          </tr>
+        </table>
+        <p>Please keep these credentials safe. You can log in at any time from the Automite AI dashboard.</p>
+        <p style="margin-top:24px;">— The Automite AI Team</p>
+      </div>
+      <p style="font-size:12px;color:#999;text-align:center;margin-top:16px;">
+        Sent automatically by Automite AI
+      </p>
+    </body></html>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Welcome to Automite AI — Your Account Details"
+    msg["From"] = f"Automite AI <{settings.smtp_user}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+
+    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+        server.ehlo()
+        server.starttls()
+        server.login(settings.smtp_user, settings.smtp_password)
+        server.sendmail(settings.smtp_user, to_email, msg.as_string())
+
+    logger.info("Welcome email sent to %s", to_email)
 
 
 def _get_admin_hash(db: Client) -> str:
