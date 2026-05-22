@@ -21,20 +21,6 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
-            <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="timezone">Time Zone</label>
-            <select id="timezone" class="form-input" required>
-                {% for tz in timezones %}
-                <option value="{{ tz }}" {% if tz == "Asia/Kolkata" %}selected{% endif %}>{{ tz }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
             <label class="form-label" for="elevenlabs_agent_id">ElevenLabs Agent ID</label>
             <input type="text" id="elevenlabs_agent_id" class="form-input" placeholder="e.g. agent_01jxxxxxxxxxxxxxx" required>
         </div>

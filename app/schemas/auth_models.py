@@ -18,8 +18,6 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, description="Desired username")
     password: str = Field(..., min_length=8, description="Strong password (min 8 chars)")
     client_name: str = Field(..., min_length=1, max_length=100, description="Business/client display name")
-    email: str = Field(..., min_length=5, max_length=200, description="Client email address for notifications")
-    timezone: str = Field(default="Asia/Kolkata", max_length=100, description="Client IANA timezone (e.g. Asia/Kolkata)")
     elevenlabs_agent_id: str = Field(..., min_length=1, max_length=200, description="ElevenLabs Conversational AI agent ID")
     business_info: str = Field(default="", description="Client-specific business info: booking slots, working days, policies")
     first_message: str = Field(default="", description="Agent's opening message spoken at the start of every call")

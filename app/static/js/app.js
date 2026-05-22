@@ -310,8 +310,6 @@ function initRegisterForm() {
             username: form.querySelector('#username').value.trim(),
             password: form.querySelector('#password').value,
             client_name: form.querySelector('#client_name').value.trim(),
-            email: form.querySelector('#email').value.trim(),
-            timezone: form.querySelector('#timezone').value,
             elevenlabs_agent_id: form.querySelector('#elevenlabs_agent_id').value.trim(),
             business_info: (form.querySelector('#business_info').value || '').trim(),
             first_message: (form.querySelector('#first_message') ? form.querySelector('#first_message').value.trim() : ''),

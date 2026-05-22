@@ -216,29 +216,22 @@ async def google_callback(request: Request, code: str, state: str):
 
 
 def _send_sheet_notification(credentials, client_id: str, business_name: str, sheet_id: str, db) -> None:
-    """Send a sheet-created notification to the client's registered email."""
+    """Fetch client's Google email via userinfo API and send a sheet-created notification."""
     try:
-        # Use the email stored at registration; fall back to Google userinfo if not present
-        client_doc = db.collection("clients").document(client_id).get()
-        client_data = client_doc.to_dict() or {}
-        client_email = client_data.get("email")
-
+        resp = http_requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {credentials.token}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        client_email = resp.json().get("email")
         if not client_email:
-            # Fallback: fetch from Google userinfo for clients registered before email field was added
-            try:
-                resp = http_requests.get(
-                    "https://www.googleapis.com/oauth2/v3/userinfo",
-                    headers={"Authorization": f"Bearer {credentials.token}"},
-                    timeout=10,
-                )
-                resp.raise_for_status()
-                client_email = resp.json().get("email")
-            except Exception as ue:
-                logger.warning("Could not retrieve Google email for client %s: %s", client_id, ue)
-
-        if not client_email:
-            logger.warning("No email found for client %s — skipping sheet notification", client_id)
+            logger.warning("Could not retrieve Google email for client %s", client_id)
             return
+
+        db.collection("clients").document(client_id).set(
+            {"google_user_email": client_email}, merge=True
+        )
 
         if not settings.smtp_user or not settings.smtp_password:
             logger.warning("SMTP not configured — skipping sheet notification email")

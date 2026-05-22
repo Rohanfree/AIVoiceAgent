@@ -48,9 +48,7 @@ async def login_page(request: Request):
 
 @router.get("/register", response_class=HTMLResponse, summary="Client registration page")
 async def register_page(request: Request):
-    from zoneinfo import available_timezones
-    timezones = sorted(available_timezones())
-    return templates.TemplateResponse("register.html", {"request": request, "timezones": timezones})
+    return templates.TemplateResponse("register.html", {"request": request})
 
 
 @router.get("/dashboard", response_class=HTMLResponse, summary="Client dashboard page")
