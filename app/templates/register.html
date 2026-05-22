@@ -39,9 +39,11 @@
             <input type="email" id="email" class="form-input" placeholder="e.g. you@example.com" required autocomplete="email">
         </div>
 
-        <div class="form-group">
-            <label class="form-label" for="timezone">Timezone</label>
-            <select id="timezone" class="form-input"></select>
+        <div class="form-group" style="position:relative;">
+            <label class="form-label" for="timezone-search">Timezone</label>
+            <input type="text" id="timezone-search" class="form-input" placeholder="Search timezone…" autocomplete="off">
+            <input type="hidden" id="timezone" value="Asia/Kolkata">
+            <div id="timezone-dropdown" style="display:none;position:absolute;z-index:999;left:0;right:0;max-height:200px;overflow-y:auto;background:#0f2218;border:1px solid rgba(26,77,58,0.5);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 6px 16px rgba(0,0,0,0.4);"></div>
         </div>
 
         <div class="form-group">
@@ -74,22 +76,68 @@
 {% block scripts %}
 <script>
 (function () {
-    const sel = document.getElementById('timezone');
-    if (!sel) return;
+    const searchInput = document.getElementById('timezone-search');
+    const hiddenInput = document.getElementById('timezone');
+    const dropdown    = document.getElementById('timezone-dropdown');
+    if (!searchInput || !hiddenInput || !dropdown) return;
+
     const zones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
         'Africa/Cairo','America/Chicago','America/Los_Angeles','America/New_York','America/Sao_Paulo',
         'Asia/Colombo','Asia/Dubai','Asia/Karachi','Asia/Kolkata','Asia/Singapore','Asia/Tokyo',
         'Australia/Sydney','Europe/London','Europe/Paris','Pacific/Auckland','UTC'
     ];
-    const preferred = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-    zones.forEach(tz => {
-        const opt = document.createElement('option');
-        opt.value = tz;
-        opt.textContent = tz.replace(/_/g, ' ');
-        if (tz === preferred) opt.selected = true;
-        sel.appendChild(opt);
+
+    const preferred  = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+    const defaultTz  = zones.includes(preferred) ? preferred : 'Asia/Kolkata';
+    hiddenInput.value = defaultTz;
+    searchInput.value = defaultTz.replace(/_/g, ' ');
+
+    function renderDropdown(filtered) {
+        dropdown.innerHTML = '';
+        const items = filtered.slice(0, 60);
+        if (!items.length) {
+            dropdown.innerHTML = '<div style="padding:10px 14px;color:#888;font-size:0.85rem;">No results</div>';
+        } else {
+            items.forEach(tz => {
+                const item = document.createElement('div');
+                item.textContent = tz.replace(/_/g, ' ');
+                item.dataset.value = tz;
+                item.style.cssText = 'padding:9px 14px;cursor:pointer;font-size:0.85rem;color:#d0e8d8;border-bottom:1px solid rgba(26,77,58,0.15);transition:background 0.1s;';
+                item.addEventListener('mouseenter', () => { item.style.background = 'rgba(26,77,58,0.35)'; });
+                item.addEventListener('mouseleave', () => { item.style.background = ''; });
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    hiddenInput.value = tz;
+                    searchInput.value = tz.replace(/_/g, ' ');
+                    dropdown.style.display = 'none';
+                });
+                dropdown.appendChild(item);
+            });
+        }
+        dropdown.style.display = 'block';
+    }
+
+    searchInput.addEventListener('focus', () => {
+        const q = searchInput.value.trim().toLowerCase().replace(/ /g, '_');
+        renderDropdown(q ? zones.filter(z => z.toLowerCase().includes(q)) : zones);
     });
-    if (!sel.value) sel.value = 'Asia/Kolkata';
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase().replace(/ /g, '_');
+        renderDropdown(q ? zones.filter(z => z.toLowerCase().includes(q)) : zones);
+    });
+
+    searchInput.addEventListener('blur', () => {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 180);
+        const typed = searchInput.value.trim().replace(/ /g, '_');
+        const exact = zones.find(z => z.toLowerCase() === typed.toLowerCase());
+        if (exact) {
+            hiddenInput.value = exact;
+            searchInput.value = exact.replace(/_/g, ' ');
+        } else {
+            searchInput.value = hiddenInput.value.replace(/_/g, ' ');
+        }
+    });
 })();
 </script>
 {% endblock %}

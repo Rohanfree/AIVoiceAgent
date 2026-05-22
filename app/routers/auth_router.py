@@ -367,6 +367,10 @@ def _send_welcome_email(to_email: str, client_name: str, username: str, password
           </tr>
         </table>
         <p>Please keep these credentials safe. You can log in at any time from the Automite AI dashboard.</p>
+        <p style="background:#fff8e1;border:1px solid #f0c040;border-radius:6px;padding:12px 14px;color:#7a5800;margin-top:16px;font-size:0.93em;">
+          <strong>Security tip:</strong> For better security, please change your password after your first login.
+          Open the <strong>Edit Profile</strong> section in your dashboard to set a new password.
+        </p>
         <p style="margin-top:24px;">— The Automite AI Team</p>
       </div>
       <p style="font-size:12px;color:#999;text-align:center;margin-top:16px;">

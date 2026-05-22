@@ -373,6 +373,18 @@ async function initDashboard() {
             }
         }
 
+        // Google Sheet link
+        const sheetBox = document.getElementById('sheet-status-box');
+        if (sheetBox && profile.google_sheet_id) {
+            const sheetUrl = `https://docs.google.com/spreadsheets/d/${profile.google_sheet_id}`;
+            sheetBox.innerHTML = `
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-md);">
+                    <span style="color: var(--color-success)">✓</span> Your call log sheet is active.
+                </p>
+                <a href="${sheetUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Sheet</a>
+            `;
+        }
+
     }
 
     // Load this month's character usage
