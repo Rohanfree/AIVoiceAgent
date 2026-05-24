@@ -25,12 +25,39 @@ python3 -m app.main
 # Docs:   http://localhost:8090/automiteaiapplication/docs
 ```
 
-### Docker
+### Docker (Production)
 
 ```bash
 docker compose up --build -d
 # Access at http://localhost:8090
 ```
+
+### Docker (Test Environment)
+
+The repo includes a separate `docker-compose.test.yml` for running a test instance alongside production with no container name or port conflicts.
+
+```bash
+# 1. Add your test Firebase service account
+cp firebase-service-account-test.json.example firebase-service-account-test.json
+# Edit firebase-service-account-test.json with your test project credentials
+
+# 2. Configure the test .env
+cp .env.example .env
+# Set FIREBASE_CREDENTIAL_PATH=./firebase-service-account-test.json
+# Set APP_ENV=development
+# Set BASE_URL=https://dev.auto-mite.com/
+
+# 3. Start the test container
+docker compose -f docker-compose.test.yml up --build -d
+# Access at http://localhost:8091
+```
+
+| Setting | Production (`docker-compose.yml`) | Test (`docker-compose.test.yml`) |
+|---|---|---|
+| Container name | `ai-agent-api` | `ai-agent-api-test` |
+| Host port | `8090` | `8091` |
+| Firebase credentials | `firebase-service-account.json` | `firebase-service-account-test.json` |
+| Public URL | `https://auto-mite.com/` | `https://dev.auto-mite.com/` |
 
 ---
 
