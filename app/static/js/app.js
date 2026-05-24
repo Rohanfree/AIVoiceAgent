@@ -257,10 +257,32 @@ function initRegisterForm() {
     if (!form) return;
 
     const agentIdInput = form.querySelector('#elevenlabs_agent_id');
+    const AGENT_ID_RE = /^agent_[a-zA-Z0-9]{10,}$/;
+
+    function showAgentIdError(msg) {
+        let errEl = document.getElementById('agent-id-error');
+        if (!errEl) {
+            errEl = document.createElement('p');
+            errEl.id = 'agent-id-error';
+            errEl.style.cssText = 'color:#ef4444;font-size:0.85rem;margin-top:0.25rem;';
+            agentIdInput.parentElement.appendChild(errEl);
+        }
+        errEl.textContent = msg;
+    }
+
     if (agentIdInput) {
         agentIdInput.addEventListener('blur', async () => {
             const agentId = agentIdInput.value.trim();
             if (!agentId) return;
+
+            const existing = document.getElementById('agent-id-error');
+            if (existing) existing.remove();
+
+            if (!AGENT_ID_RE.test(agentId)) {
+                showAgentIdError('Invalid Agent ID format. It should look like: agent_01jxxxxxxxxxxxxxxxxxx');
+                return;
+            }
+
             const firstMsgInput = document.getElementById('first_message');
             const firstMsgLoading = document.getElementById('first-message-loading');
             try {
@@ -269,14 +291,8 @@ function initRegisterForm() {
                 if (firstMsgLoading) firstMsgLoading.style.display = 'none';
                 if (!resp.ok) return;
                 const data = await resp.json();
-                const existing = document.getElementById('agent-id-error');
-                if (existing) existing.remove();
                 if (data.taken) {
-                    const errEl = document.createElement('p');
-                    errEl.id = 'agent-id-error';
-                    errEl.style.cssText = 'color:#ef4444;font-size:0.85rem;margin-top:0.25rem;';
-                    errEl.textContent = `This agent is already registered to "${data.client_name}".`;
-                    agentIdInput.parentElement.appendChild(errEl);
+                    showAgentIdError(`This agent is already registered to "${data.client_name}".`);
                     if (firstMsgInput) firstMsgInput.value = '';
                 } else {
                     if (firstMsgInput && data.first_message != null) {
@@ -300,8 +316,15 @@ function initRegisterForm() {
         const btn = form.querySelector('button[type="submit"]');
         setLoading(btn, true);
 
+        const agentIdVal = form.querySelector('#elevenlabs_agent_id').value.trim();
+        if (!AGENT_ID_RE.test(agentIdVal)) {
+            showAgentIdError('Invalid Agent ID format. It should look like: agent_01jxxxxxxxxxxxxxxxxxx');
+            setLoading(btn, false);
+            return;
+        }
+
         if (document.getElementById('agent-id-error')) {
-            showAlert('error', 'Please use a different Agent ID before continuing.');
+            showAlert('error', 'Please fix the Agent ID error before continuing.');
             setLoading(btn, false);
             return;
         }
