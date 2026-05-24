@@ -21,6 +21,7 @@ ENV/
 
 # Firebase service account - NEVER commit
 firebase-service-account.json
+firebase-service-account-test.json
 *-service-account.json
 *serviceAccount*.json
 

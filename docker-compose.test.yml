@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    container_name: ai-agent-api-test
+    ports:
+      - "8091:8090"
+    env_file:
+      - .env
+    volumes:
+      - ./firebase-service-account-test.json:/app/firebase-service-account-test.json
+    restart: always
