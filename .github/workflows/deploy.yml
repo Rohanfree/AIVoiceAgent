@@ -3,6 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
 
 jobs:
   deploy:
@@ -22,3 +28,5 @@ jobs:
             docker compose down
             docker compose up --build -d
             docker image prune -f
+            cd /root/automite/AIVoiceAgentTest
+            docker compose restart
