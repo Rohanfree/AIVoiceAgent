@@ -24,6 +24,7 @@ from typing import Callable
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
@@ -292,6 +293,92 @@ def create_app() -> FastAPI:
         StaticFiles(directory="app/static"),
         name="static",
     )
+
+    # ── SEO / Discovery files ────────────────────────────────────────────────
+    @app.get("/robots.txt", include_in_schema=False)
+    async def robots_txt() -> PlainTextResponse:
+        content = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /automiteaiapplication/automiteui/auth/\n"
+            "Disallow: /automiteaiapplication/mngr-sys-access-78/\n"
+            "Disallow: /automiteaiapplication/docs\n"
+            "Disallow: /automiteaiapplication/redoc\n"
+            "Disallow: /automiteaiapplication/openapi.json\n"
+            "\n"
+            "Sitemap: https://auto-mite.com/sitemap.xml\n"
+        )
+        return PlainTextResponse(content)
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    async def sitemap_xml() -> Response:
+        # Sitemap index — one entry point for the whole site (main pages + blog)
+        content = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            "  <sitemap>\n"
+            "    <loc>https://auto-mite.com/sitemap-pages.xml</loc>\n"
+            "  </sitemap>\n"
+            "  <sitemap>\n"
+            "    <loc>https://auto-mite.com/blogs/sitemap.xml</loc>\n"
+            "  </sitemap>\n"
+            "</sitemapindex>\n"
+        )
+        return Response(content=content, media_type="application/xml")
+
+    @app.get("/sitemap-pages.xml", include_in_schema=False)
+    async def sitemap_pages_xml() -> Response:
+        content = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            "  <url>\n"
+            "    <loc>https://auto-mite.com/automiteaiapplication/automiteui/pages/landing</loc>\n"
+            "    <changefreq>monthly</changefreq>\n"
+            "    <priority>1.0</priority>\n"
+            "  </url>\n"
+            "  <url>\n"
+            "    <loc>https://auto-mite.com/blogs</loc>\n"
+            "    <changefreq>weekly</changefreq>\n"
+            "    <priority>0.8</priority>\n"
+            "  </url>\n"
+            "</urlset>\n"
+        )
+        return Response(content=content, media_type="application/xml")
+
+    @app.get("/llms.txt", include_in_schema=False)
+    async def llms_txt() -> PlainTextResponse:
+        content = (
+            "# Automite AI\n"
+            "> AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 — purpose-built for businesses.\n"
+            "\n"
+            "## Services\n"
+            "- [Inbound Voice Agents](https://auto-mite.com/automiteaiapplication/automiteui/pages/landing): "
+            "Automated receptionists that handle incoming calls, qualify leads, and book appointments\n"
+            "- [Outbound Voice Agents](https://auto-mite.com/automiteaiapplication/automiteui/pages/landing): "
+            "Automated follow-up calls, reminders, and re-engagement campaigns\n"
+            "\n"
+            "## Pages\n"
+            "- [Home / Landing](https://auto-mite.com/automiteaiapplication/automiteui/pages/landing): "
+            "Main product page — services, ROI calculator, FAQ, and free consultation booking\n"
+            "- [Blog](https://auto-mite.com/blogs): "
+            "Automite's knowledge hub covering AI Agents, LLMs, RAG Systems, Safety, and Fine-Tuning — "
+            "written for engineers, researchers, and founders. Updated frequently.\n"
+            "- [Blog index for LLMs](https://auto-mite.com/blogs/llms.txt): "
+            "Machine-readable list of every blog post and author, kept in sync automatically.\n"
+            "\n"
+            "## How It Works\n"
+            "1. Strategic audit of your business call flows\n"
+            "2. Custom prompt engineering and agent configuration\n"
+            "3. Multi-stage testing and deployment\n"
+            "4. Continuous optimisation and maintenance\n"
+            "\n"
+            "## Tech Stack\n"
+            "Built on OpenAI and Twilio integrations with custom prompt engineering.\n"
+            "\n"
+            "## Contact\n"
+            "Book a free consultation: https://auto-mite.com/automiteaiapplication/automiteui/pages/landing\n"
+        )
+        return PlainTextResponse(content)
 
     # ── Health check ────────────────────────────────────────────────────────
     @app.get("/automiteaiapplication/health", tags=["Health"], summary="Service health check")
