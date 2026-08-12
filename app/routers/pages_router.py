@@ -41,6 +41,16 @@ async def landing_page(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 
+@router.get("/case-studies", response_class=HTMLResponse, summary="Case studies page")
+async def case_studies_page(request: Request):
+    return templates.TemplateResponse("case-studies.html", {"request": request})
+
+
+@router.get("/privacy-policy", response_class=HTMLResponse, summary="Privacy policy page")
+async def privacy_policy_page(request: Request):
+    return templates.TemplateResponse("privacy-policy.html", {"request": request})
+
+
 @router.get("/login", response_class=HTMLResponse, summary="Client login page")
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
