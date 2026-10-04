@@ -3,6 +3,33 @@
 {% block title %}Login{% endblock %}
 {% block meta_description %}Sign in to your Automite AI dashboard{% endblock %}
 
+{% block head_extra %}
+<style>
+    /* Styling for ElevenLabs Widget to match Automite AI theme */
+    elevenlabs-convai {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 9999;
+        /* Add a subtle neon glow to the widget container */
+        filter: drop-shadow(0 0 10px var(--color-cyan-dim));
+        transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    elevenlabs-convai:hover {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 15px var(--color-cyan));
+    }
+
+    @media (max-width: 768px) {
+        elevenlabs-convai {
+            bottom: 1rem;
+            right: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block main_class %}auth-wrapper{% endblock %}
 
 {% block content %}
@@ -34,4 +61,11 @@
         Don't have an account? <a href="/automiteaiapplication/automiteui/pages/register">Register here</a>
     </div>
 </div>
+
+<!-- ElevenLabs Conversational AI Widget -->
+<elevenlabs-convai agent-id="agent_9201kkyd33bmfeha7k2z7tbrra2m"></elevenlabs-convai>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 {% endblock %}
