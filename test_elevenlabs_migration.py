@@ -29,6 +29,7 @@ class TestRegisterRequestSchema(unittest.TestCase):
             password="password123",
             client_name="Test Salon",
             elevenlabs_agent_id="agent_abc123",
+            email="test@example.com",
         )
         self.assertEqual(req.elevenlabs_agent_id, "agent_abc123")
 
@@ -81,7 +82,7 @@ class TestClientRouterAllowedFields(unittest.TestCase):
         found = False
         for node in ast.walk(tree):
             if isinstance(node, ast.Set):
-                elts = [e.s for e in node.elts if isinstance(e, ast.Constant)]
+                elts = [e.value for e in node.elts if isinstance(e, ast.Constant)]
                 if "knowledge_base_text" in elts:
                     found = True
                     break
@@ -100,6 +101,7 @@ class TestAuthRouterRegister(unittest.IsolatedAsyncioTestCase):
             password="password123",
             client_name="My Salon",
             elevenlabs_agent_id="agent_test999",
+            email="newuser@example.com",
         )
 
         # Fake Firestore
@@ -138,7 +140,29 @@ class TestAuthRouterRegister(unittest.IsolatedAsyncioTestCase):
 class TestRouterRegistration(unittest.TestCase):
     def test_elevenlabs_tools_routes_exist(self):
         from app.main import app
-        paths = {route.path for route in app.routes}
+
+        def _collect_paths():
+            """Flat APIRoutes on old FastAPI; _IncludedRouter wrappers on new."""
+            paths = set()
+            for route in app.routes:
+                direct = getattr(route, "path", None)
+                if direct:
+                    paths.add(direct)
+                    continue
+                orig = getattr(route, "original_router", None)
+                if orig is None:
+                    continue
+                ctx = getattr(route, "include_context", None)
+                # NB: sub-route paths already carry the router's own prefix;
+                # only the include-time prefix needs prepending.
+                base = getattr(ctx, "prefix", "") or ""
+                for sub in getattr(orig, "routes", []):
+                    sub_path = getattr(sub, "path", None)
+                    if sub_path:
+                        paths.add(base + sub_path)
+            return paths
+
+        paths = _collect_paths()
         expected = [
             "/automiteaiapplication/elevenlabs-tools/get-customer",
             "/automiteaiapplication/elevenlabs-tools/check-availability",

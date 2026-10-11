@@ -67,8 +67,8 @@ def test_main_does_not_register_vapi_routers():
         source = f.read()
     assert "from app.routers import agent_tools" not in source, \
         "main.py still imports agent_tools from active routers"
-    assert "include_router(agent_tools" not in source, \
-        "main.py still registers agent_tools router"
+    assert "include_router(agent_tools." not in source, \
+        "main.py still registers the legacy agent_tools router"
     assert "from app.routers import vapi_webhook" not in source, \
         "main.py still imports vapi_webhook"
     print("PASS  main.py does not register any VAPI router")
