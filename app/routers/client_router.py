@@ -63,7 +63,8 @@ async def update_profile(  # noqa: C901
 ) -> dict:
     """
     Update the client's profile. Accepted fields:
-    - business_name, services, operating_hours, policies, currency
+    - business_name, services, operating_hours, policies, currency,
+      elevenlabs_agent_id, knowledge_base_text
     """
     client_id = user.get("client_id")
     if not client_id:
@@ -72,7 +73,7 @@ async def update_profile(  # noqa: C901
             detail="No client profile associated with this account.",
         )
 
-    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency", "elevenlabs_agent_id"}
+    allowed_fields = {"business_name", "services", "operating_hours", "policies", "currency", "elevenlabs_agent_id", "knowledge_base_text"}
     filtered = {k: v for k, v in updates.items() if k in allowed_fields}
 
     if not filtered:
