@@ -305,6 +305,7 @@ def create_app() -> FastAPI:
             "Disallow: /automiteaiapplication/docs\n"
             "Disallow: /automiteaiapplication/redoc\n"
             "Disallow: /automiteaiapplication/openapi.json\n"
+            "Disallow: /automiteaiapplication/automiteui/pages/landing-moves-preview\n"
             "\n"
             "Sitemap: https://auto-mite.com/sitemap.xml\n"
         )
