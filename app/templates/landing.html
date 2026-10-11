@@ -61,6 +61,20 @@
       from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    elevenlabs-convai {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 999;
+      transform: scale(0.88);
+      transform-origin: bottom right;
+      filter: drop-shadow(0 4px 16px rgba(26,77,58,0.18));
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+    elevenlabs-convai:hover { transform: scale(0.94); filter: drop-shadow(0 6px 20px rgba(26,77,58,0.22)); }
+    @media (max-width: 768px) {
+      elevenlabs-convai { bottom: 0.85rem; right: 0.85rem; transform: scale(0.8); }
+    }
   </style>
 </head>
 
@@ -896,6 +910,9 @@
       </div>
     </div>
   </footer>
+
+  <elevenlabs-convai agent-id="agent_2601ks0nkjsmfrn9g6m0d90c8qjh"></elevenlabs-convai>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
   <script src="/automiteaiapplication/automiteui/static/js/landing.js?v=11"></script>
   <script>
