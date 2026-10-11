@@ -89,7 +89,7 @@ docker compose -f docker-compose.test.yml up --build -d
 │   │   ├── calendar_service.py      #   Google Calendar sync
 │   │   ├── customer_service.py      #   Customer record management
 │   │   ├── sheets_service.py        #   Google Sheets logging
-│   │   └── whatsapp_service.py      #   WhatsApp Cloud API messaging
+│   │   └── whatsapp_service.py      #   ⚠️  UNINTEGRATED — dead code, no callers (see notes)
 │   ├── legacy/
 │   │   └── vapi/                # ⚠️  LEGACY — Vapi AI integration (disabled)
 │   │       ├── __init__.py      #   Legacy package notice
@@ -260,9 +260,9 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | — |
 | `SECRET_KEY` | Fernet encryption key | — |
 | `BASE_URL` | Public base URL for callbacks | `http://localhost:8090` |
-| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token | — |
-| `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID | — |
-| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID | — |
+| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token (⚠️ currently unused — service is dead code) | — |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID (⚠️ currently unused) | — |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID (⚠️ currently unused) | — |
 | `SMTP_HOST` / `SMTP_PORT` | Email SMTP server | `smtp.gmail.com:587` |
 | `SMTP_USER` / `SMTP_PASSWORD` | Gmail SMTP credentials (App Password) | — |
 | `CONTACT_EMAIL` | Where contact form submissions are sent | `aiautomite@gmail.com` |
@@ -320,6 +320,21 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 - [ ] Production docker-compose with nginx reverse proxy
 - [ ] Monitoring with Prometheus + Grafana
 - [ ] Firestore backup automation
+
+---
+
+## 📝 Known Limitations (doc-only notes, 2026-10-11)
+
+- **`.env.example` / config SMTP mismatch:** `app/config.py` reads five SMTP
+  settings (`smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`,
+  `contact_email`), but `.env.example` documents only `SMTP_USER`,
+  `SMTP_PASSWORD`, `CONTACT_EMAIL`. `SMTP_HOST`/`SMTP_PORT` silently fall back
+  to `smtp.gmail.com:587`. No code change — just be aware the host/port are
+  not in the template.
+- **WhatsApp is dead code:** `app/services/whatsapp_service.py` exists and
+  `WHATSAPP_*` keys exist in config/`.env.example`, but nothing imports or
+  calls the service (verified by grep). Treat as unintegrated until a router
+  wires it up. No code change.
 
 ---
 
