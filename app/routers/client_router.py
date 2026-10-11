@@ -15,6 +15,12 @@ from app.db import get_db
 
 logger = logging.getLogger(__name__)
 
+# Max chars accepted for knowledge_base_text via PUT /profile. The value is
+# persisted to Firestore and injected into the ElevenLabs agent prompt, so it
+# must be bounded. 20_000 chars (~4–5k tokens) is generous for legit business
+# info while capping prompt-injection payload / storage abuse.
+KNOWLEDGE_BASE_MAX_LENGTH = 20_000
+
 router = APIRouter(
     prefix="/client-portal",
     tags=["Client Portal"],
@@ -81,6 +87,26 @@ async def update_profile(  # noqa: C901
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"No valid fields to update. Allowed: {allowed_fields}",
         )
+
+    # ── knowledge_base_text guard: typed + length-capped before persist ──────
+    # This value is stored in Firestore and injected into the ElevenLabs agent
+    # prompt, so reject non-strings and unbounded payloads up front.
+    if "knowledge_base_text" in filtered:
+        kb = filtered["knowledge_base_text"]
+        if not isinstance(kb, str):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="knowledge_base_text must be a string.",
+            )
+        if len(kb) > KNOWLEDGE_BASE_MAX_LENGTH:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail=(
+                    f"knowledge_base_text exceeds max length of "
+                    f"{KNOWLEDGE_BASE_MAX_LENGTH} characters "
+                    f"(got {len(kb)})."
+                ),
+            )
 
     from datetime import datetime, timezone
     filtered["updated_at"] = datetime.now(tz=timezone.utc).isoformat()

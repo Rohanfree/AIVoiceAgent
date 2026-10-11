@@ -88,6 +88,57 @@ class TestClientRouterAllowedFields(unittest.TestCase):
                     break
         self.assertTrue(found, "knowledge_base_text must be in the allowed_fields set")
 
+    def test_knowledge_base_cap_constant_sane(self):
+        import app.routers.client_router as mod
+        self.assertIsInstance(mod.KNOWLEDGE_BASE_MAX_LENGTH, int)
+        # Generous enough for legit business info, bounded against abuse.
+        self.assertGreaterEqual(mod.KNOWLEDGE_BASE_MAX_LENGTH, 5_000)
+        self.assertLessEqual(mod.KNOWLEDGE_BASE_MAX_LENGTH, 100_000)
+
+
+class TestKnowledgeBaseTextCap(unittest.IsolatedAsyncioTestCase):
+    def _mock_db(self):
+        db = MagicMock()
+        doc = MagicMock()
+        doc.exists = False
+        doc.to_dict.return_value = {}
+        db.collection.return_value.document.return_value.get.return_value = doc
+        return db
+
+    async def test_oversize_knowledge_base_text_rejected(self):
+        import app.routers.client_router as mod
+        from fastapi import HTTPException
+        big = "x" * (mod.KNOWLEDGE_BASE_MAX_LENGTH + 1)
+        with self.assertRaises(HTTPException) as ctx:
+            await mod.update_profile(
+                {"knowledge_base_text": big},
+                user={"client_id": "c1"},
+                db=self._mock_db(),
+            )
+        self.assertEqual(ctx.exception.status_code, 413)
+
+    async def test_non_string_knowledge_base_text_rejected(self):
+        import app.routers.client_router as mod
+        from fastapi import HTTPException
+        with self.assertRaises(HTTPException) as ctx:
+            await mod.update_profile(
+                {"knowledge_base_text": {"not": "a string"}},
+                user={"client_id": "c1"},
+                db=self._mock_db(),
+            )
+        self.assertEqual(ctx.exception.status_code, 400)
+
+    async def test_at_cap_knowledge_base_text_accepted(self):
+        import app.routers.client_router as mod
+        ok = "y" * mod.KNOWLEDGE_BASE_MAX_LENGTH
+        result = await mod.update_profile(
+            {"knowledge_base_text": ok},
+            user={"client_id": "c1"},
+            db=self._mock_db(),
+        )
+        self.assertEqual(result["status"], "updated")
+        self.assertIn("knowledge_base_text", result["fields"])
+
 
 # ── 5. auth_router builds user_doc with elevenlabs_agent_id ──────────────────
 
