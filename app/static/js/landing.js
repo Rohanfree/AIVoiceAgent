@@ -166,3 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+/* ── Footer: dynamic copyright year (spans keep baked-in year as no-JS fallback) ── */
+document.querySelectorAll('.js-year').forEach((el) => {
+  el.textContent = String(new Date().getFullYear());
+});
