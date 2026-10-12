@@ -3,9 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Automite AI{% endblock %} — Intelligent Automation</title>
-    <meta name="description" content="{% block meta_description %}Automite AI — Intelligent Automation. Simplified.{% endblock %}">
+    <title>{% block title %}Automite AI — Intelligent Automation{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Automite AI builds intelligent AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 so your team doesn't have to.{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}https://auto-mite.com/automiteaiapplication/automiteui/pages/landing{% endblock %}">
+    <meta name="theme-color" content="#1A4D3A">
+    {# Open Graph / Twitter — per-page overrides via blocks below #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="Automite AI">
+    <meta property="og:title" content="{% block og_title %}Automite AI — Intelligent AI Voice Agents for Business{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Automite AI builds intelligent AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 so your team doesn't have to.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://auto-mite.com/automiteaiapplication/automiteui/pages/landing{% endblock %}">
+    <meta property="og:image" content="https://auto-mite.com/automiteaiapplication/automiteui/static/images/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Automite AI — Intelligent AI Voice Agents for Business{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Automite AI builds intelligent AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 so your team doesn't have to.{% endblock %}">
+    <meta name="twitter:image" content="https://auto-mite.com/automiteaiapplication/automiteui/static/images/logo.png">
     {% block meta_extra %}{% endblock %}
+    <script type="application/ld+json">
+    {% block json_ld %}{
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://auto-mite.com/#organization",
+          "name": "Automite AI",
+          "url": "https://auto-mite.com/",
+          "logo": "https://auto-mite.com/automiteaiapplication/automiteui/static/images/logo.png",
+          "email": "aiautomite@gmail.com",
+          "telephone": "+1-705-315-0166",
+          "sameAs": ["https://auto-mite.com/blogs"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://auto-mite.com/#website",
+          "url": "https://auto-mite.com/",
+          "name": "Automite AI",
+          "publisher": {"@id": "https://auto-mite.com/#organization"}
+        }
+      ]
+    }{% endblock %}
+    </script>
     <link rel="icon" type="image/jpeg" href="/automiteaiapplication/automiteui/static/images/icon.jpeg">
     <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/automite.css?v={{ static_hash('css/automite.css') }}">
     {% block head_extra %}{% endblock %}
