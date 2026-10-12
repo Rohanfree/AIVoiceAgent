@@ -1,0 +1,272 @@
+/* ============================================================
+   landing-moves.css — Phase 2 design prototype (preview only).
+   Prototype file. Does not touch landing.css or live behavior.
+   Brand lock: light theme, Montserrat, one accent (--mv-green).
+   Shape lock: pills for interactive, 16px for cards.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --mv-green: #1A4D3A;
+  --mv-ink: #111111;
+  --mv-grey: #5A6472;
+  --mv-bg: #FAFAFA;
+  --mv-bg-alt: #F2F4F3;
+  --mv-card: #E8F0EC;
+  --mv-line: rgba(26, 77, 58, 0.16);
+  --mv-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: "Montserrat", system-ui, sans-serif;
+  background: var(--mv-bg);
+  color: var(--mv-ink);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.mv-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Move 1: mono-eyebrow rhythm (2 total on page, hero + index) ── */
+.mv-eyebrow {
+  font-family: var(--mv-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mv-green);
+  margin-bottom: 18px;
+}
+
+/* ── Move 2: tightened hero ── */
+.mv-hero { min-height: 100dvh; display: flex; align-items: center; padding: 96px 0 72px; }
+.mv-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 56px;
+  align-items: center;
+  width: 100%;
+}
+.mv-hero h1 {
+  font-size: clamp(2.4rem, 4.6vw, 3.9rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  max-width: 20ch;
+}
+.mv-hero h1 .mv-h1-soft { color: var(--mv-green); }
+.mv-hero-sub {
+  margin-top: 18px;
+  font-size: 1.06rem;
+  color: var(--mv-grey);
+  max-width: 42ch;
+}
+.mv-hero-ctas { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+.mv-btn {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid var(--mv-green);
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+.mv-btn:active { transform: scale(0.98); }
+.mv-btn-solid { background: var(--mv-green); color: #fff; }
+.mv-btn-solid:hover { opacity: 0.92; }
+.mv-btn-ghost { background: transparent; color: var(--mv-green); }
+.mv-btn-ghost:hover { background: rgba(26, 77, 58, 0.08); }
+
+/* ── Ambient hero visual: CSS-only voice orb (one cinematic moment) ── */
+.mv-orb { display: flex; justify-content: center; }
+.mv-orb-stage {
+  position: relative;
+  width: min(340px, 72vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #2A6B52 0%, var(--mv-green) 46%, #0E2E22 100%);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.mv-orb-stage::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.22), transparent 55%);
+  pointer-events: none;
+}
+.mv-orb-bars { display: flex; align-items: center; gap: 7px; height: 44%; z-index: 1; }
+.mv-orb-bars span {
+  width: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.92);
+  animation: mvOrb 1.6s ease-in-out infinite;
+  height: 22%;
+}
+.mv-orb-bars span:nth-child(3n) { animation-delay: 0.2s; }
+.mv-orb-bars span:nth-child(3n+1) { animation-delay: 0.55s; }
+.mv-orb-bars span:nth-child(4n) { animation-delay: 0.9s; }
+.mv-orb-bars span:nth-child(5n) { animation-delay: 1.15s; }
+@keyframes mvOrb { 0%, 100% { height: 16%; opacity: 0.55; } 50% { height: 96%; opacity: 1; } }
+.mv-orb-ring {
+  position: absolute; inset: 7%; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  animation: mvRing 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mvRing { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.045); opacity: 0.3; } }
+
+/* ── Sections ── */
+.mv-section { padding: 96px 0; }
+.mv-section-alt { background: var(--mv-bg-alt); }
+.mv-section h2 {
+  font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  max-width: 22ch;
+}
+.mv-section-sub { margin-top: 12px; color: var(--mv-grey); max-width: 60ch; }
+
+/* ── Move 3: metric ledger with count-up ── */
+.mv-ledger { margin-top: 44px; border-top: 1px solid var(--mv-line); }
+.mv-ledger-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 24px;
+  align-items: baseline;
+  padding: 22px 4px;
+  border-bottom: 1px solid var(--mv-line);
+}
+.mv-ledger-num {
+  font-family: "Montserrat", system-ui, sans-serif;
+  font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--mv-green);
+}
+.mv-ledger-label { font-weight: 600; font-size: 1rem; }
+.mv-ledger-note { grid-column: 1 / -1; color: var(--mv-grey); font-size: 0.92rem; }
+
+/* ── Move 4: manifesto band with word reveal ── */
+.mv-manifesto { padding: 130px 0; text-align: left; }
+.mv-manifesto p {
+  font-size: clamp(1.6rem, 3.6vw, 2.9rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.28;
+  max-width: 26ch;
+}
+.mv-manifesto .mv-w { opacity: 0.16; transition: opacity 0.45s ease; }
+.mv-manifesto .mv-w.mv-on { opacity: 1; }
+.mv-manifesto .mv-w-mid { color: var(--mv-green); }
+
+/* ── Numbered deployments index ── */
+.mv-index { margin-top: 40px; border-top: 1px solid var(--mv-line); }
+.mv-index-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 4px;
+  border-bottom: 1px solid var(--mv-line);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s ease;
+}
+.mv-index-row:hover { background: rgba(26, 77, 58, 0.05); }
+.mv-index-no { font-family: var(--mv-mono); font-size: 0.85rem; color: var(--mv-grey); }
+.mv-index-name { font-weight: 700; }
+.mv-index-cat {
+  font-family: var(--mv-mono); font-size: 0.75rem; letter-spacing: 0.08em;
+  border: 1px solid var(--mv-line); border-radius: 9999px; padding: 6px 14px;
+  color: var(--mv-green); white-space: nowrap;
+}
+
+/* ── Move 6: AUTOMITE scroll wordmark ── */
+.mv-wordmark { padding: 48px 0 72px; overflow: hidden; background: var(--mv-bg); }
+.mv-wordmark-inner {
+  font-weight: 900;
+  font-size: clamp(3.4rem, 12.5vw, 11rem);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-align: center;
+  color: rgba(26, 77, 58, 0.16);
+  white-space: nowrap;
+  animation: mvSpread linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 100%;
+}
+@keyframes mvSpread { from { letter-spacing: -0.02em; opacity: 0.55; } to { letter-spacing: 0.1em; opacity: 1; } }
+
+/* ── Move 5: marquee footer crown (only marquee on page) ── */
+.mv-crown { overflow: hidden; border-top: 1px solid var(--mv-line); padding: 18px 0; background: var(--mv-bg-alt); }
+.mv-crown-track { display: flex; gap: 0; width: max-content; animation: mvMarquee 26s linear infinite; }
+.mv-crown-track span {
+  font-family: var(--mv-mono); font-size: 0.85rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--mv-green); padding: 0 28px; white-space: nowrap;
+}
+@keyframes mvMarquee { to { transform: translateX(-50%); } }
+
+/* ── Move 7: demo lightbox slot ── */
+.mv-demo { text-align: left; }
+.mv-lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  display: none; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.mv-lightbox.mv-open { display: flex; }
+.mv-lightbox-backdrop { position: absolute; inset: 0; background: rgba(14, 30, 24, 0.62); }
+.mv-lightbox-card {
+  position: relative; background: #fff; border-radius: 16px;
+  max-width: 560px; width: 100%; padding: 36px 32px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+}
+.mv-lightbox-card h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
+.mv-lightbox-card p { color: var(--mv-grey); margin-top: 10px; font-size: 0.97rem; }
+.mv-lightbox-bars { display: flex; align-items: center; gap: 6px; height: 56px; margin: 22px 0; }
+.mv-lightbox-bars span { width: 5px; border-radius: 3px; background: var(--mv-green); animation: mvOrb 1.4s ease-in-out infinite; height: 20%; }
+.mv-lightbox-bars span:nth-child(odd) { animation-delay: 0.3s; }
+.mv-lightbox-bars span:nth-child(3n) { animation-delay: 0.7s; }
+.mv-lightbox-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 38px; height: 38px; border-radius: 9999px;
+  border: 1px solid var(--mv-line); background: #fff; color: var(--mv-ink);
+  font-size: 1.1rem; cursor: pointer; line-height: 1;
+}
+.mv-lightbox-close:hover { background: var(--mv-bg-alt); }
+
+/* ── Scroll reveal ── */
+.mv-reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.mv-reveal.mv-in { opacity: 1; transform: none; }
+
+/* ── Footer ── */
+.mv-footer { padding: 40px 0 48px; background: var(--mv-bg-alt); border-top: 1px solid var(--mv-line); }
+.mv-footer-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--mv-grey); font-size: 0.9rem; }
+.mv-footer-row a { color: var(--mv-green); text-decoration: none; font-weight: 600; }
+
+/* ── Mobile collapse ── */
+@media (max-width: 768px) {
+  .mv-hero { padding: 56px 0 44px; }
+  .mv-hero-grid { grid-template-columns: 1fr; gap: 32px; }
+  .mv-hero h1 { font-size: 2.05rem; }
+  .mv-hero-sub { font-size: 1rem; }
+  .mv-orb-stage { width: min(210px, 58vw); }
+  .mv-hero-ctas { margin-top: 24px; }
+  .mv-section { padding: 64px 0; }
+  .mv-manifesto { padding: 84px 0; }
+  .mv-index-row { grid-template-columns: 52px 1fr; }
+  .mv-index-cat { grid-column: 2; justify-self: start; }
+}
+
+/* ── Reduced motion: everything collapses to static ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .mv-reveal { opacity: 1; transform: none; transition: none; }
+  .mv-orb-bars span, .mv-orb-ring, .mv-crown-track, .mv-lightbox-bars span { animation: none; }
+  .mv-orb-bars span, .mv-lightbox-bars span { height: 40%; opacity: 0.9; }
+  .mv-wordmark-inner { animation: none; opacity: 1; letter-spacing: 0.05em; }
+  .mv-manifesto .mv-w { opacity: 1; }
+}

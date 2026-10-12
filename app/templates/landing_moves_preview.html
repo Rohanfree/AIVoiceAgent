@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automite AI — Design Prototype Preview</title>
+  <meta name="description" content="Preview of proposed landing design moves. Prototype only, not the live page." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing-moves.css" />
+</head>
+<body>
+
+  <!-- Move 2: tightened hero. Move 1: mono eyebrow. Ambient: CSS voice orb. -->
+  <header class="mv-hero" id="hero">
+    <div class="mv-wrap mv-hero-grid">
+      <div>
+        <p class="mv-eyebrow">AI voice agents for business</p>
+        <h1>Every call answered, 24/7.</h1>
+        <p class="mv-hero-sub">Automite answers inbound calls, books jobs, and chases quotes around the clock.</p>
+        <div class="mv-hero-ctas">
+          <a class="mv-btn mv-btn-solid" href="#demo" data-open-demo>Hear a live call</a>
+          <a class="mv-btn mv-btn-ghost" href="#contact">Book a consultation</a>
+        </div>
+      </div>
+      <div class="mv-orb" aria-hidden="true">
+        <div class="mv-orb-stage">
+          <div class="mv-orb-ring"></div>
+          <div class="mv-orb-bars">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Move 3: metric ledger with count-up -->
+  <section class="mv-section mv-section-alt" aria-label="Results">
+    <div class="mv-wrap">
+      <h2 class="mv-reveal">Results our clients can count</h2>
+      <p class="mv-section-sub mv-reveal">Live call handling, measured across active deployments.</p>
+      <div class="mv-ledger mv-reveal">
+        <div class="mv-ledger-row">
+          <span class="mv-ledger-num" data-count="48200" data-decimals="0" data-suffix="+">0</span>
+          <span class="mv-ledger-label">Calls handled</span>
+          <span class="mv-ledger-note">Inbound and outbound calls answered by agents last quarter.</span>
+        </div>
+        <div class="mv-ledger-row">
+          <span class="mv-ledger-num" data-count="38" data-decimals="0" data-suffix="%">0</span>
+          <span class="mv-ledger-label">Follow-up cost saved</span>
+          <span class="mv-ledger-note">Median saving reported after replacing manual callbacks.</span>
+        </div>
+        <div class="mv-ledger-row">
+          <span class="mv-ledger-num" data-count="99.9" data-decimals="1" data-suffix="%">0</span>
+          <span class="mv-ledger-label">Pickup in under 2s</span>
+          <span class="mv-ledger-note">Share of calls answered within two seconds, day and night.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Move 4: manifesto band with word reveal -->
+  <section class="mv-manifesto" aria-label="Manifesto">
+    <div class="mv-wrap">
+      <p><span class="mv-w">We</span> <span class="mv-w">build</span> <span class="mv-w">voice</span> <span class="mv-w">agents</span> <span class="mv-w">that</span> <span class="mv-w">answer</span> <span class="mv-w">every</span> <span class="mv-w">call,</span> <span class="mv-w mv-w-mid">book</span> <span class="mv-w mv-w-mid">every</span> <span class="mv-w mv-w-mid">job,</span> <span class="mv-w">and</span> <span class="mv-w">never</span> <span class="mv-w">put</span> <span class="mv-w">a</span> <span class="mv-w">customer</span> <span class="mv-w">on</span> <span class="mv-w">hold.</span></p>
+    </div>
+  </section>
+
+  <!-- Numbered deployments index -->
+  <section class="mv-section mv-section-alt" id="deployments" aria-label="Deployments">
+    <div class="mv-wrap">
+      <p class="mv-eyebrow mv-reveal">Deployments</p>
+      <h2 class="mv-reveal">Agents at work right now</h2>
+      <div class="mv-index mv-reveal">
+        <a class="mv-index-row" href="#contact">
+          <span class="mv-index-no">001</span>
+          <span class="mv-index-name">Plumbing intake, after hours calls booked straight to the diary</span>
+          <span class="mv-index-cat">Inbound</span>
+        </a>
+        <a class="mv-index-row" href="#contact">
+          <span class="mv-index-no">002</span>
+          <span class="mv-index-name">Dental recall, lapsed patients rebooked by voice</span>
+          <span class="mv-index-cat">Outbound</span>
+        </a>
+        <a class="mv-index-row" href="#contact">
+          <span class="mv-index-no">003</span>
+          <span class="mv-index-name">Property viewings qualified before a human picks up</span>
+          <span class="mv-index-cat">Inbound</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Move 7: demo slot -->
+  <section class="mv-section" id="demo" aria-label="Demo">
+    <div class="mv-wrap mv-demo">
+      <h2 class="mv-reveal">Hear what callers hear</h2>
+      <p class="mv-section-sub mv-reveal">A two minute sample of a live agent booking a job. No signup needed.</p>
+      <div class="mv-hero-ctas mv-reveal">
+        <a class="mv-btn mv-btn-solid" href="#demo" data-open-demo>Play the sample call</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Move 6: AUTOMITE scroll wordmark -->
+  <div class="mv-wordmark" aria-hidden="true">
+    <div class="mv-wordmark-inner">AUTOMITE</div>
+  </div>
+
+  <!-- Move 5: marquee footer crown -->
+  <div class="mv-crown" aria-hidden="true">
+    <div class="mv-crown-track">
+      <span>Answered</span><span>Booked</span><span>Followed up</span><span>Answered</span><span>Booked</span><span>Followed up</span>
+      <span>Answered</span><span>Booked</span><span>Followed up</span><span>Answered</span><span>Booked</span><span>Followed up</span>
+    </div>
+  </div>
+
+  <footer class="mv-footer" id="contact">
+    <div class="mv-wrap mv-footer-row">
+      <span>Prototype preview. Not the live page.</span>
+      <a href="/automiteaiapplication/automiteui/pages/landing">Back to live landing</a>
+    </div>
+  </footer>
+
+  <!-- Move 7: global demo lightbox slot -->
+  <div class="mv-lightbox" id="demo-lightbox-slot" role="dialog" aria-modal="true" aria-label="Sample call player">
+    <div class="mv-lightbox-backdrop"></div>
+    <div class="mv-lightbox-card">
+      <button class="mv-lightbox-close" type="button" aria-label="Close">×</button>
+      <h3>Sample call: plumbing intake</h3>
+      <p>Slot for the call recording. Audio element lands here at rollout. Placeholder bars below show the intended shape.</p>
+      <div class="mv-lightbox-bars" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <a class="mv-btn mv-btn-solid" href="/automiteaiapplication/automiteui/pages/landing#contact">Book a consultation</a>
+    </div>
+  </div>
+
+  <script src="/automiteaiapplication/automiteui/static/js/landing-moves.js"></script>
+</body>
+</html>

@@ -41,6 +41,22 @@ async def landing_page(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 
+@router.get(
+    "/landing-moves-preview",
+    response_class=HTMLResponse,
+    summary="Design prototype preview (not linked from live pages)",
+    include_in_schema=False,
+)
+async def landing_moves_preview(request: Request):
+    # Belt-and-braces noindex: meta tag in the template + HTTP header here
+    # (headers survive even if a crawler ignores meta tags).
+    return templates.TemplateResponse(
+        "landing_moves_preview.html",
+        {"request": request},
+        headers={"X-Robots-Tag": "noindex, nofollow"},
+    )
+
+
 @router.get("/case-studies", response_class=HTMLResponse, summary="Case studies page")
 async def case_studies_page(request: Request):
     return templates.TemplateResponse("case-studies.html", {"request": request})
