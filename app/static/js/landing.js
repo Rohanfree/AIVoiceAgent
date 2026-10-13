@@ -212,6 +212,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   })();
 
+  /* ── Iter10 item 1: interaction sound layer ──────────────────────────
+     The footer toggle already owns one sound decision (the lp-sound-on key).
+     Iter10 makes that decision govern a real interaction sound too: a 40ms
+     tick when the pointer lands on a control and a soft two-tone click on
+     press. Tones are synthesised with Web Audio, so no media bytes are added;
+     nothing plays unless the visitor has already turned sound on, and the
+     whole layer is skipped under the Iter1 flat gate. Gain stays at or below
+     0.05. The context is built inside the unmute press (the Safari rule the
+     toggle below already documents). */
+  let lpAudioCtx = null;
+  function lpPrimeSound() {
+    if (lpAudioCtx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    try { lpAudioCtx = new Ctx(); } catch (_) { lpAudioCtx = null; }
+  }
+  function lpBlip(kind) {
+    if (motionFlat || reduceMotion) return;                    // Iter1 gate
+    let on = false;
+    try { on = localStorage.getItem('lp-sound-on') === '1'; } catch (_) { /* private mode */ }
+    if (!on) return;                                           // existing toggle, existing key
+    if (!(window.matchMedia &&
+      window.matchMedia('(hover:hover) and (pointer:fine)').matches)) return;
+    if (!(window.AudioContext || window.webkitAudioContext)) return;
+    try {
+      lpPrimeSound();
+      if (!lpAudioCtx) return;
+      if (lpAudioCtx.state === 'suspended') lpAudioCtx.resume();
+      const t = lpAudioCtx.currentTime;
+      const osc = lpAudioCtx.createOscillator();
+      const gain = lpAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(kind === 'hover' ? 1180 : 660, t);
+      if (kind === 'click') osc.frequency.exponentialRampToValueAtTime(440, t + 0.09);
+      const peak = kind === 'hover' ? 0.02 : 0.05;
+      const len = kind === 'hover' ? 0.05 : 0.12;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(peak, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      osc.connect(gain); gain.connect(lpAudioCtx.destination);
+      osc.start(t); osc.stop(t + len + 0.02);
+    } catch (_) { /* audio unavailable */ }
+  }
+
   /* ── Iter2 Move 2: footer sound toggle ───────────────────────────────
      Off by default and never autoplayed. One click unmutes both ambient
      looping videos (hero orb + manifesto drift); the choice is remembered.
@@ -239,8 +283,31 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const next = !on;
       apply(next, true);
+      // Build the audio context inside this gesture so the first blip can play.
+      if (next) lpPrimeSound();
       try { localStorage.setItem(KEY, next ? '1' : '0'); } catch (_) { /* private mode */ }
     });
+  })();
+
+  /* ── Iter10 item 1: wire the interaction blips ───────────────────────
+     Delegated and throttled so a fast pointer sweep never turns into a buzz.
+     Silent unless the toggle above is on and the visit is not flat; the same
+     guard lives in lpBlip, so nothing here can startle a muted visitor. */
+  (function () {
+    if (motionFlat || reduceMotion) return;
+    let lastHover = 0;
+    document.addEventListener('pointerover', (e) => {
+      if (!e.target || !e.target.closest) return;
+      if (!e.target.closest('[data-sound], a, button')) return;
+      const now = performance.now();
+      if (now - lastHover < 140) return;   // one tick per 140ms, never a buzz
+      lastHover = now;
+      lpBlip('hover');
+    }, { passive: true });
+    document.addEventListener('click', (e) => {
+      if (!e.target || !e.target.closest) return;
+      if (e.target.closest('[data-sound], button, a')) lpBlip('click');
+    }, { passive: true });
   })();
 
   function lpFmt(value, decimals, suffix) {

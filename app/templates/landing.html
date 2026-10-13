@@ -2036,22 +2036,28 @@
         <span class="footer-copy">© Automite AI <span class="js-year">2025</span>. All rights reserved.</span>
         <!-- Iter2 Move 2: global sound toggle. Unmutes the ambient loops
              (hero orb + manifesto drift). Off by default; state remembered.
-             Starts muted and never autoplays on a flat-gate visit. -->
-        <button type="button" id="lp-sound" class="lp-sound" data-sound-toggle
-          aria-pressed="false" aria-label="Unmute ambient sound" data-cursor="Sound">
-          <svg viewBox="0 0 24 22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 5.6h4.2L12.6.8v20.4L7.2 16.4H3z" />
-            <g data-sound-wave>
-              <path d="M16.4 7.6a5.2 5.2 0 010 6.8" />
-              <path d="M19.4 4.8a9.2 9.2 0 010 12.4" />
-            </g>
-            <g data-sound-cross>
-              <path d="M16.7 8.3l4.6 4.6" />
-              <path d="M21.3 8.3l-4.6 4.6" />
-            </g>
-          </svg>
-        </button>
+             Starts muted and never autoplays on a flat-gate visit.
+             Iter10 item 1: this same control now governs the interface blips
+             too, so the page still has exactly one sound decision. The label
+             beside it states that plainly. -->
+        <div class="lp-sound-wrap">
+          <span class="lp-sound-note">Interface and ambient sound · off by default</span>
+          <button type="button" id="lp-sound" class="lp-sound" data-sound-toggle
+            aria-pressed="false" aria-label="Unmute ambient sound" data-cursor="Sound">
+            <svg viewBox="0 0 24 22" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 5.6h4.2L12.6.8v20.4L7.2 16.4H3z" />
+              <g data-sound-wave>
+                <path d="M16.4 7.6a5.2 5.2 0 010 6.8" />
+                <path d="M19.4 4.8a9.2 9.2 0 010 12.4" />
+              </g>
+              <g data-sound-cross>
+                <path d="M16.7 8.3l4.6 4.6" />
+                <path d="M21.3 8.3l-4.6 4.6" />
+              </g>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </footer>

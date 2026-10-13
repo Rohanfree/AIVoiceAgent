@@ -1764,3 +1764,25 @@ section:nth-child(even) { background: var(--bg-alt); }
    class, three rows under the Iter8 connectors strip. Static by design. */
 .lp-pinned-block { margin-top: 48px; }
 .lp-pinned-note { max-width: 720px; }
+
+/* ============================================================
+   Iteration 10 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Nothing here adds a <section> (background parity),
+   references new media, or invents audio or figures: the five items
+   are labelled content over skins the page already ships. The one
+   new sound is synthesised in the browser (no media bytes) and every
+   new motion piece is skipped under [data-motion-flat].
+   ============================================================ */
+
+/* Iter10 item 1: interaction sound layer, labelled at the toggle it rides.
+   The caption sits with the existing Iter2 sound control so the page still
+   has one sound decision; both the caption and the control are hidden
+   together under the flat gate. No new colour, no new control. */
+.lp-sound-wrap { display: inline-flex; align-items: center; gap: 10px; }
+.lp-sound-note {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--grey);
+}
+[data-motion-flat] .lp-sound-wrap { display: none !important; }
