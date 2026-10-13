@@ -1342,3 +1342,31 @@ section:nth-child(even) { background: var(--bg-alt); }
   .lp-chip { clip-path: inset(0 0 0 0); transition: none; }
   .lp-chip-video { display: none; }
 }
+
+/* Iter5 item 2: the force_message disclosure line. Same utterance grammar as
+   the diarized transcript (agent side, right-aligned, accent type) with a
+   green left rule and a mono "verbatim" lock. Static by design: no JS, no
+   motion to gate — it inherits the transcript's --t ordering. */
+.lp-lock-line {
+  display: grid; gap: 2px; max-width: 88%;
+  justify-self: end; text-align: right;
+  padding: 9px 13px; border-radius: 12px;
+  background: rgba(26,77,58,0.07);
+  background: color-mix(in srgb, var(--green) 7%, transparent);
+  border-left: 2px solid var(--green);
+  opacity: 0.72; transition: opacity 0.18s linear;
+}
+.lp-lock-line p { margin: 0; font-size: 0.92rem; line-height: 1.5; color: var(--green); }
+.lp-lock-line i {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.62rem; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; opacity: 0.6;
+}
+.lp-lock {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.6rem; font-weight: 600; line-height: 1; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--green);
+}
+.lp-lock-line.on { opacity: 1; }
+[data-motion-flat] .lp-lock-line { opacity: 1; transition: none; }

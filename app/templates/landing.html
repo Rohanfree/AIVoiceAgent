@@ -1285,6 +1285,14 @@
       <div class="lp-call" data-call aria-disabled="true">
         <span class="lp-transcript-note">Illustrative transcript · two speakers, not a real call</span>
         <ol class="lp-call-list" role="list">
+          <!-- Iter5 item 2: the force_message disclosure. A locked, verbatim
+               first turn — not generated, not interruptible. It inherits the
+               transcript's --t:0 ordering so the same timeupdate loop would
+               light it first once a real recording ships. Static markup. -->
+          <li class="lp-lock-line" data-sp="1" data-locked style="--t:0">
+            <i>Agent <span class="lp-lock">verbatim</span></i>
+            <p>Hi, you're through to Acme Dental. This call is being recorded.</p>
+          </li>
           <li class="lp-call-line" data-sp="0" style="--t:1.2">
             <i>Caller</i>
             <p>Hi — do you have anything open Saturday morning?</p>
@@ -1302,6 +1310,14 @@
             <p>Booked for 9:40. A text confirmation is on its way.</p>
           </li>
         </ol>
+        <!-- Iter5 item 2: the rule the locked line demonstrates, in the shared
+             honest-note component (modifier class only, so the Iter3 count of
+             five unmodified notes is unchanged). -->
+        <aside class="lp-note lp-lock-note" data-note="note" role="note">
+          <span class="lp-note-label">Rule</span>
+          <p>The opening disclosure is a fixed line, not a generated one. It is spoken the same
+            way on every call and cannot be talked over.</p>
+        </aside>
       </div>
       <a class="btn btn-primary" href="#contact" data-cursor="Book">Book a consultation</a>
     </div>
