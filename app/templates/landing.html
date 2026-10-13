@@ -721,6 +721,54 @@
             an unattended action that is never answered simply does not run.</p>
         </aside>
       </div>
+
+      <!-- Iter9 item 1: barge-in. The mirror of Iter4's Smart Turn meter: not
+           only does the agent wait for you to finish, the moment you talk back
+           it stops mid-sentence and answers what you actually said. Three
+           static utterances reuse the diarized transcript skin via a modifier
+           class (the Iter4/Iter5 pinned transcript is untouched); the cut is the
+           strikethrough, not an animation. Two guard rows state the rule and its
+           single exception, the recording disclosure, which matches our
+           provider's default. No audio, no JS, no timer; entrance motion reuses
+           the shared .reveal observer that flattens under the flat gate. -->
+      <div class="lp-moment reveal" data-bargein>
+        <p class="lp-moment-title">It stops the moment you talk back</p>
+        <p class="lp-moment-sub">Cutting in mid-sentence is a first-class behaviour, not an
+          accident. The example below is a scripted transcript, not a real call.</p>
+        <ol class="lp-call-list lp-moment-list" role="list">
+          <li class="lp-call-line lp-moment-line" data-sp="1">
+            <i>Agent</i>
+            <p class="lp-cut">Our next opening is Thursday at ten. <s>I can also offer Friday
+              morning</s></p>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="0">
+            <i>Caller <span class="lp-jumped">cut in</span></i>
+            <p>Actually, anything after four?</p>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1">
+            <i>Agent</i>
+            <p>After four it is. Friday 4:20 with Dr. Ellis. Shall I book that?</p>
+          </li>
+        </ol>
+        <ul class="lp-guard lp-bargein" role="list">
+          <li>
+            <i class="lp-guard-kind">Interruptible</i>
+            <p>Everything the agent says can be cut off mid-sentence. The moment you speak it
+              stops and listens, then answers what you actually said.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Except one</i>
+            <p>The recording disclosure is the single line that plays to the end. Everything
+              else on the call is yours to interrupt.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-bargein-note" data-note="note" role="note">
+          <span class="lp-note-label">Example</span>
+          <p>Two scripted outcomes, no audio: the cut is the strikethrough, not a recording. The
+            disclosure exception matches our provider's default, where only a forced line is
+            uninterruptible.</p>
+        </aside>
+      </div>
     </div>
   </section>
 

@@ -1686,3 +1686,30 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-connect-guard { margin-top: 24px; }
 .lp-connect-note { max-width: 720px; }
+
+/* ============================================================
+   Iteration 9 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Nothing here adds a <section> (background parity),
+   references new media, or invents audio or figures: the five items
+   are labelled content over skins the page already ships. Entrance
+   motion reuses the existing .reveal observer (flattened under
+   [data-motion-flat]); no new JS is added.
+   ============================================================ */
+
+/* Iter9 item 1: barge-in. The diarized utterance skin again, plus the two
+   marks that make the cut legible: a strikethrough for the tail that was
+   never spoken, and a mono "cut in" badge in the Iter7 .lp-lock grammar.
+   The cut is the strikethrough, not an animation. Static by design. */
+.lp-cut s {
+  text-decoration: line-through; text-decoration-thickness: 1px;
+  opacity: 0.45; transition: opacity 0.12s linear;
+}
+.lp-jumped {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.6rem; font-weight: 600; line-height: 1; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--green);
+}
+.lp-bargein { margin-top: 22px; }
+.lp-bargein-note { max-width: 720px; }
+[data-motion-flat] .lp-cut s { transition: none; }
