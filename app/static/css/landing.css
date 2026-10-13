@@ -657,19 +657,28 @@ section:nth-child(even) { background: var(--bg-alt); }
   text-transform: uppercase; color: var(--green); margin-bottom: 18px;
 }
 
-/* Move 2: tightened hero with foundry ambient visual */
-.hero-tight { max-width: 1100px; }
+/* Move 2: tightened hero with foundry ambient visual.
+   Copy cap: H1 2 lines desktop, sub 12 words, both CTAs above the fold. */
+.hero-tight { max-width: 1200px; }
 .hero-tight-grid {
-  display: grid; grid-template-columns: 1.15fr 0.85fr;
-  gap: 56px; align-items: center; text-align: left; width: 100%;
+  display: grid; grid-template-columns: 1.35fr 0.65fr;
+  gap: 48px; align-items: center; text-align: left; width: 100%;
 }
-.hero-tight-grid .hero-h1 { font-size: clamp(2.4rem, 4.6vw, 3.9rem); max-width: 20ch; }
-.hero-tight-grid .hero-sub { margin-left: 0; }
+.hero-tight-grid .hero-h1 {
+  font-size: clamp(2.35rem, 4.1vw, 3.4rem); max-width: 16ch; margin-bottom: 20px;
+}
+.hero-tight-grid .hero-sub { margin-left: 0; margin-right: 0; margin-bottom: 32px; }
 .hero-tight-grid .hero-ctas { justify-content: flex-start; margin-bottom: 0; }
-.lp-hero-media { display: flex; justify-content: center; }
+.lp-hero-media { display: flex; justify-content: center; align-items: center; position: relative; }
 .lp-hero-orb {
-  width: min(340px, 72vw); aspect-ratio: 1; border-radius: 50%;
+  width: min(320px, 72vw); height: auto; aspect-ratio: 1; border-radius: 50%;
   object-fit: cover; display: block;
+  box-shadow: 0 24px 80px rgba(26,77,58,0.22);
+}
+.lp-hero-orb-video {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(320px, 72vw); aspect-ratio: 1; border-radius: 50%;
+  object-fit: cover; display: block; pointer-events: none;
   box-shadow: 0 24px 80px rgba(26,77,58,0.22);
 }
 
@@ -787,9 +796,10 @@ section:nth-child(even) { background: var(--bg-alt); }
 
 @media (max-width: 768px) {
   .hero-tight-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
-  .hero-tight-grid .hero-sub { margin-left: auto; }
+  .hero-tight-grid .hero-h1 { font-size: clamp(2rem, 8vw, 2.4rem); max-width: none; margin-left: auto; margin-right: auto; }
+  .hero-tight-grid .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-tight-grid .hero-ctas { justify-content: center; }
-  .lp-hero-orb { width: min(210px, 58vw); }
+  .lp-hero-orb, .lp-hero-orb-video { width: min(210px, 58vw); }
   .lp-index-row { grid-template-columns: 52px 64px 1fr; }
   .lp-index-cat { grid-column: 3; justify-self: start; }
 }
