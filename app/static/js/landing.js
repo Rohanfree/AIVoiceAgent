@@ -171,6 +171,46 @@ document.addEventListener('DOMContentLoaded', () => {
   // so flat visitors get the final state instantly with no animation.
   const motionFlat = document.documentElement.hasAttribute('data-motion-flat');
   const reduceMotion = motionFlat || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Iter2 Move 1: custom cursor — diamond → label pill ─────────────
+     Decorative chrome for fine pointers only. The diamond is the resting
+     state; when the pointer lands on a [data-cursor] target the pill wipes
+     open from the left and names it (Book, Play call, Drag). Bails out
+     entirely under the flat gate / reduced motion, leaving the OS cursor. */
+  (function () {
+    const cursor = document.querySelector('.lp-cursor');
+    const label = document.querySelector('.lp-cursor-label');
+    if (!cursor || !label) return;
+    if (motionFlat || reduceMotion || !('requestAnimationFrame' in window)) return;
+    const labelText = label.querySelector('[data-cursor-text]');
+    let mx = Math.round(window.innerWidth / 2), my = Math.round(window.innerHeight / 2);
+    let dx = mx, dy = my, lx = mx, ly = my, raf = 0;
+    function setXY(el, x, y) { el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)'; }
+    function kick() { if (!raf) raf = requestAnimationFrame(step); }
+    function step() {
+      raf = 0;
+      dx += (mx - dx) * 0.18; dy += (my - dy) * 0.18; // dot leads
+      lx += (mx - lx) * 0.12; ly += (my - ly) * 0.12; // pill trails a little
+      setXY(cursor, dx, dy);
+      setXY(label, lx, ly);
+      if (Math.abs(mx - dx) > 0.2 || Math.abs(my - dy) > 0.2 ||
+          Math.abs(mx - lx) > 0.2 || Math.abs(my - ly) > 0.2) kick();
+    }
+    setXY(cursor, dx, dy); setXY(label, lx, ly);
+    window.addEventListener('pointermove', (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      mx = e.clientX; my = e.clientY; kick();
+    }, { passive: true });
+    document.addEventListener('pointerover', (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-cursor]') : null;
+      if (t) {
+        if (labelText) labelText.textContent = t.getAttribute('data-cursor') || '';
+        label.classList.add('on');
+      } else {
+        label.classList.remove('on');
+      }
+    }, { passive: true });
+  })();
   function lpFmt(value, decimals, suffix) {
     if (decimals === 0) {
       return Math.round(value).toLocaleString('en-US') + suffix;

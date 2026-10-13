@@ -914,6 +914,44 @@ section:nth-child(even) { background: var(--bg-alt); }
   .lp-rail-card .lp-index-thumb { height: 150px; }
 }
 
+/* ============================================================
+   Iteration 2 moves. Same brand lock as above: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius. Every motion
+   below is inert under [data-motion-flat] (see the gate block further down).
+   ============================================================ */
+
+/* Iter2 Move 1: custom cursor — accent diamond at rest, label pill on an
+   interactive target. Fine pointers only, and skipped entirely under the flat
+   gate so the OS cursor is never replaced for touch / reduced-motion visitors.
+   Deliberately no mix-blend-mode: the researched difference blend produces
+   off-palette pinks over the cream sections, which would break the lock to a
+   single green accent. */
+.lp-cursor, .lp-cursor-label {
+  position: fixed; top: 0; left: 0; z-index: 100;
+  pointer-events: none; display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lp-cursor, .lp-cursor-label { display: block; }
+}
+.lp-cursor-dot {
+  display: block; width: 11px; height: 11px;
+  background: var(--green); border-radius: 3px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.lp-cursor-label { width: 0; height: 0; }
+.lp-cursor-label span {
+  display: inline-block; padding: 5px 12px; white-space: nowrap;
+  background: var(--green); color: #fff; border-radius: 3px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  clip-path: inset(0 100% 0 0); opacity: 0;
+  transition: clip-path 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
+}
+.lp-cursor-label.on span { clip-path: inset(0 0 0 0); opacity: 1; }
+[data-motion-flat] .lp-cursor,
+[data-motion-flat] .lp-cursor-label { display: none !important; }
+
 /* ── Consolidation: the crown is the ONLY marquee on the page.
    Testimonials and the partner logo band are static. ── */
 .testimonials-grid {

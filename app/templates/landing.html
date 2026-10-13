@@ -163,6 +163,12 @@
 
 <body>
 
+  <!-- Iter2 Move 1: custom cursor (diamond → label pill). Decorative only;
+       injected/positioned by JS and only ever shown on hover + fine pointers,
+       never under the flat gate. -->
+  <div class="lp-cursor" aria-hidden="true"><i class="lp-cursor-dot"></i></div>
+  <div class="lp-cursor-label" aria-hidden="true"><span data-cursor-text></span></div>
+
   <!-- Page loader — hidden once all resources are ready -->
   <div id="lp-loader" role="status" aria-label="Loading">
     <div class="lp-loader-brand">
@@ -253,8 +259,8 @@
           </p>
 
           <div class="hero-ctas">
-            <a href="#contact" class="btn btn-primary">Book a Free Consultation</a>
-            <a href="#demo" class="btn btn-outline" data-open-demo>Hear a live call</a>
+            <a href="#contact" class="btn btn-primary" data-cursor="Book">Book a Free Consultation</a>
+            <a href="#demo" class="btn btn-outline" data-open-demo data-cursor="Play call">Hear a live call</a>
           </div>
         </div>
 
@@ -333,7 +339,7 @@
       <h2 class="section-title" id="deployments-heading">Agents at work right now</h2>
 
       <div class="lp-index reveal">
-        <div class="lp-rail" data-rail aria-label="Sample deployments, drag to scroll">
+        <div class="lp-rail" data-rail data-cursor="Drag" aria-label="Sample deployments, drag to scroll">
           <div class="lp-rail-track" data-rail-track>
             <a class="lp-rail-card" href="#contact" draggable="false">
               <img class="lp-index-thumb" src="/automiteaiapplication/automiteui/static/media/deploy-001-inbound.png"
@@ -378,7 +384,7 @@
       <h2 class="section-title" id="demo-heading">Hear what callers hear</h2>
       <p class="section-subtitle">A sample of a live agent booking a job. No signup needed.</p>
       <div class="lp-demo-ctas">
-        <a href="#demo" class="btn btn-primary" data-open-demo>Play the sample call</a>
+        <a href="#demo" class="btn btn-primary" data-open-demo data-cursor="Play call">Play the sample call</a>
       </div>
     </div>
   </section>
