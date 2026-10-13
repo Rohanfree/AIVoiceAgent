@@ -310,6 +310,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   })();
 
+  /* ── Iter10 item 3: band-glitch shatter ──────────────────────────────
+     Four stacked clones of the target, each clipped to one horizontal band
+     and displaced, then released: the brand tears and re-forms. Fires on the
+     loader wordmark while the page is still arriving (no hover needed) and on
+     hero hover. One shatter per host at a time, the overlay is aria-hidden and
+     position: fixed over the source, and the whole routine is skipped under
+     the flat gate / reduced motion. No media, no font, no layout change. */
+  function lpBandGlitch(src, bursts, tick) {
+    if (motionFlat || reduceMotion || !src) return;
+    if (src.getAttribute('data-glitch-live') === '1') return;
+    const rect = src.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const BANDS = 4, h = 100 / BANDS;
+    const layer = document.createElement('div');
+    layer.className = 'lp-glitch-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.cssText = 'position:fixed;left:' + rect.left + 'px;top:' + rect.top +
+      'px;width:' + rect.width + 'px;height:' + rect.height +
+      'px;pointer-events:none;z-index:10000;';
+    for (let i = 0; i < BANDS; i++) {
+      const c = src.cloneNode(true);              // four copies, each clipped to its band
+      c.removeAttribute('id');
+      const ids = c.querySelectorAll('[id]');
+      for (let k = 0; k < ids.length; k++) ids[k].removeAttribute('id');
+      c.style.position = 'absolute';
+      c.style.inset = '0';
+      c.style.margin = '0';
+      c.style.pointerEvents = 'none';
+      c.style.clipPath = 'inset(' + (h * i).toFixed(3) + '% 0 ' +
+        (h * (BANDS - 1 - i)).toFixed(3) + '% 0)';
+      layer.appendChild(c);
+    }
+    document.body.appendChild(layer);
+    src.style.visibility = 'hidden';
+    src.setAttribute('data-glitch-live', '1');
+    let n = 0;
+    (function step() {
+      if (n++ >= bursts) {                        // settle back to rest
+        if (layer.parentNode) layer.parentNode.removeChild(layer);
+        src.style.visibility = '';
+        src.removeAttribute('data-glitch-live');
+        return;
+      }
+      const items = layer.children;
+      for (let i = 0; i < items.length; i++) {    // deterministic per-band tear
+        const dir = (i % 2 ? -1 : 1) * (0.08 + ((i * 37 + n * 13) % 18) / 100);
+        items[i].style.transform = 'translateX(' + (dir * rect.height).toFixed(1) + 'px)';
+      }
+      setTimeout(step, tick);
+    })();
+  }
+  (function () {
+    if (motionFlat || reduceMotion) return;
+    const brand = document.querySelector('.lp-loader-brand');
+    const wm = brand ? brand.querySelector('.lp-loader-wordmark') : null;
+    if (wm) {
+      // Fire while fonts and media are still settling, then once more; no hover.
+      setTimeout(() => lpBandGlitch(wm, 7, 90), 450);
+      setTimeout(() => lpBandGlitch(wm, 7, 90), 2400);
+    }
+    const h1 = document.getElementById('hero-heading');
+    if (h1 && window.matchMedia &&
+        window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+      h1.addEventListener('mouseenter', () => lpBandGlitch(h1, 5, 80));
+    }
+  })();
+
   function lpFmt(value, decimals, suffix) {
     if (decimals === 0) {
       return Math.round(value).toLocaleString('en-US') + suffix;

@@ -1796,3 +1796,12 @@ section:nth-child(even) { background: var(--bg-alt); }
   font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
   font-size: 0.86em; color: var(--green);
 }
+
+/* Iter10 item 3: band-glitch shatter. The target is cloned into four stacked
+   copies, each clipped to one horizontal band and displaced, then released.
+   The overlay is built in JS (position: fixed over the source) so no markup
+   and no layout change is needed; it is aria-hidden and never injected under
+   the flat gate. will-change is held only while a shatter is live. */
+.lp-glitch-layer { pointer-events: none; will-change: transform; }
+.lp-glitch-layer > * { will-change: transform; }
+[data-motion-flat] .lp-glitch-layer { display: none !important; }
