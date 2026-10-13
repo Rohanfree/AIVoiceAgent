@@ -408,6 +408,29 @@
         <span class="lp-note-label">Example</span>
         <p>Shape of the record, not a real customer. Field set is configured per business.</p>
       </aside>
+
+      <!-- Iter6 item 2: concurrency spec + overflow rule. Two callers at the
+           lunch rush: a stated simultaneous-call capacity and a defined
+           behaviour at the ceiling, reusing the Iter5 read/write guard grammar
+           (.lp-guard) verbatim. Static copy, no JS, no audio. The capacity is
+           an illustrative example for a sample deployment, not a claim. -->
+      <div class="lp-guard-block reveal">
+        <p class="lp-guard-title">Two customers call at once</p>
+        <p class="lp-guard-sub">Example capacity for a sample deployment. Every deployment has a
+          stated simultaneous-call limit and a defined behaviour at the ceiling.</p>
+        <ul class="lp-guard lp-guard-conc" role="list">
+          <li>
+            <i class="lp-guard-kind">Together</i>
+            <p>This example deployment answers up to <b>4 calls at once</b>. Above that, the next
+              caller reaches your existing line: never dead air, never a dropped call.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Overflow</i>
+            <p>Voicemail is the last resort, not the first. A missed ring still lands in your
+              post-call record as a missed call, with the number.</p>
+          </li>
+        </ul>
+      </div>
     </div>
   </section>
 
