@@ -288,6 +288,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Landing Moves: reduced motion — never autoplay ambient loops ── */
+  if (reduceMotion) {
+    document.querySelectorAll('.lp-hero-orb-video, .lp-manifesto-bg, .lp-lightbox-video video').forEach((v) => {
+      v.autoplay = false;
+      v.removeAttribute('autoplay');
+      try { v.pause(); } catch (_) { /* no source yet */ }
+    });
+  }
+
 });
 
 /* ── Footer: dynamic copyright year (spans keep baked-in year as no-JS fallback) ── */

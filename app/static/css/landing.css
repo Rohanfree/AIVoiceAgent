@@ -819,10 +819,32 @@ section:nth-child(even) { background: var(--bg-alt); }
   .lp-index-cat { grid-column: 3; justify-self: start; }
 }
 
-/* Reduced motion: video posters + static fallbacks */
+/* ── Consolidation: the crown is the ONLY marquee on the page.
+   Testimonials and the partner logo band are static. ── */
+.testimonials-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 24px; margin-top: 56px;
+}
+.testimonials-grid .testimonial-card { width: auto; }
+.logo-ticker { animation: none; width: auto; max-width: 100%; flex-wrap: wrap; justify-content: center; row-gap: 24px; }
+.logo-ticker-wrap::before, .logo-ticker-wrap::after { display: none; }
+@media (max-width: 1024px) { .testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .testimonials-grid { grid-template-columns: 1fr; } }
+
+/* Reduced motion: no animation, no autoplaying media, posters stay visible
+   (nothing goes blank). */
 @media (prefers-reduced-motion: reduce) {
-  .lp-crown-track, .lp-wordmark-inner { animation: none; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .lp-crown-track, .lp-wordmark-inner, .marquee-inner, .logo-ticker,
+  .hero-eyebrow span, .wave-anim, .wave-anim2, .wave-anim3 { animation: none !important; }
   .lp-wordmark-inner { opacity: 1; letter-spacing: 0.05em; }
   .lp-manifesto-text .lp-w { opacity: 1; }
+  /* Hide the ambient loops; their poster twins (img) remain in place. */
   .lp-hero-orb-video, .lp-manifesto-bg, .lp-lightbox-video video { display: none; }
 }
