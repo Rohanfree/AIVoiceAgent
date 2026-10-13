@@ -655,43 +655,74 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  /* ── Shared decode-in-place routine (Iter2 Move 5; reused by Iter4 Move 3) ──
+     The final string resolves left to right from a glyph pool. Never
+     random-per-frame for the whole duration (that reads as a bug). Flat gate /
+     reduced motion: the target text is set instantly. */
+  const LP_GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#*';
+  function lpScramble(el, final, dur) {
+    const D = dur || 620;
+    if (reduceMotion || !('requestAnimationFrame' in window)) { el.textContent = final; return; }
+    // Hold the real string for assistive tech while glyphs cycle on screen.
+    el.setAttribute('aria-hidden', 'true');
+    let t0 = 0;
+    (function frame(now) {
+      if (!t0) t0 = now;
+      const p = Math.min(1, (now - t0) / D);
+      const lock = Math.floor(p * final.length); // resolve left -> right
+      el.textContent = final.slice(0, lock) +
+        final.slice(lock).replace(/\S/g, () => LP_GLYPHS[(Math.random() * LP_GLYPHS.length) | 0]);
+      if (p < 1) requestAnimationFrame(frame);
+      else { el.textContent = final; el.removeAttribute('aria-hidden'); }
+    })(performance.now());
+  }
+
   /* ── Iter2 Move 5: scramble-on-reveal ────────────────────────────────
      Eyebrows, section labels and ledger labels decode in place as they enter
      view: the final string lives in data-scramble-text and the visible text
-     resolves left to right from a glyph pool. Never random-per-frame for the
-     whole duration (that reads as a bug). Flat gate / reduced motion: the
+     resolves left to right from a glyph pool. Flat gate / reduced motion: the
      server-rendered final text is left exactly as-is. */
   (function () {
     const els = document.querySelectorAll('[data-scramble-text]');
     if (!els.length) return;
-    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#*';
-    function run(el) {
-      const final = el.getAttribute('data-scramble-text') || el.textContent;
-      if (reduceMotion || !('requestAnimationFrame' in window)) { el.textContent = final; return; }
-      // Hold the real string for assistive tech while glyphs cycle on screen.
-      el.setAttribute('aria-hidden', 'true');
-      const dur = 620;
-      let t0 = 0;
-      (function frame(now) {
-        if (!t0) t0 = now;
-        const p = Math.min(1, (now - t0) / dur);
-        const lock = Math.floor(p * final.length); // resolve left -> right
-        el.textContent = final.slice(0, lock) +
-          final.slice(lock).replace(/\S/g, () => GLYPHS[(Math.random() * GLYPHS.length) | 0]);
-        if (p < 1) requestAnimationFrame(frame);
-        else { el.textContent = final; el.removeAttribute('aria-hidden'); }
-      })(performance.now());
-    }
+    const finalOf = (el) => el.getAttribute('data-scramble-text') || el.textContent;
     if (reduceMotion || !('IntersectionObserver' in window)) {
-      els.forEach((el) => { el.textContent = el.getAttribute('data-scramble-text') || el.textContent; });
+      els.forEach((el) => { el.textContent = finalOf(el); });
       return;
     }
     const scObs = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
-        if (e.isIntersecting) { run(e.target); scObs.unobserve(e.target); }
+        if (e.isIntersecting) { lpScramble(e.target, finalOf(e.target)); scObs.unobserve(e.target); }
       });
     }, { threshold: 0.4 });
     els.forEach((el) => scObs.observe(el));
+  })();
+
+  /* ── Iter4 Move 3: raw ↔ clean transcript toggle ─────────────────────
+     A pure client-side swap over the two strings already inlined in the DOM:
+     no audio, no API, no server round-trip. The swap reuses lpScramble so it
+     reads as re-processing rather than a page glitch, and is instant under the
+     flat gate. aria-pressed=false (default) shows the clean text; true shows
+     the raw capture. */
+  (function () {
+    const wrap = document.querySelector('[data-raw]');
+    if (!wrap) return;
+    const btn = wrap.querySelector('.lp-raw-toggle');
+    const lines = wrap.querySelectorAll('[data-raw-line]');
+    if (!btn || !lines.length) return;
+    // Stash each string once so a mid-scramble click can never corrupt it.
+    const finals = new Map();
+    lines.forEach((line) => finals.set(line, line.textContent.trim()));
+    btn.addEventListener('click', () => {
+      const on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+      lines.forEach((line) => {
+        const isRaw = line.getAttribute('data-raw-line') === 'raw';
+        const show = on ? !isRaw : isRaw; // pressing flips to the raw capture
+        line.hidden = !show;
+        if (show) lpScramble(line, finals.get(line), 420);
+      });
+    });
   })();
 
   document.querySelectorAll('[data-open-demo]').forEach(btn => {

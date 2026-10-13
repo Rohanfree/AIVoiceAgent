@@ -435,6 +435,26 @@
         </div>
         <span class="lp-transcript-note">Scripted demo · pre-authored signal, not a live API call</span>
       </div>
+
+      <!-- Iter4 Move 3: raw ↔ clean transcript toggle. A pure client-side swap
+           over two inlined strings — no audio, no API, no server round-trip.
+           It shows what the agent keeps: numbers normalised, fillers stripped,
+           the caller's name spelled right. Instant swap under the flat gate. -->
+      <div class="lp-raw" data-raw>
+        <p class="lp-raw-title">Gets the details right</p>
+        <p class="lp-raw-sub">Raw capture on the left of the switch; what the agent stores
+          and reads back on the right. Same call, re-processed.</p>
+        <button type="button" class="lp-raw-toggle" aria-pressed="false">
+          <span class="lp-raw-a">Raw capture</span>
+          <span class="lp-raw-b">What we store</span>
+        </button>
+        <p class="lp-raw-line" data-raw-line="clean">Balance $167,983.15 · Ms. Okafor,
+          appointment Tue 9:40.</p>
+        <p class="lp-raw-line" data-raw-line="raw" hidden>uh the balance is one hundred
+          sixty seven thousand nine hundred eighty three dollars and fifteen cents
+          uh… Ms Ock-uh-for… Tuesday, uh, nine forty.</p>
+        <span class="lp-transcript-note">Illustrative · sample text, not a real call</span>
+      </div>
     </div>
   </section>
 
