@@ -1039,7 +1039,7 @@
   <div class="lp-lightbox" id="demo-lightbox-slot" role="dialog" aria-modal="true" aria-label="Sample call player">
     <div class="lp-lightbox-backdrop"></div>
     <div class="lp-lightbox-card">
-      <button class="lp-lightbox-close" type="button" aria-label="Close">×</button>
+      <button class="lp-lightbox-close" type="button" aria-label="Close" data-cursor="Close">×</button>
       <h3>Sample call: plumbing intake</h3>
       <p>Slot for a published call recording. No recording is published yet, so the
         player below is an honest empty placeholder.</p>
@@ -1047,7 +1047,22 @@
         alt="" aria-hidden="true" width="1280" height="720" />
       <audio class="lp-lightbox-audio" controls preload="none"
         aria-label="Call recording placeholder (empty)"></audio>
-      <a class="btn btn-primary" href="#contact">Book a consultation</a>
+      <!-- Iter2 Move 4: karaoke transcript slot. Disabled-honest: no recording
+           and no character-level timings exist yet, so this is static,
+           clearly-labelled illustrative text and NOT synced to any audio.
+           When a real recording ships, assign a server-generated TIMES map in
+           landing.js and this same block becomes word-timed off timeupdate. -->
+      <div class="lp-transcript" data-transcript aria-disabled="true">
+        <span class="lp-transcript-note">Illustrative transcript · not synced to audio</span>
+        <p class="lp-transcript-body">
+          <span class="lp-t-word">Caller</span>: my boiler is leaking and there is water
+          coming through the ceiling. <span class="lp-t-word">Agent</span>: sorry to hear
+          that. I can get an engineer out today, with a 2pm or a 4:30pm window.
+          <span class="lp-t-word">Caller</span>: 2pm, please.
+          <span class="lp-t-word">Agent</span>: booked. A text confirmation is on its way.
+        </p>
+      </div>
+      <a class="btn btn-primary" href="#contact" data-cursor="Book">Book a consultation</a>
     </div>
   </div>
 

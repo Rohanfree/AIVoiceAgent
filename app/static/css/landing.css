@@ -985,6 +985,26 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 [data-motion-flat] .lp-lens { display: none !important; }
 
+/* Iter2 Move 4: karaoke transcript slot. Disabled until a real sample ships:
+   static illustrative text behind a clear label. The word spans only take the
+   accent once a server-generated timing map drives them off timeupdate. */
+.lp-transcript { margin: 0 0 20px; }
+.lp-transcript-note {
+  display: inline-block; margin-bottom: 10px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey); border: 1px dashed var(--border); border-radius: 9999px;
+  padding: 4px 12px;
+}
+.lp-transcript-body {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--bg-alt);
+  padding: 14px 16px; font-size: 0.95rem; line-height: 1.7; color: #333;
+}
+.lp-transcript[aria-disabled="true"] .lp-transcript-body { opacity: 0.72; }
+.lp-t-word { transition: color 0.12s linear; }
+.lp-t-on { color: var(--green); }
+[data-motion-flat] .lp-t-word { transition: none; }
+
 /* ── Consolidation: the crown is the ONLY marquee on the page.
    Testimonials and the partner logo band are static. ── */
 .testimonials-grid {

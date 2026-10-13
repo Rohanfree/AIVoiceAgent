@@ -553,12 +553,55 @@ document.addEventListener('DOMContentLoaded', () => {
       if (lpLastFocus && lpLastFocus.focus) lpLastFocus.focus();
     };
     if (lpLensOn) {
-      // Close is ~2.5x faster than open — the asymmetry reads as deliberate.
+      // Close is ~2.5x faster than open; the asymmetry reads as deliberate.
       lpArc(0, 1, 170, () => { finish(); lpArc(1, 0, 170); });
     } else {
       finish();
     }
   }
+
+  /* ── Iter2 Move 4: karaoke transcript ────────────────────────────────
+     Honest until a real sample exists. The player is an empty slot (no src,
+     preload=none), so timeupdate never fires and nothing is faked. When a
+     recording is published, generate the map server-side from the TTS
+     character-level timestamps and assign it to lpTimes; this same code then
+     highlights word-by-word, driven purely by the audio element (no timers,
+     no rAF, no drift). lpTimes stays null until then, so only the static,
+     clearly-labelled illustrative text renders. */
+  const lpTranscript = document.querySelector('[data-transcript]');
+  const lpAudioEl = lpBox ? lpBox.querySelector('.lp-lightbox-audio') : null;
+  const lpTimes = null; // { chars: [...], times: [[start, end], ...], duration: n }
+  if (lpTranscript && lpAudioEl && lpTimes &&
+      Array.isArray(lpTimes.chars) && Array.isArray(lpTimes.times)) {
+    const words = [];
+    let cur = null;
+    const frag = document.createDocumentFragment();
+    lpTimes.chars.forEach((c, i) => {
+      if (/\s/.test(c)) { cur = null; return; }
+      if (!cur) {
+        cur = { el: document.createElement('span'), start: (lpTimes.times[i] && lpTimes.times[i][0]) || 0 };
+        cur.el.className = 'lp-t-word';
+        frag.appendChild(cur.el);
+        frag.appendChild(document.createTextNode(' '));
+        words.push(cur);
+      }
+      cur.el.textContent += c;
+    });
+    const body = lpTranscript.querySelector('.lp-transcript-body');
+    if (body) {
+      body.textContent = '';
+      body.appendChild(frag);
+      lpTranscript.setAttribute('aria-disabled', 'false');
+      lpAudioEl.addEventListener('timeupdate', () => {
+        const t = lpAudioEl.currentTime;
+        for (let i = 0; i < words.length; i++) {
+          const on = t >= words[i].start && (i === words.length - 1 || t < words[i + 1].start);
+          words[i].el.classList.toggle('lp-t-on', on);
+        }
+      });
+    }
+  }
+
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
     btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });
   });
