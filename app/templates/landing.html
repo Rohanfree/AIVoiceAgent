@@ -808,6 +808,44 @@
         </aside>
       </div>
 
+      <!-- Iter10 item 2: the voice-activity gate as a stated row. Nine
+           iterations covered turn-taking, interruption, transfers and privacy
+           but never the first half-second: did it hear me at all. Three rows in
+           the Iter5 guard grammar via a modifier class state the documented
+           control: a gate set low for phone audio, background sound transcribed
+           rather than dropped, and the setting written down before launch.
+           Static content, no JS, no asset; entrance motion reuses the shared
+           .reveal observer that flattens under the flat gate. -->
+      <div class="lp-guard-block lp-vad-block reveal">
+        <p class="lp-guard-title">It hears you on a bad line</p>
+        <p class="lp-guard-sub">The first half-second decides the call. The speech gate is
+          set for a phone line, not a studio, in three facts.</p>
+        <ul class="lp-guard lp-vad" role="list">
+          <li>
+            <i class="lp-guard-kind">Quiet caller</i>
+            <p>A whispered or soft-spoken caller is still transcribed. The gate that decides
+              what counts as speech sits low for <b>narrowband phone audio</b>, so a quiet
+              voice is kept rather than skipped.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Bad line</i>
+            <p>Street noise, a car speaker, a busy kitchen: background sound is transcribed
+              rather than dropped, so the conversation keeps its shape on a noisy line.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Your setting</i>
+            <p>The gate can be opened right up for a line that would rather keep noise than
+              lose a word. How yours is set is written down before launch.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-vad-note" data-note="note" role="note">
+          <span class="lp-note-label">Source</span>
+          <p>Our transcription provider's published voice-activity control
+            (<code>vad_threshold</code>: 0.5 batch, 0.08 streaming, 0 = off). Documented
+            behaviour, not a slogan.</p>
+        </aside>
+      </div>
+
       <!-- Iter9 item 3: click-a-word seeking over a published recording. On a
            real sample every word is a seek handle (jump to that moment) with a
            speed control beside it. No recording is published, so this ships as

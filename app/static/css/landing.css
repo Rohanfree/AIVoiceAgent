@@ -1786,3 +1786,13 @@ section:nth-child(even) { background: var(--bg-alt); }
   color: var(--grey);
 }
 [data-motion-flat] .lp-sound-wrap { display: none !important; }
+
+/* Iter10 item 2: the voice-activity gate. The Iter5 guard grammar via a
+   modifier class, three rows under the barge-in block whose other half this
+   is (audibility). The note reuses the honest-note component. Static. */
+.lp-vad-block { margin-top: 48px; }
+.lp-vad-note { max-width: 720px; }
+.lp-vad-note code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.86em; color: var(--green);
+}
