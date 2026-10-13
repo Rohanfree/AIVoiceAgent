@@ -70,7 +70,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=16" />
+  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=17" />
   <link rel="icon" type="image/png" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <link rel="apple-touch-icon" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <style>
@@ -241,6 +241,43 @@
           </video>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     METRIC LEDGER (SAMPLE figures — count-up)
+═════════════════════════════════════════════ -->
+  <section id="results" class="lp-ledger-section" aria-labelledby="results-heading">
+    <div class="container">
+      <div class="reveal">
+        <h2 class="section-title" id="results-heading">Results our clients can count</h2>
+        <p class="section-subtitle">Live call handling, measured across active deployments.</p>
+      </div>
+
+      <div class="lp-ledger reveal">
+        <img class="lp-ledger-band" src="/automiteaiapplication/automiteui/static/media/ledger-band.png"
+          alt="" aria-hidden="true" width="1600" height="500" />
+
+        <div class="lp-ledger-row">
+          <span class="lp-ledger-num" data-count="48200" data-decimals="0" data-suffix="+">48,200+</span>
+          <span class="lp-ledger-label">Calls handled</span>
+          <span class="lp-ledger-note">Inbound and outbound calls answered by agents last quarter.</span>
+        </div>
+
+        <div class="lp-ledger-row">
+          <span class="lp-ledger-num" data-count="38" data-decimals="0" data-suffix="%">38%</span>
+          <span class="lp-ledger-label">Follow-up cost saved</span>
+          <span class="lp-ledger-note">Median saving reported after replacing manual callbacks.</span>
+        </div>
+
+        <div class="lp-ledger-row">
+          <span class="lp-ledger-num" data-count="99.9" data-decimals="1" data-suffix="%">99.9%</span>
+          <span class="lp-ledger-label">Pickup in under 2s</span>
+          <span class="lp-ledger-note">Share of calls answered within two seconds, day and night.</span>
+        </div>
+      </div>
+
+      <p class="lp-sample-note">Sample figures for layout only. Real aggregates must replace these before launch.</p>
     </div>
   </section>
 
@@ -912,7 +949,7 @@
   <elevenlabs-convai agent-id="agent_2601ks0nkjsmfrn9g6m0d90c8qjh"></elevenlabs-convai>
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-  <script src="/automiteaiapplication/automiteui/static/js/landing.js?v=11"></script>
+  <script src="/automiteaiapplication/automiteui/static/js/landing.js?v=12"></script>
   <script>
     (function () {
       var loader = document.getElementById('lp-loader');

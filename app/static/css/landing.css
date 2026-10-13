@@ -683,6 +683,7 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 
 /* Move 3: metric ledger with count-up (SAMPLE figures) */
+.lp-ledger-section { background: var(--bg-alt); }
 .lp-ledger { margin-top: 44px; border-top: 1px solid var(--border); }
 .lp-ledger-band {
   display: block; width: 100%; height: 120px; object-fit: cover;

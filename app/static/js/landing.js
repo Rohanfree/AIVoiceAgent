@@ -194,15 +194,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const lpNums = document.querySelectorAll('.lp-ledger-num[data-count]');
   if (lpNums.length) {
-    if (!('IntersectionObserver' in window)) {
-      lpNums.forEach(lpCountUp);
+    if (reduceMotion) {
+      // Reduced motion: show the finals instantly (server already rendered them,
+      // this is a belt-and-braces no-op that guarantees the exact values).
+      lpNums.forEach(el => {
+        const target = parseFloat(el.getAttribute('data-count'));
+        const decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+        el.textContent = lpFmt(target, decimals, el.getAttribute('data-suffix') || '');
+      });
     } else {
-      const no = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          if (e.isIntersecting) { lpCountUp(e.target); no.unobserve(e.target); }
-        });
-      }, { threshold: 0.4 });
-      lpNums.forEach(el => no.observe(el));
+      // Reset the server-rendered finals so the count-up has somewhere to run from.
+      lpNums.forEach(el => { el.textContent = '0'; });
+      if (!('IntersectionObserver' in window)) {
+        lpNums.forEach(lpCountUp);
+      } else {
+        const no = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) { lpCountUp(e.target); no.unobserve(e.target); }
+          });
+        }, { threshold: 0.4 });
+        lpNums.forEach(el => no.observe(el));
+      }
     }
   }
 
