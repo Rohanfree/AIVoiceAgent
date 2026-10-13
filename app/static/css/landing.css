@@ -743,29 +743,50 @@ section:nth-child(even) { background: var(--bg-alt); }
   object-fit: cover; border-radius: var(--radius);
 }
 
-/* Deployments index (SAMPLE rows, no client names) */
+/* Deployments index — drag rail (SAMPLE rows, no client names).
+   Move 5 (Iter 1): the index is a horizontal, pointer-drag gallery with 1:1
+   grab, momentum fling and infinite wrap (JS duplicates the cards 3x). Cards
+   reuse the .lp-index-* type/pill language. Under the flat gate / reduced
+   motion it degrades to native overflow-x scroll (.lp-rail-static). */
 .lp-index-section { background: var(--bg-alt); }
-.lp-index { margin-top: 40px; border-top: 1px solid var(--border); }
-.lp-index-row {
-  display: grid; grid-template-columns: 72px 64px 1fr auto; gap: 20px;
-  align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--border);
-  text-decoration: none; color: inherit; transition: background 0.2s ease;
+.lp-index { margin-top: 40px; }
+.lp-rail {
+  position: relative; overflow: hidden; cursor: grab;
+  touch-action: pan-y; -webkit-user-select: none; user-select: none;
+  padding: 4px 2px 10px;
 }
-.lp-index-row:hover { background: rgba(26,77,58,0.05); }
+.lp-rail.lp-grabbing { cursor: grabbing; }
+.lp-rail-track { display: flex; gap: 20px; align-items: stretch; will-change: transform; }
+.lp-rail-card {
+  display: flex; flex-direction: column; align-items: stretch; gap: 14px;
+  flex: 0 0 auto; width: 320px; max-width: 78vw; padding: 16px;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); color: inherit; text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.lp-rail-card:hover { border-color: var(--green); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+.lp-rail-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lp-rail-card .lp-index-thumb { width: 100%; height: 172px; border-radius: 12px; object-position: center top; }
+.lp-rail-card .lp-index-name { display: block; overflow: hidden; flex: 1; font-weight: 700; line-height: 1.4; }
+.lp-index-name-in { display: block; transform: translateY(110%); will-change: transform; }
+.lp-rail img { -webkit-user-drag: none; user-select: none; }
+.lp-rail-static {
+  overflow-x: auto; cursor: auto; touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch; padding-bottom: 12px;
+}
+.lp-rail-static .lp-rail-track { transform: none !important; }
+.lp-rail-static .lp-index-name-in { transform: none; }
 .lp-index-no {
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 0.85rem; color: var(--grey);
 }
-.lp-index-thumb {
-  width: 64px; height: 48px; object-fit: cover; border-radius: 8px; display: block;
-}
+.lp-index-thumb { object-fit: cover; border-radius: 8px; display: block; }
 .lp-index-sample {
   display: inline-block; margin-right: 8px; vertical-align: 1px;
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.62rem;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey);
   border: 1px dashed var(--border); border-radius: 9999px; padding: 2px 8px;
 }
-.lp-index-name { font-weight: 700; }
 .lp-index-cat {
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.75rem;
   letter-spacing: 0.08em; border: 1px solid var(--border); border-radius: 9999px;
@@ -852,8 +873,8 @@ section:nth-child(even) { background: var(--bg-alt); }
   .hero-tight-grid .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-tight-grid .hero-ctas { justify-content: center; }
   .lp-hero-orb, .lp-hero-orb-video { width: min(210px, 58vw); }
-  .lp-index-row { grid-template-columns: 52px 64px 1fr; }
-  .lp-index-cat { grid-column: 3; justify-self: start; }
+  .lp-rail-card { width: 270px; }
+  .lp-rail-card .lp-index-thumb { height: 150px; }
 }
 
 /* ── Consolidation: the crown is the ONLY marquee on the page.

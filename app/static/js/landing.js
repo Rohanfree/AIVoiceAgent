@@ -277,6 +277,154 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ── Move 5 (Iter 1): deployments drag rail ─────────────────── */
+  // Horizontal pointer-drag gallery: 1:1 grab, momentum fling with friction
+  // decay, infinite wrap via a 3x card buffer, and card titles that mask-reveal
+  // only as a card docks near the viewport center. Degrades to native
+  // overflow-x scroll under the flat gate / reduced motion.
+  (function () {
+    const rail = document.querySelector('[data-rail]');
+    if (!rail) return;
+    const track = rail.querySelector('[data-rail-track]');
+    if (!track) return;
+
+    if (motionFlat || reduceMotion || !('requestAnimationFrame' in window)) {
+      rail.classList.add('lp-rail-static');
+      return;
+    }
+
+    const originals = Array.prototype.slice.call(track.children);
+    const base = originals.length;
+    if (!base) return;
+
+    function cloneSet() {
+      const frag = document.createDocumentFragment();
+      originals.forEach((node) => {
+        const clone = node.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        clone.setAttribute('tabindex', '-1');
+        frag.appendChild(clone);
+      });
+      return frag;
+    }
+    track.insertBefore(cloneSet(), track.firstChild); // leading buffer
+    track.appendChild(cloneSet());                    // trailing buffer
+    const all = Array.prototype.slice.call(track.children);
+
+    let loopWidth = 0, x = 0, target = 0, velocity = 0;
+    let dragging = false, settling = false, moved = false, raf = 0;
+    let startX = 0, startTarget = 0, lastX = 0, lastT = 0;
+    const nowMs = () => (window.performance || Date).now();
+
+    function measure() {
+      loopWidth = all[base].offsetLeft - all[0].offsetLeft;
+      if (!loopWidth || loopWidth < 1) loopWidth = track.scrollWidth / 3;
+    }
+    function normalize() {
+      if (!loopWidth) return;
+      while (target <= -loopWidth) { target += loopWidth; x += loopWidth; }
+      while (target > 0) { target -= loopWidth; x -= loopWidth; }
+    }
+    function render() {
+      normalize();
+      track.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)';
+      const railW = rail.clientWidth || 1;
+      const half = railW / 2, plateau = railW * 0.06, gate = railW * 0.42;
+      for (let i = 0; i < all.length; i++) {
+        const card = all[i];
+        const inner = card.querySelector('.lp-index-name-in');
+        if (!inner) continue;
+        const cx = card.offsetLeft + card.offsetWidth / 2 + x;
+        const d = Math.abs(cx - half);
+        const p = 1 - Math.min(1, Math.max(0, d - plateau) / gate);
+        inner.style.transform = 'translateY(' + ((1 - p) * 110).toFixed(2) + '%)';
+      }
+    }
+    function step() {
+      raf = 0;
+      if (settling) {
+        if (Math.abs(velocity) > 0.1) { target += velocity; velocity *= 0.94; }
+        else { velocity = 0; settling = false; }
+      }
+      x += (target - x) * 0.12;
+      if (Math.abs(target - x) < 0.05 && !dragging && !settling) x = target;
+      render();
+      if (dragging || settling || Math.abs(target - x) > 0.05) {
+        raf = requestAnimationFrame(step);
+      }
+    }
+    function kick() { if (!raf) raf = requestAnimationFrame(step); }
+
+    function onDown(e) {
+      if (!dragging && e.button != null && e.button !== 0) return;
+      dragging = true; moved = false;
+      startX = e.clientX; startTarget = target;
+      lastX = e.clientX; lastT = nowMs(); velocity = 0;
+      rail.classList.add('lp-grabbing');
+      if (e.pointerId != null && rail.setPointerCapture) {
+        try { rail.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+      }
+      kick();
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      target = startTarget + dx;
+      x = target; // 1:1 grab tracking
+      const t = nowMs();
+      const dt = Math.max(1, t - lastT);
+      velocity = Math.max(-80, Math.min(80, (e.clientX - lastX) / dt * 16.67));
+      lastX = e.clientX; lastT = t;
+      kick();
+    }
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      rail.classList.remove('lp-grabbing');
+      settling = Math.abs(velocity) > 0.1;
+      kick();
+    }
+
+    if (window.PointerEvent) {
+      rail.addEventListener('pointerdown', onDown);
+      rail.addEventListener('pointermove', onMove);
+      rail.addEventListener('pointerup', onUp);
+      rail.addEventListener('pointercancel', onUp);
+    } else {
+      rail.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      rail.addEventListener('touchstart', (e) => onDown(e.touches[0]), { passive: true });
+      rail.addEventListener('touchmove', (e) => onMove(e.touches[0]), { passive: true });
+      rail.addEventListener('touchend', onUp);
+    }
+
+    // Suppress the link click that follows a drag.
+    rail.addEventListener('click', (e) => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+
+    // Keyboard: bring a focused (real) card to the center.
+    originals.forEach((card) => {
+      card.addEventListener('focus', () => {
+        target = x = rail.clientWidth / 2 - (card.offsetLeft + card.offsetWidth / 2);
+        kick();
+      });
+    });
+
+    let rt = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => { measure(); render(); }, 150);
+    }, { passive: true });
+
+    measure();
+    // Start with the first real card docked at center.
+    target = x = rail.clientWidth / 2 - (all[base].offsetLeft + all[base].offsetWidth / 2);
+    render();
+  })();
+
   /* ── Landing Moves: demo lightbox (open/close/focus/Escape) ── */
   const lpBox = document.getElementById('demo-lightbox-slot');
   let lpLastFocus = null;
