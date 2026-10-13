@@ -282,6 +282,26 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .service-cta:hover { gap: 10px; }
 
+/* Move 4 (Iter 1): spec-table capability cards + dual CTA.
+   A compact mono 3-row spec under each service card, then a solid primary
+   + ghost secondary CTA. Equal-height cards via the existing flex column. */
+.svc-spec {
+  display: grid; gap: 0; margin: 4px 0 22px;
+  border-top: 1px solid var(--border);
+}
+.svc-spec > div {
+  display: grid; grid-template-columns: 6.5rem 1fr; gap: 12px;
+  align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.svc-spec dt {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--green); margin: 0;
+}
+.svc-spec dd { margin: 0; font-size: 0.85rem; color: #333; line-height: 1.5; }
+.svc-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: auto; }
+.svc-ctas .btn { padding: 11px 22px; font-size: 14px; }
+
 .explainer-block {
   margin-top: 64px; background: #fff; border: 1px solid var(--border);
   border-radius: var(--radius); padding: 44px; box-shadow: var(--shadow);
