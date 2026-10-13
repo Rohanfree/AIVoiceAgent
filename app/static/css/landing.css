@@ -1273,3 +1273,40 @@ section:nth-child(even) { background: var(--bg-alt); }
   font-size: 0.98rem; line-height: 1.7; color: #333;
 }
 .lp-raw-line[hidden] { display: none; }
+
+/* Iter4 Move 5: custom-voice capture — a three-step mono stepper. The A/B
+   control in step 03 is a disabled-honest slot, the same treatment as the
+   voice roster: inert buttons, an explicit "Sample coming" note, and no audio
+   asset referenced. It fills in when real clips exist. */
+.lp-clone { list-style: none; margin: 40px 0 0; padding: 0; border-top: 1px solid var(--border); }
+.lp-clone > li {
+  display: grid; grid-template-columns: 48px 1fr; gap: 4px 20px;
+  align-items: baseline; padding: 20px 4px; border-bottom: 1px solid var(--border);
+}
+.lp-clone > li > i {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.85rem; letter-spacing: 0.08em; color: var(--green);
+}
+.lp-clone p { margin: 0; font-size: 0.98rem; color: #333; }
+.lp-clone b { color: var(--green); }
+.lp-ab {
+  grid-column: 2; display: inline-flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-top: 12px;
+}
+.lp-ab button {
+  padding: 8px 16px; border-radius: 9999px; border: 1px solid var(--green);
+  background: transparent; color: var(--green); cursor: not-allowed;
+  font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600;
+  opacity: 0.75;
+}
+.lp-ab button[aria-pressed="true"] { background: var(--green); color: #fff; }
+.lp-ab-note {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey);
+}
+@media (max-width: 640px) {
+  .lp-clone > li { grid-template-columns: 1fr; gap: 6px; }
+  .lp-ab { grid-column: 1; }
+}

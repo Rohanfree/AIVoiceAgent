@@ -605,6 +605,33 @@
         </ul>
       </div>
 
+      <!-- Iter4 Move 5: custom-voice capture — a three-step mono stepper. The
+           A/B control in step 03 is a disabled-honest slot, the same treatment
+           as the roster above: inert buttons, an explicit "Sample coming"
+           note, and no audio asset referenced, embedded or autoplayed. It
+           fills in when real clips exist. -->
+      <ol class="lp-clone" role="list">
+        <li>
+          <i>01</i>
+          <p>You read 60 seconds of your own greeting.</p>
+        </li>
+        <li>
+          <i>02</i>
+          <p>We clone it — same voice, any language, any hour.</p>
+        </li>
+        <li>
+          <i>03</i>
+          <p>Callers hear <b>your</b> voice, not a stranger's.</p>
+          <span class="lp-ab" data-ab>
+            <button type="button" disabled aria-disabled="true" aria-pressed="true"
+              aria-label="Play your recording. Sample coming soon.">Your recording</button>
+            <button type="button" disabled aria-disabled="true" aria-pressed="false"
+              aria-label="Play the agent in your cloned voice. Sample coming soon.">The agent</button>
+            <em class="lp-ab-note">Sample coming</em>
+          </span>
+        </li>
+      </ol>
+
       <aside class="lp-note" data-note="note" role="note">
         <span class="lp-note-label">Sample</span>
         <p>Player slots only. No call or voice samples, and no language previews, are published yet,
