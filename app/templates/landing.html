@@ -472,6 +472,34 @@
           </li>
         </ul>
       </div>
+
+      <!-- Iter8 item 3: the missed-call callback routine. The next sentence
+           after the overflow rule: at the end of the day the agent works the
+           missed-call list and rings people back on a schedule you set. The
+           Iter5 .lp-record skin carries the four agreed fields; the Iter7
+           role-card "never" vocabulary and a note state the stale-data rule.
+           Static content, no JS, no asset. -->
+      <div class="lp-routine-block reveal">
+        <p class="lp-guard-title">It calls back when you miss the call</p>
+        <p class="lp-guard-sub">A routine works the day's missed-call list on a schedule you
+          set. Every field is agreed before it runs, and it runs only after the same task has
+          been proven by hand.</p>
+        <div class="lp-record lp-routine" data-record>
+          <p class="lp-record-head">Missed-call callback <i>routine</i></p>
+          <dl>
+            <div><dt>runs</dt><dd>"Daily 17:00, your timezone"</dd></div>
+            <div><dt>input</dt><dd>"Today's missed calls, from the post-call records"</dd></div>
+            <div><dt>may</dt><dd>"Call back, offer the next open slot, book if approved"</dd></div>
+            <div><dt>limits</dt><dd>"Quotes nothing new · runs on stale data"</dd></div>
+          </dl>
+        </div>
+        <aside class="lp-note lp-routine-note" data-note="note" role="note">
+          <span class="lp-note-label">Rule</span>
+          <p>Unattended work starts only after the same task has run by hand for a week. If the
+            diary cannot be reached, the callback list reports the failure instead of guessing
+            from yesterday.</p>
+        </aside>
+      </div>
     </div>
   </section>
 

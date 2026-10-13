@@ -1651,3 +1651,11 @@ section:nth-child(even) { background: var(--bg-alt); }
    so the Iter5 read-vs-write strip stays the only bare .lp-guard. Static. */
 .lp-lookup { margin-top: 22px; }
 .lp-known-note { max-width: 720px; }
+
+/* Iter8 item 3: the missed-call callback routine. The Iter5 .lp-record skin
+   carries the four agreed fields (runs / input / may / never); the Iter7 role
+   card vocabulary ("never") and a shared note state the trust rule. Static. */
+.lp-routine-block { margin-top: 56px; }
+.lp-routine { margin-top: 20px; max-width: 640px; }
+.lp-routine dl > div { grid-template-columns: 8ch 1fr; }
+.lp-routine-note { max-width: 720px; }
