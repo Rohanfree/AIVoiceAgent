@@ -724,6 +724,7 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 
 /* Deployments index (SAMPLE rows, no client names) */
+.lp-index-section { background: var(--bg-alt); }
 .lp-index { margin-top: 40px; border-top: 1px solid var(--border); }
 .lp-index-row {
   display: grid; grid-template-columns: 72px 64px 1fr auto; gap: 20px;
@@ -737,6 +738,12 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-index-thumb {
   width: 64px; height: 48px; object-fit: cover; border-radius: 8px; display: block;
+}
+.lp-index-sample {
+  display: inline-block; margin-right: 8px; vertical-align: 1px;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey);
+  border: 1px dashed var(--border); border-radius: 9999px; padding: 2px 8px;
 }
 .lp-index-name { font-weight: 700; }
 .lp-index-cat {
