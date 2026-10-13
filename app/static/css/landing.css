@@ -1601,3 +1601,46 @@ section:nth-child(even) { background: var(--bg-alt); }
    under the Iter4 clone stepper. Static by design. */
 .lp-recipe-block { margin-top: 48px; }
 .lp-recipe-note { max-width: 720px; }
+
+/* ============================================================
+   Iteration 8 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Nothing here adds a <section> (background parity),
+   references new media, or invents audio: the five items are
+   labelled content over reused skins. Entrance motion reuses the
+   existing .reveal observer (flattened under [data-motion-flat]);
+   the one interaction is a two-branch, client-side swap.
+   ============================================================ */
+
+/* Shared heading + transcript wrapper for the new call-demo blocks. Reuses
+   the diarized-transcript utterance skin (.lp-call-line) via a modifier, so
+   the Iter4/Iter5 pinned transcript is untouched. */
+.lp-moment { margin-top: 48px; max-width: 720px; }
+.lp-moment-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.lp-moment-sub { margin-top: 6px; max-width: 56ch; font-size: 0.95rem; color: var(--grey); }
+.lp-call-list.lp-moment-list { margin-top: 18px; }
+.lp-moment-line[hidden], .lp-moment-item[hidden] { display: none; }
+
+/* Iter8 item 1: the approval card. The proposed write is shown with its
+   target and values before it runs, with Allow once / Deny. The card reuses
+   the Iter5 .lp-record skin (white card + mono <dl>); the two outcomes are
+   pre-authored client-side branches. Static under the flat gate. */
+.lp-approve { margin-top: 2px; max-width: 100%; }
+.lp-approve dl > div { grid-template-columns: 7ch 1fr; }
+.lp-approve-ctas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.lp-approve-ctas button {
+  padding: 9px 20px; border-radius: 9999px; cursor: pointer;
+  font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600;
+  border: 1px solid var(--green); background: transparent; color: var(--green);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.lp-approve-ctas button[data-choice="yes"] { background: var(--green); color: #fff; }
+.lp-approve-ctas button[disabled] { cursor: default; opacity: 0.6; }
+.lp-approve-ctas button:not([disabled]):hover { box-shadow: 0 6px 20px rgba(26,77,58,0.2); }
+.lp-approve-expire {
+  margin: 12px 0 0;
+  font: 500 0.7rem/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.06em; color: var(--grey);
+}
+[data-motion-flat] .lp-approve-ctas button { transition: none; }
+.lp-approve-note { max-width: 720px; }

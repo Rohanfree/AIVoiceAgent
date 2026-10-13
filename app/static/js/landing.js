@@ -788,6 +788,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  /* ── Iter8 item 1: the approval card demo ───────────────────────────
+     Two pre-authored outcomes over markup already in the DOM. Choosing
+     Allow once or Deny swaps the card's status and reveals the matching
+     transcript line; the unapproved branch states the expiry rule. No
+     audio, no API, no timer, no new observer. Static under the flat gate
+     (only the CSS transition is dropped). */
+  (function () {
+    const wrap = document.querySelector('[data-approve]');
+    if (!wrap) return;
+    const status = wrap.querySelector('.lp-approve-status');
+    const outcomes = wrap.querySelectorAll('[data-out]');
+    if (!outcomes.length) return;
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest ? e.target.closest('button[data-choice]') : null;
+      if (!btn || btn.disabled) return;
+      const yes = btn.getAttribute('data-choice') === 'yes';
+      wrap.querySelectorAll('button[data-choice]').forEach((b) => { b.disabled = true; });
+      if (status) status.textContent = yes ? 'allowed once' : 'denied';
+      outcomes.forEach((line) => {
+        line.hidden = line.getAttribute('data-out') !== (yes ? 'yes' : 'no');
+      });
+    });
+  })();
+
   /* ── Iter6 item 4: copy-page-as-text utility ─────────────────────────
      One click copies the page's plain-text digest (data-brief) so an owner
      can paste it into an AI assistant. Clipboard API with a textarea fallback

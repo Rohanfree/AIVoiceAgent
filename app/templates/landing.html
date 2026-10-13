@@ -582,6 +582,53 @@
         <p>What a transfer does when it works and when it does not, stated as behaviour rather
           than a promise. No recording is needed to show it, and none is invented here.</p>
       </aside>
+
+      <!-- Iter8 item 1: the approval card. The Iter5 read/write rule says a
+           write always confirms first; this is the artifact that shows the
+           confirmation. A proposed booking renders with its target and values,
+           then Allow once or Deny reveals one of two pre-authored transcript
+           lines. No audio, no API, no timer: the two branches are scripted and
+           labelled an example. The card reuses the Iter5 .lp-record skin and
+           the diarized utterance skin; both branches work under the flat gate. -->
+      <div class="lp-moment reveal" data-approve>
+        <p class="lp-moment-title">It shows you the booking before it makes it</p>
+        <p class="lp-moment-sub">A write never runs silently. The proposed action is shown with
+          what it will do, and you choose. Allow once and Deny below are a scripted
+          demonstration, not a live booking.</p>
+        <ol class="lp-call-list lp-moment-list" role="list">
+          <li class="lp-call-line lp-moment-line" data-sp="1">
+            <i>Agent</i>
+            <p>I can book you in Tuesday 10:00 with Dr. Ellis. Shall I go ahead?</p>
+          </li>
+          <li class="lp-moment-item">
+            <div class="lp-record lp-approve">
+              <p class="lp-record-head">Proposed action <i class="lp-approve-status">waiting for you</i></p>
+              <dl>
+                <div><dt>action</dt><dd>book_appointment</dd></div>
+                <div><dt>slot</dt><dd>"Tue 10:00 · cleaning"</dd></div>
+              </dl>
+              <div class="lp-approve-ctas">
+                <button type="button" data-choice="yes" aria-label="Allow this action once">Allow once</button>
+                <button type="button" data-choice="no" aria-label="Deny this action">Deny</button>
+              </div>
+              <p class="lp-approve-expire">No answer in 10 minutes: nothing is booked.</p>
+            </div>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1" hidden data-out="yes">
+            <i>Agent</i>
+            <p>Booked for Tuesday 10:00. A confirmation text is on its way.</p>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1" hidden data-out="no">
+            <i>Agent</i>
+            <p>No problem, nothing has been booked. What time would suit instead?</p>
+          </li>
+        </ol>
+        <aside class="lp-note lp-approve-note" data-note="note" role="note">
+          <span class="lp-note-label">Example</span>
+          <p>The shape of the confirmation step. Allow once and Deny are scripted outcomes, and
+            an unattended action that is never answered simply does not run.</p>
+        </aside>
+      </div>
     </div>
   </section>
 
