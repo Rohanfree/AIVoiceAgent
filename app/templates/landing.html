@@ -722,6 +722,51 @@
         </aside>
       </div>
 
+      <!-- Iter10 item 4: the draft before it sends. The Iter8 approval card
+           confirms a tool action; this reviews the words addressed to a
+           customer. The confirmation is written, addressed and left for the
+           owner: it can be edited in place, sent, or dropped. Send and Discard
+           are pre-authored scripted outcomes over markup already in the DOM.
+           Reuses the Iter5 .lp-record skin, the diarized utterance skin and the
+           Iter8 two-branch pattern via modifier classes. No audio, no API, no
+           timer; both branches work under the flat gate. -->
+      <div class="lp-moment reveal" data-draft>
+        <p class="lp-moment-title">You see the text before your customer does</p>
+        <p class="lp-moment-sub">The confirmation is written, addressed and left for you.
+          Edit it, send it, or drop it. Send and Discard below are a scripted
+          demonstration, not a live message.</p>
+        <ol class="lp-call-list lp-moment-list" role="list">
+          <li class="lp-moment-item">
+            <div class="lp-record lp-draft">
+              <p class="lp-record-head">Draft message <i class="lp-draft-status">waiting for you</i></p>
+              <dl>
+                <div><dt>to</dt><dd>"07xxx · J. Marsh"</dd></div>
+                <div><dt>via</dt><dd>"SMS · after the call"</dd></div>
+              </dl>
+              <textarea class="lp-draft-body" rows="3"
+                aria-label="Edit the confirmation message">Booked Tue 10:00 with Dr. Ellis. Reply CALL to move it.</textarea>
+              <div class="lp-draft-ctas">
+                <button type="button" data-choice="send" aria-label="Send this message">Send</button>
+                <button type="button" data-choice="drop" aria-label="Discard this message">Discard</button>
+              </div>
+            </div>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1" hidden data-out="send">
+            <i>Caller</i>
+            <p>Got it. See you Tuesday.</p>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1" hidden data-out="drop">
+            <i>Agent</i>
+            <p>Dropped. Nothing was sent, and the booking in the diary is unchanged.</p>
+          </li>
+        </ol>
+        <aside class="lp-note lp-draft-note" data-note="note" role="note">
+          <span class="lp-note-label">Example</span>
+          <p>The shape of the review step. Send and Discard are scripted outcomes; no message
+            has left this page, and the text above is editable sample copy.</p>
+        </aside>
+      </div>
+
       <!-- Iter9 item 4: injection defense. Every other honesty move guards what
            the agent may do; this answers the adversarial follow-up, what if a
            caller tries to talk it into something. Three rows in the Iter5 guard

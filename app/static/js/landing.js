@@ -377,6 +377,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
+  /* ── Iter10 item 4: the draft before it sends ────────────────────────
+     An editable confirmation message held for review. Send and Discard are
+     pre-authored outcomes over markup already in the DOM: choosing one
+     disables both buttons, updates the status word and reveals the matching
+     line. The textarea is a normal editable field. No network, no audio, no
+     timer, no new observer; both branches work under the flat gate. */
+  (function () {
+    const wrap = document.querySelector('[data-draft]');
+    if (!wrap) return;
+    const status = wrap.querySelector('.lp-draft-status');
+    const outcomes = wrap.querySelectorAll('[data-out]');
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest ? e.target.closest('button[data-choice]') : null;
+      if (!btn || btn.disabled) return;
+      const choice = btn.getAttribute('data-choice');
+      wrap.querySelectorAll('button[data-choice]').forEach((b) => { b.disabled = true; });
+      if (status) status.textContent = choice === 'send' ? 'sent' : 'discarded';
+      outcomes.forEach((line) => { line.hidden = line.getAttribute('data-out') !== choice; });
+    });
+  })();
+
   function lpFmt(value, decimals, suffix) {
     if (decimals === 0) {
       return Math.round(value).toLocaleString('en-US') + suffix;
