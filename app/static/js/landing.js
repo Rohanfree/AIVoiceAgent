@@ -762,6 +762,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  /* ── Iter5 item 4: pronunciation replace map ─────────────────────────
+     The same client-side swap as Iter4 Move 3, over two more inlined strings:
+     no audio, no API, no server round-trip. Reuses lpScramble so the change
+     reads as re-configuring rather than a page glitch, and is instant under the
+     flat gate. aria-pressed=false (default) shows the configured wording; true
+     shows what a bot would say with the name unmatched. */
+  (function () {
+    const wrap = document.querySelector('[data-pron]');
+    if (!wrap) return;
+    const btn = wrap.querySelector('.lp-pron-toggle');
+    const lines = wrap.querySelectorAll('[data-pron-line]');
+    if (!btn || !lines.length) return;
+    const finals = new Map();
+    lines.forEach((line) => finals.set(line, line.textContent.trim()));
+    btn.addEventListener('click', () => {
+      const on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+      lines.forEach((line) => {
+        const isRaw = line.getAttribute('data-pron-line') === 'raw';
+        const show = on ? !isRaw : isRaw; // pressing flips to the raw wording
+        line.hidden = !show;
+        if (show) lpScramble(line, finals.get(line), 420);
+      });
+    });
+  })();
+
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
     btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });
   });

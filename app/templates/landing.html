@@ -642,6 +642,24 @@
         </li>
       </ol>
 
+      <!-- Iter5 item 4: pronunciation replace map, reusing the Iter4 raw/clean
+           swap. Two inlined strings and a two-segment pill; the swap reuses
+           lpScramble so it reads as re-configuring, not a page glitch, and is
+           instant under the flat gate. Honest framing: an example of how we
+           configure it, never a recording of either string. -->
+      <div class="lp-pron" data-pron>
+        <p class="lp-pron-title">Your name, said right</p>
+        <p class="lp-pron-sub">Before it speaks, a name is swapped for how it should sound. The
+          transcript the business reads keeps the real spelling.</p>
+        <button type="button" class="lp-pron-toggle" aria-pressed="false">
+          <span class="lp-pron-a">As a bot says it</span>
+          <span class="lp-pron-b">As we configure it</span>
+        </button>
+        <p class="lp-pron-line" data-pron-line="fixed">Thanks for calling "Acme Mobull" Dental.</p>
+        <p class="lp-pron-line" data-pron-line="raw" hidden>Thanks for calling "Ack-mee Mob-you-el" Dental.</p>
+        <span class="lp-pron-note">Example configuration · text only, not a recording</span>
+      </div>
+
       <aside class="lp-note" data-note="note" role="note">
         <span class="lp-note-label">Sample</span>
         <p>Player slots only. No call or voice samples, and no language previews, are published yet,

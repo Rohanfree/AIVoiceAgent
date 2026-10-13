@@ -1389,3 +1389,34 @@ section:nth-child(even) { background: var(--bg-alt); }
   text-transform: uppercase; color: var(--green);
 }
 .lp-guard li p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #333; }
+
+/* Iter5 item 4: pronunciation replace map. The Iter4 raw/clean swap applied to
+   a name: a two-segment pill over two inlined strings, no audio and no server
+   round-trip. The swap reuses lpScramble and is instant under the flat gate. */
+.lp-pron { margin-top: 40px; }
+.lp-pron-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.lp-pron-sub { margin-top: 6px; max-width: 56ch; font-size: 0.95rem; color: var(--grey); }
+.lp-pron-toggle {
+  display: inline-flex; margin-top: 16px; padding: 3px; gap: 2px;
+  border: 1px solid var(--border); border-radius: 9999px; background: #fff;
+  font-family: 'Montserrat', sans-serif; cursor: pointer;
+}
+.lp-pron-toggle span {
+  padding: 7px 16px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600;
+  color: var(--grey); transition: background 0.2s ease, color 0.2s ease;
+}
+.lp-pron-toggle[aria-pressed="false"] .lp-pron-b,
+.lp-pron-toggle[aria-pressed="true"] .lp-pron-a { background: var(--green); color: #fff; }
+.lp-pron-line {
+  margin: 14px 0 0; max-width: 62ch; padding: 14px 16px; border-radius: 12px;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  font-size: 0.98rem; line-height: 1.7; color: #333;
+}
+.lp-pron-line[hidden] { display: none; }
+.lp-pron-note {
+  display: inline-block; margin-top: 12px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey); border: 1px dashed var(--border); border-radius: 9999px;
+  padding: 4px 12px;
+}
