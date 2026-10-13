@@ -435,6 +435,110 @@
         </li>
       </ul>
 
+      <!-- Iter3 Move 1: language grid. Same roster, any language. Every chip is
+           a disabled honest slot: no preview clip is published yet, so each one
+           is inert (disabled, aria-disabled) and the note below says so. -->
+      <div class="lp-lang" role="group" aria-labelledby="lp-lang-heading">
+        <p class="lp-lang-title" id="lp-lang-heading">Languages on the line</p>
+        <p class="lp-lang-sub">Voice and language are separate. Any voice can speak any supported
+          language, and the agent can detect the caller instead.</p>
+        <ul class="lp-lang-grid" role="list">
+          <li>
+            <button type="button" class="lp-lang-chip lp-lang-auto" disabled aria-disabled="true"
+              aria-label="Auto-detect the caller language, code auto. Spoken preview slot, coming soon."
+              data-preview="auto">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Auto-detect</span>
+              <i class="lp-lang-code">auto</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="en"
+              aria-label="English, code en. Spoken preview slot, coming soon." data-preview="en">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">English</span>
+              <i class="lp-lang-code">en</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="es-ES"
+              aria-label="Spanish (Spain), code es-ES. Spoken preview slot, coming soon."
+              data-preview="es-ES">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Spanish (Spain)</span>
+              <i class="lp-lang-code">es-ES</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="fr"
+              aria-label="French, code fr. Spoken preview slot, coming soon." data-preview="fr">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">French</span>
+              <i class="lp-lang-code">fr</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="de"
+              aria-label="German, code de. Spoken preview slot, coming soon." data-preview="de">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">German</span>
+              <i class="lp-lang-code">de</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="pt-BR"
+              aria-label="Portuguese (Brazil), code pt-BR. Spoken preview slot, coming soon."
+              data-preview="pt-BR">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Portuguese (Brazil)</span>
+              <i class="lp-lang-code">pt-BR</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="it"
+              aria-label="Italian, code it. Spoken preview slot, coming soon." data-preview="it">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Italian</span>
+              <i class="lp-lang-code">it</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="ja"
+              aria-label="Japanese, code ja. Spoken preview slot, coming soon." data-preview="ja">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Japanese</span>
+              <i class="lp-lang-code">ja</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="hi"
+              aria-label="Hindi, code hi. Spoken preview slot, coming soon." data-preview="hi">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Hindi</span>
+              <i class="lp-lang-code">hi</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="ar-EG"
+              aria-label="Arabic (Egypt), code ar-EG. Spoken preview slot, coming soon."
+              data-preview="ar-EG">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Arabic (Egypt)</span>
+              <i class="lp-lang-code">ar-EG</i>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lp-lang-chip" disabled aria-disabled="true" lang="zh"
+              aria-label="Chinese (Simplified), code zh. Spoken preview slot, coming soon."
+              data-preview="zh">
+              <span class="lp-lang-play" aria-hidden="true">▶</span>
+              <span class="lp-lang-name">Chinese (Simplified)</span>
+              <i class="lp-lang-code">zh</i>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <p class="lp-sample-note">Player slots only. No call or voice samples are published yet, and none
         are invented here.</p>
     </div>

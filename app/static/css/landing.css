@@ -861,6 +861,43 @@ section:nth-child(even) { background: var(--bg-alt); }
   .lp-voice-note { grid-column: 2; justify-self: start; }
 }
 
+/* Move 1 (Iter 3): language grid. Same roster, any language. Two columns of
+   chips; the auto-detect chip tops the grid and spans both columns. Every chip
+   is a disabled honest slot (no preview clip is published yet), so the whole
+   block is inert by design and needs no motion gate. Green accent only. */
+.lp-lang { margin-top: 44px; }
+.lp-lang-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.lp-lang-sub { margin-top: 6px; max-width: 56ch; font-size: 0.92rem; color: var(--grey); }
+.lp-lang-grid {
+  list-style: none; margin: 20px 0 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.lp-lang-chip {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px 18px; border-radius: 9999px;
+  border: 1px solid var(--border); background: #fff; color: #111;
+  font-family: 'Montserrat', sans-serif; font-size: 0.95rem; text-align: left;
+  cursor: not-allowed; opacity: 0.72;
+}
+.lp-lang-play {
+  flex-shrink: 0; font-size: 0.72rem; line-height: 1; color: var(--green);
+}
+.lp-lang-name { font-weight: 600; }
+.lp-lang-code {
+  margin-left: auto; font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.72rem; letter-spacing: 0.12em; color: var(--grey);
+}
+.lp-lang-auto {
+  grid-column: 1 / -1; border-color: var(--green); opacity: 0.82;
+}
+.lp-lang-auto .lp-lang-name,
+.lp-lang-auto .lp-lang-play { color: var(--green); }
+@media (max-width: 640px) {
+  .lp-lang-grid { grid-template-columns: 1fr; }
+  .lp-lang-auto { grid-column: auto; }
+}
+
 /* Move 3 (Iter 1): masked split-line reveal.
    Each display line sits in an overflow-hidden wrapper; the inner span starts
    below the mask and slides to 0 with a per-line stagger when the block enters
