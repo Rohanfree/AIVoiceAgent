@@ -760,7 +760,7 @@ section:nth-child(even) { background: var(--bg-alt); }
   display: none; align-items: center; justify-content: center; padding: 24px;
 }
 .lp-lightbox.lp-open { display: flex; }
-.lp-lightbox-backdrop { position: absolute; inset: 0; background: rgba(14,30,24,0.62); }
+.lp-lightbox-backdrop { position: absolute; inset: 0; background: rgba(14,46,34,0.62); }
 .lp-lightbox-card {
   position: relative; background: #fff; border-radius: 16px;
   max-width: 560px; width: 100%; padding: 36px 32px;
