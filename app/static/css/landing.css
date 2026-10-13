@@ -1668,3 +1668,21 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-cite { margin-top: 20px; max-width: 640px; }
 .lp-cite dl > div { grid-template-columns: 8ch 1fr; }
 .lp-cite-note { max-width: 720px; }
+
+/* Iter8 item 5: connect-and-revoke integrations. A type-only chip strip of the
+   systems we can connect (no logos, no endorsement), then two guard rows in the
+   Iter5 grammar via a modifier class stating how access is granted and revoked.
+   Reuses the Iter3 chip language; static content, no JS, no asset. */
+.lp-connect-block { margin-top: 56px; }
+.lp-connect {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; padding: 0;
+  list-style: none;
+}
+.lp-connect li {
+  font: 600 0.68rem/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  border: 1px solid rgba(26,77,58,0.3); border-radius: 999px;
+  padding: 9px 16px; color: var(--green);
+}
+.lp-connect-guard { margin-top: 24px; }
+.lp-connect-note { max-width: 720px; }

@@ -1137,6 +1137,44 @@
         </article>
       </div>
 
+      <!-- Iter8 item 5: connect-and-revoke integrations. The Process paragraph
+           claims integration (CRM, Calendars, Dialers); this attaches an object
+           to the claim. A type-only chip strip names the systems we can connect
+           (no logos, no endorsement), and two guard rows state how access is
+           granted (by you, in the source admin) and revoked (in the source app,
+           at once). Reuses the Iter3 chip language and the Iter5 guard grammar
+           via modifier classes. Static content, no JS, no asset. -->
+      <div class="lp-guard-block lp-connect-block reveal">
+        <p class="lp-guard-title">Connects to the systems you already run</p>
+        <p class="lp-guard-sub">Named as text only: no logos, no implied partnership. Each
+          connection is yours to grant, and yours to revoke.</p>
+        <ul class="lp-connect" role="list" aria-label="Systems we can connect">
+          <li>Google Calendar</li>
+          <li>Gmail</li>
+          <li>Outlook</li>
+          <li>HubSpot</li>
+          <li>Salesforce</li>
+          <li>your dialer</li>
+        </ul>
+        <ul class="lp-guard lp-connect-guard" role="list">
+          <li>
+            <i class="lp-guard-kind">Granted</i>
+            <p>You connect each system yourself, in its own admin screen. The agent asks for the
+              least it needs and holds <b>no master key</b>.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Revoked</i>
+            <p>Switch access off in the source app and it is off, instantly. Until you say
+              otherwise, every connection reads and never writes.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-connect-note" data-note="note" role="note">
+          <span class="lp-note-label">Scope</span>
+          <p>The systems we can connect today, shown as text. Yours is confirmed in the audit
+            before anything is switched on.</p>
+        </aside>
+      </div>
+
       <!-- Iter5 item 3: the read-vs-write tool boundary. Two kinds of action,
            one rule: reads run mid-sentence without asking, writes always confirm
            first. Pure copy in the existing spec-table grammar — static, no JS,
