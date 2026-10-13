@@ -70,7 +70,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=19" />
+  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=20" />
   <link rel="icon" type="image/png" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <link rel="apple-touch-icon" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <style>
@@ -331,6 +331,19 @@
       </div>
 
       <p class="lp-sample-note">Sample rows. Illustrative deployment patterns only, no client names or figures.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+     DEMO (opens the lightbox slot)
+═════════════════════════════════════════════ -->
+  <section id="demo" class="lp-demo-section" aria-labelledby="demo-heading">
+    <div class="container">
+      <h2 class="section-title" id="demo-heading">Hear what callers hear</h2>
+      <p class="section-subtitle">A sample of a live agent booking a job. No signup needed.</p>
+      <div class="lp-demo-ctas">
+        <a href="#demo" class="btn btn-primary" data-open-demo>Play the sample call</a>
+      </div>
     </div>
   </section>
 
@@ -974,6 +987,23 @@
   <!-- ═══════════════════════════════════════════
      FOOTER
 ════════════════════════════════════════════ -->
+  <!-- Demo lightbox slot (Move 7). Audio is an honest empty placeholder:
+       no call recording is published, so nothing is invented here. -->
+  <div class="lp-lightbox" id="demo-lightbox-slot" role="dialog" aria-modal="true" aria-label="Sample call player">
+    <div class="lp-lightbox-backdrop"></div>
+    <div class="lp-lightbox-card">
+      <button class="lp-lightbox-close" type="button" aria-label="Close">×</button>
+      <h3>Sample call: plumbing intake</h3>
+      <p>Slot for a published call recording. No recording is published yet, so the
+        player below is an honest empty placeholder.</p>
+      <img class="lp-lightbox-poster" src="/automiteaiapplication/automiteui/static/media/demo-poster.png"
+        alt="" aria-hidden="true" width="1280" height="720" />
+      <audio class="lp-lightbox-audio" controls preload="none"
+        aria-label="Call recording placeholder (empty)"></audio>
+      <a class="btn btn-primary" href="#contact">Book a consultation</a>
+    </div>
+  </div>
+
   <footer id="footer" role="contentinfo">
     <div class="container">
       <div class="footer-inner">
@@ -1002,7 +1032,7 @@
   <elevenlabs-convai agent-id="agent_2601ks0nkjsmfrn9g6m0d90c8qjh"></elevenlabs-convai>
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-  <script src="/automiteaiapplication/automiteui/static/js/landing.js?v=13"></script>
+  <script src="/automiteaiapplication/automiteui/static/js/landing.js?v=14"></script>
   <script>
     (function () {
       var loader = document.getElementById('lp-loader');

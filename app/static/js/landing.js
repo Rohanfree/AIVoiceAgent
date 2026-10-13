@@ -271,8 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!lpBox) return;
     lpBox.classList.remove('lp-open');
     document.body.style.overflow = '';
-    const vid = lpBox.querySelector('video');
-    if (vid) vid.pause();
+    // Pause any media in the slot (video loops and the audio player).
+    lpBox.querySelectorAll('video, audio').forEach((m) => {
+      try { m.pause(); } catch (_) { /* no media source yet */ }
+    });
     if (lpLastFocus && lpLastFocus.focus) lpLastFocus.focus();
   }
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
