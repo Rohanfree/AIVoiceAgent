@@ -1596,3 +1596,8 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-role-note { max-width: 720px; }
 @media (max-width: 1024px) { .lp-role-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .lp-role-grid { grid-template-columns: 1fr; } }
+
+/* Iter7 item 5: the recording recipe. Four hairline rows in the guard grammar,
+   under the Iter4 clone stepper. Static by design. */
+.lp-recipe-block { margin-top: 48px; }
+.lp-recipe-note { max-width: 720px; }
