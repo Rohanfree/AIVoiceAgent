@@ -1005,6 +1005,14 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-t-on { color: var(--green); }
 [data-motion-flat] .lp-t-word { transition: none; }
 
+/* Iter2 Move 5: scramble-on-reveal. Eyebrows, section labels and ledger
+   labels decode in place as they enter view. The ledger's figures keep their
+   count-up; scrambling a numeral mid-count would race it and read as a bug,
+   so the ledger *labels* decode instead and all numerals get tabular figures
+   so widths never jitter. */
+.lp-ledger-num,
+[data-scramble-text] { font-variant-numeric: tabular-nums; }
+
 /* ── Consolidation: the crown is the ONLY marquee on the page.
    Testimonials and the partner logo band are static. ── */
 .testimonials-grid {

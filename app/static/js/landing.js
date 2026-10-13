@@ -602,6 +602,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ── Iter2 Move 5: scramble-on-reveal ────────────────────────────────
+     Eyebrows, section labels and ledger labels decode in place as they enter
+     view: the final string lives in data-scramble-text and the visible text
+     resolves left to right from a glyph pool. Never random-per-frame for the
+     whole duration (that reads as a bug). Flat gate / reduced motion: the
+     server-rendered final text is left exactly as-is. */
+  (function () {
+    const els = document.querySelectorAll('[data-scramble-text]');
+    if (!els.length) return;
+    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#*';
+    function run(el) {
+      const final = el.getAttribute('data-scramble-text') || el.textContent;
+      if (reduceMotion || !('requestAnimationFrame' in window)) { el.textContent = final; return; }
+      // Hold the real string for assistive tech while glyphs cycle on screen.
+      el.setAttribute('aria-hidden', 'true');
+      const dur = 620;
+      let t0 = 0;
+      (function frame(now) {
+        if (!t0) t0 = now;
+        const p = Math.min(1, (now - t0) / dur);
+        const lock = Math.floor(p * final.length); // resolve left -> right
+        el.textContent = final.slice(0, lock) +
+          final.slice(lock).replace(/\S/g, () => GLYPHS[(Math.random() * GLYPHS.length) | 0]);
+        if (p < 1) requestAnimationFrame(frame);
+        else { el.textContent = final; el.removeAttribute('aria-hidden'); }
+      })(performance.now());
+    }
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      els.forEach((el) => { el.textContent = el.getAttribute('data-scramble-text') || el.textContent; });
+      return;
+    }
+    const scObs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { run(e.target); scObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.4 });
+    els.forEach((el) => scObs.observe(el));
+  })();
+
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
     btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });
   });
