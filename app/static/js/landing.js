@@ -223,12 +223,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (lpMan) {
     let lpWords = lpMan.querySelectorAll('.lp-w');
     if (!lpWords.length) {
-      // Client-side split fallback if server did not wrap words.
+      // Client-side split fallback if the server did not wrap words.
+      // The green clause is pinned by data-green-from/to so the fallback marks
+      // exactly the same words as the server-rendered spans ("book every job,").
+      const gf = parseInt(lpMan.getAttribute('data-green-from') || '8', 10);
+      const gt = parseInt(lpMan.getAttribute('data-green-to') || '10', 10);
       const text = lpMan.textContent.trim().split(/\s+/);
       lpMan.textContent = '';
       text.forEach((word, i) => {
         const s = document.createElement('span');
-        s.className = 'lp-w' + ((i >= 5 && i <= 7) ? ' lp-w-mid' : '');
+        s.className = 'lp-w' + ((i >= gf && i <= gt) ? ' lp-w-mid' : '');
         s.textContent = word;
         lpMan.appendChild(s);
         lpMan.appendChild(document.createTextNode(' '));

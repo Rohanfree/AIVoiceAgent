@@ -705,8 +705,8 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 
 /* Move 4: manifesto band with word reveal + drift loop */
-.lp-manifesto { position: relative; overflow: hidden; }
-.lp-manifesto-bg {
+.lp-manifesto { position: relative; overflow: hidden; background: var(--bg); }
+.lp-manifesto-bg, .lp-manifesto-poster {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; opacity: 0.14; pointer-events: none;
 }
