@@ -501,26 +501,63 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   })();
 
+  /* ── Iter2 Move 3: arc-mask lens ────────────────────────────────────
+     One --mask-arc scalar (0→1) grows the elliptical green lens. Shared by
+     the loader exit and the lightbox open/close so both read as the same
+     gesture. Inert under the flat gate: no tween, no lens — the lightbox
+     simply shows as before. */
+  const lpLensEl = document.getElementById('lp-lens');
+  const lpLensOn = !motionFlat && !reduceMotion && !!lpLensEl && ('requestAnimationFrame' in window);
+  function lpArcSet(v) { if (lpLensEl) lpLensEl.style.setProperty('--mask-arc', String(v)); }
+  function lpArc(from, to, ms, done) {
+    if (!lpLensOn) { lpArcSet(to); if (done) done(); return; }
+    const t0 = performance.now();
+    lpArcSet(from);
+    (function frame(now) {
+      const p = Math.min(1, (now - t0) / ms);
+      const eased = 1 - Math.pow(1 - p, 4);
+      lpArcSet(from + (to - from) * eased);
+      if (p < 1) requestAnimationFrame(frame);
+      else { lpArcSet(to); if (done) done(); }
+    })(t0);
+  }
+
   /* ── Landing Moves: demo lightbox (open/close/focus/Escape) ── */
   const lpBox = document.getElementById('demo-lightbox-slot');
   let lpLastFocus = null;
   function lpOpenBox() {
     if (!lpBox) return;
     lpLastFocus = document.activeElement;
-    lpBox.classList.add('lp-open');
-    document.body.style.overflow = 'hidden';
+    if (lpLensOn) {
+      // Iris open: green lens fully closed, card mounted beneath, lens opens.
+      lpArcSet(1);
+      lpBox.classList.add('lp-open');
+      document.body.style.overflow = 'hidden';
+      lpArc(1, 0, 420);
+    } else {
+      lpBox.classList.add('lp-open');
+      document.body.style.overflow = 'hidden';
+    }
     const close = lpBox.querySelector('.lp-lightbox-close');
     if (close) close.focus();
   }
   function lpCloseBox() {
     if (!lpBox) return;
-    lpBox.classList.remove('lp-open');
-    document.body.style.overflow = '';
-    // Pause any media in the slot (video loops and the audio player).
-    lpBox.querySelectorAll('video, audio').forEach((m) => {
-      try { m.pause(); } catch (_) { /* no media source yet */ }
-    });
-    if (lpLastFocus && lpLastFocus.focus) lpLastFocus.focus();
+    const finish = () => {
+      lpBox.classList.remove('lp-open');
+      document.body.style.overflow = '';
+      // Pause any media in the slot (video loops and the audio player).
+      lpBox.querySelectorAll('video, audio').forEach((m) => {
+        try { m.pause(); } catch (_) { /* no media source yet */ }
+      });
+      if (lpLastFocus && lpLastFocus.focus) lpLastFocus.focus();
+    };
+    if (lpLensOn) {
+      // Close is ~2.5x faster than open — the asymmetry reads as deliberate.
+      lpArc(0, 1, 170, () => { finish(); lpArc(1, 0, 170); });
+    } else {
+      finish();
+    }
   }
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
     btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });

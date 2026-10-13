@@ -1094,6 +1094,11 @@
     </div>
   </footer>
 
+  <!-- Iter2 Move 3: arc-mask lens. Decorative full-viewport green iris; one
+       scalar drives the loader exit and the lightbox open/close. Inert
+       (zero-scale) at rest, and hidden under the flat gate. -->
+  <div class="lp-lens" id="lp-lens" aria-hidden="true"></div>
+
   <elevenlabs-convai agent-id="agent_2601ks0nkjsmfrn9g6m0d90c8qjh"></elevenlabs-convai>
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
@@ -1101,9 +1106,37 @@
   <script>
     (function () {
       var loader = document.getElementById('lp-loader');
+      var lens = document.getElementById('lp-lens');
       // Flat gate: no loader animation, so dismiss before the first paint cycle.
       var flat = document.documentElement.hasAttribute('data-motion-flat');
-      function dismiss() { if (loader) loader.classList.add('lp-loader-hidden'); }
+      var reduce = false;
+      try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      var animate = !flat && !reduce && lens && ('requestAnimationFrame' in window);
+      function paint(v) { if (lens) lens.style.setProperty('--mask-arc', String(v)); }
+      function arc(from, to, ms) {
+        if (!animate) { paint(to); return; }
+        var t0 = performance.now();
+        paint(from);
+        (function frame(now) {
+          var p = Math.min(1, (now - t0) / ms);
+          paint(from + (to - from) * (1 - Math.pow(1 - p, 4)));
+          if (p < 1) requestAnimationFrame(frame); else paint(to);
+        })(t0);
+      }
+      var done = false;
+      function dismiss() {
+        if (done || !loader) return;
+        done = true;
+        if (animate) {
+          // Hand off loader → hero with the same arc-mask gesture as the lightbox.
+          paint(1);
+          loader.classList.add('lp-loader-hidden');
+          arc(1, 0, 900);
+        } else {
+          loader.classList.add('lp-loader-hidden');
+          paint(0);
+        }
+      }
       if (flat || document.readyState === 'complete') {
         dismiss();
       } else {

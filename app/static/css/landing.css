@@ -970,6 +970,21 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-sound[aria-pressed="true"] [data-sound-cross] { opacity: 0; }
 [data-motion-flat] .lp-sound { display: none !important; }
 
+/* Iter2 Move 3: arc-mask lens. One scalar --mask-arc (0→1) grows an
+   elliptical green lens from screen centre; the loader exit and the lightbox
+   open/close all ride the same curve, so the page has one house transition
+   shape rather than a bag of one-offs. At rest it is a zero-scale point
+   (invisible, non-interactive). Driven via transform scale for compositing,
+   not by twiddling insets (same read, no per-frame layout). */
+.lp-lens {
+  position: fixed; left: 50%; top: 50%; z-index: 9998;
+  width: 165vmax; height: 130vmax; pointer-events: none;
+  background: var(--green); border-radius: 50%;
+  --mask-arc: 0;
+  transform: translate(-50%, -50%) scale(var(--mask-arc, 0));
+}
+[data-motion-flat] .lp-lens { display: none !important; }
+
 /* ── Consolidation: the crown is the ONLY marquee on the page.
    Testimonials and the partner logo band are static. ── */
 .testimonials-grid {
