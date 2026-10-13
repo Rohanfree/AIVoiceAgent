@@ -824,6 +824,43 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-lightbox-close:hover { background: var(--bg-alt); }
 
+/* Move 2 (Iter 1): voice roster — empty player slots only.
+   No audio exists yet, so each row shows a disabled player and an honest
+   "Sample coming soon" note. Green accent only; mono tags. */
+.lp-voices-section { background: var(--bg); }
+.lp-voice-list {
+  list-style: none; margin: 40px 0 0; padding: 0; border-top: 1px solid var(--border);
+}
+.lp-voice-row {
+  display: grid; grid-template-columns: 44px 1fr auto auto;
+  align-items: center; gap: 20px;
+  padding: 18px 4px; border-bottom: 1px solid var(--border);
+}
+.lp-voice-play {
+  width: 44px; height: 44px; border-radius: 9999px;
+  border: 1px solid var(--border); background: #fff; color: var(--green);
+  font-size: 13px; line-height: 1; cursor: not-allowed; opacity: 0.7;
+  display: flex; align-items: center; justify-content: center;
+}
+.lp-voice-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lp-voice-name { font-weight: 700; }
+.lp-voice-tone { font-size: 0.85rem; color: var(--grey); }
+.lp-voice-tags {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.72rem; letter-spacing: 0.06em; color: var(--grey); white-space: nowrap;
+}
+.lp-voice-note {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green);
+  border: 1px dashed var(--border); border-radius: 9999px; padding: 5px 12px;
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .lp-voice-row { grid-template-columns: 44px 1fr; gap: 12px 16px; }
+  .lp-voice-tags { grid-column: 2; }
+  .lp-voice-note { grid-column: 2; justify-self: start; }
+}
+
 /* Move 3 (Iter 1): masked split-line reveal.
    Each display line sits in an overflow-hidden wrapper; the inner span starts
    below the mask and slides to 0 with a per-line stagger when the block enters
