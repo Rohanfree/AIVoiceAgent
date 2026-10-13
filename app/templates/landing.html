@@ -1193,6 +1193,34 @@
           <span class="lp-t-word">Agent</span>: booked. A text confirmation is on its way.
         </p>
       </div>
+      <!-- Iter4 Move 1: diarized two-speaker transcript. Disabled-honest: no
+           call recording and no speaker-tagged timing map exist yet, so this is
+           static, clearly-labelled illustrative text — caller column left,
+           agent column right in the accent — not a single karaoke stream. When
+           a real sample ships, a server-generated speaker-tagged timing map
+           (never built in browser code) drives the .on highlight off the
+           existing timeupdate loop; the layout itself never changes. -->
+      <div class="lp-call" data-call aria-disabled="true">
+        <span class="lp-transcript-note">Illustrative transcript · two speakers, not a real call</span>
+        <ol class="lp-call-list" role="list">
+          <li class="lp-call-line" data-sp="0" style="--t:1.2">
+            <i>Caller</i>
+            <p>Hi — do you have anything open Saturday morning?</p>
+          </li>
+          <li class="lp-call-line" data-sp="1" style="--t:3.4">
+            <i>Agent</i>
+            <p>Morning. Yes — 9:40 or 11:20 are free. Which suits you?</p>
+          </li>
+          <li class="lp-call-line" data-sp="0" style="--t:6.1">
+            <i>Caller</i>
+            <p>9:40 works, thanks. It's a boiler service.</p>
+          </li>
+          <li class="lp-call-line" data-sp="1" style="--t:8.0">
+            <i>Agent</i>
+            <p>Booked for 9:40. A text confirmation is on its way.</p>
+          </li>
+        </ol>
+      </div>
       <a class="btn btn-primary" href="#contact" data-cursor="Book">Book a consultation</a>
     </div>
   </div>

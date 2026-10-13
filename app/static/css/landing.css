@@ -1148,3 +1148,43 @@ section:nth-child(even) { background: var(--bg-alt); }
   /* Hide the ambient loops; their poster twins (img) remain in place. */
   .lp-hero-orb-video, .lp-manifesto-bg, .lp-lightbox-video video { display: none; }
 }
+
+/* ============================================================
+   Iteration 4 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only (no dark surfaces — the dark showreel curtain from the
+   research is deliberately held pending a brand decision). Every
+   motion below is inert under [data-motion-flat]. Nothing references
+   an audio asset that does not exist: the smart-turn meter and the
+   raw/clean swap are scripted illustrations with pre-authored text.
+   ============================================================ */
+
+/* Iter4 Move 1: diarized two-speaker transcript in the demo lightbox.
+   A flat list of utterances, not two DOM trees: caller left, agent
+   right, in timestamp order. Static and clearly labelled until a real
+   recording (with a server-generated speaker map) ships; the .on
+   highlight only ever lights when that map drives it off timeupdate.
+   The card gains a height cap so the richer slot never overflows. */
+.lp-lightbox-card { max-height: calc(100vh - 48px); overflow-y: auto; }
+.lp-call { margin: 0 0 20px; }
+.lp-call-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.lp-call-line {
+  display: grid; gap: 2px; max-width: 88%;
+  padding: 9px 13px; border-radius: 12px; background: var(--bg-alt);
+  opacity: 0.72; transition: opacity 0.18s linear;
+}
+.lp-call-line[data-sp="1"] {
+  justify-self: end; text-align: right;
+  background: rgba(26,77,58,0.07);
+  background: color-mix(in srgb, var(--green) 7%, transparent);
+}
+.lp-call-line[data-sp="1"] p { color: var(--green); }
+.lp-call-line.on { opacity: 1; }
+.lp-call-line i {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.62rem; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; opacity: 0.6;
+}
+.lp-call-line p { margin: 0; font-size: 0.92rem; line-height: 1.5; }
+[data-motion-flat] .lp-call-line { opacity: 1; transition: none; }
