@@ -1420,3 +1420,28 @@ section:nth-child(even) { background: var(--bg-alt); }
   color: var(--grey); border: 1px dashed var(--border); border-radius: 9999px;
   padding: 4px 12px;
 }
+
+/* Iter5 item 5: the post-call record. A mono card of typed fields — the
+   artifact the owner keeps after the call. Rows ride the existing
+   scramble-on-reveal observer (each <dd> carries data-scramble-text), so no
+   new observer is added; under the flat gate they paint at their final
+   strings. */
+.lp-record {
+  margin-top: 36px; max-width: 460px; padding: 16px 18px;
+  border: 1px solid rgba(26,77,58,0.18); border-radius: 16px; background: #fff;
+}
+.lp-record-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; font-weight: 600; line-height: 1; letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.lp-record-head i { color: var(--green); font-style: normal; }
+.lp-record dl {
+  display: grid; gap: 6px; margin: 10px 0 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.82rem; font-weight: 500; line-height: 1.6;
+}
+.lp-record dl > div { display: grid; grid-template-columns: 8ch 1fr; gap: 12px; }
+.lp-record dt { color: var(--green); text-transform: lowercase; }
+.lp-record dd { margin: 0; font-variant-numeric: tabular-nums; }
