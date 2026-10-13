@@ -260,6 +260,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ── Move 3 (Iter 1): masked split-line reveals ─────────────── */
+  // Each .lp-split block holds .lp-line > .lp-line-in (see CSS). One observer
+  // per block; the inner lines slide up with a --i based stagger.
+  const lpSplits = document.querySelectorAll('.lp-split');
+  if (lpSplits.length) {
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      lpSplits.forEach(s => s.classList.add('lp-in'));
+    } else {
+      const so = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('lp-in'); so.unobserve(e.target); }
+        });
+      }, { threshold: 0.2 });
+      lpSplits.forEach(s => so.observe(s));
+    }
+  }
+
   /* ── Landing Moves: demo lightbox (open/close/focus/Escape) ── */
   const lpBox = document.getElementById('demo-lightbox-slot');
   let lpLastFocus = null;
