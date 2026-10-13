@@ -1062,6 +1062,49 @@ section:nth-child(even) { background: var(--bg-alt); }
 @media (max-width: 1024px) { .testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .testimonials-grid { grid-template-columns: 1fr; } }
 
+/* ============================================================
+   Iteration 3 moves. Same brand lock as above: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius. Moves 1, 2 and 5
+   are static honest slots (no motion to gate); move 3's ornaments ride the
+   existing split-line / manifesto observers and flatten under the flat gate.
+   ============================================================ */
+
+/* Iter3 Move 5: one honest-note callout for every disclaimer. A designed
+   object, not italic small print: an uppercase mono label over a tinted block
+   with a heavy left rule. Pure CSS, no JS, static by design, so it is safe on
+   every placeholder. Two variants only, no icon font, no new accent color. */
+.lp-note {
+  display: grid; gap: 6px; margin-top: 20px;
+  padding: 14px 16px; border-radius: 16px;
+  background: rgba(26,77,58,0.06);
+  background: color-mix(in srgb, var(--green) 6%, transparent);
+  border-left: 3px solid var(--green);
+}
+.lp-note[data-note="warn"] { border-left-color: currentColor; }
+.lp-note-label {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; font-weight: 600; line-height: 1; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--green);
+}
+.lp-note[data-note="warn"] .lp-note-label { color: inherit; }
+.lp-note p { margin: 0; font-size: 0.92rem; color: var(--grey); }
+
+/* Iter3 Move 2: inline speech-tag chips. Small pills set in the prose; the
+   disabled state is the honest slot, not a broken button. No sound asset is
+   referenced, so nothing can autoplay or 404. */
+.lp-say {
+  margin: 22px 0 0; max-width: 62ch; font-size: 1rem; line-height: 1.9; color: #333;
+}
+.lp-tag {
+  display: inline-flex; align-items: center;
+  padding: 1px 9px; margin: 0 2px; border-radius: 9999px;
+  border: 1px solid currentColor;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.78rem; line-height: 1.7; color: var(--green);
+  background: transparent; cursor: not-allowed;
+}
+.lp-tag[disabled] { opacity: 0.75; }
+
 /* Move 1 (Iter 1): progressive motion demotion gate.
    The inline <head> script sets data-motion-flat on <html> for touch devices,
    prefers-reduced-motion, or returning visitors. All motion-heavy rules branch
