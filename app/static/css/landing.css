@@ -1452,3 +1452,24 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-record dl > div { display: grid; grid-template-columns: 8ch 1fr; gap: 12px; }
 .lp-record dt { color: var(--green); text-transform: lowercase; }
 .lp-record dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Iteration 6 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Nothing here adds a <section> (background parity),
+   references new media, or invents audio: the five items are
+   content and one clipboard utility. Any motion reuses the
+   existing observers and flattens under [data-motion-flat].
+   ============================================================ */
+
+/* Iter6 item 1: unit-economics card. The Iter5 .lp-record skin reused for
+   the spend half of the calculator: values right-aligned, the total row
+   ruled and green. Same shape, second job. Static apart from the shared
+   scramble-on-reveal already riding each <dd>. */
+.lp-cost { margin-top: 48px; }
+.lp-cost dl > div { grid-template-columns: 1fr auto; }
+.lp-cost dl > div:last-child {
+  border-top: 1px solid rgba(26,77,58,0.14); padding-top: 6px; color: var(--green);
+}
+.lp-cost dd { font-variant-numeric: tabular-nums; }
+.lp-cost-note { max-width: 460px; }
