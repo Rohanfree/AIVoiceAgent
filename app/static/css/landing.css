@@ -1713,3 +1713,9 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-bargein { margin-top: 22px; }
 .lp-bargein-note { max-width: 720px; }
 [data-motion-flat] .lp-cut s { transition: none; }
+
+/* Iter9 item 2: prepaid credits and the monthly ceiling. The Iter5 guard
+   grammar via a modifier class, three rows; the note reuses the honest-note
+   component. Static by design. */
+.lp-ceiling-block { margin-top: 48px; }
+.lp-ceiling-note { max-width: 720px; }

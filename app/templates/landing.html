@@ -1364,6 +1364,42 @@
         <p>Illustrative only, at our provider's published list prices, not your quote. Telephony
           and our service are billed separately, and everything is shown before you sign.</p>
       </aside>
+
+      <!-- Iter9 item 2: prepaid credits and the monthly ceiling. Iter6 says what
+           a call costs and Iter7 says what this call did cost; this answers the
+           question that decides the signature, what is the most it can ever
+           cost. Three rows in the Iter5 guard grammar via a modifier class,
+           stating the provider's own billing mechanics (prepaid balance, an 80%
+           warning, automatic rejection at zero). The capped-out row ties back to
+           Iter6's overflow rule. Static content, no JS, no asset, no figure
+           invented. -->
+      <div class="lp-guard-block lp-ceiling-block reveal">
+        <p class="lp-guard-title">It cannot run up a bill you did not approve</p>
+        <p class="lp-guard-sub">Three layers of spend control, set before the agent answers a
+          single call.</p>
+        <ul class="lp-guard lp-ceiling" role="list">
+          <li>
+            <i class="lp-guard-kind">Ceiling</i>
+            <p>You set a <b>monthly cap</b> before we switch the agent on. It runs on prepaid
+              credits, so it cannot spend past the number you chose.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Warned</i>
+            <p>At <b>80%</b> of the cap you get a message, not an invoice at month's end. Raise
+              the cap or ride it out, your call.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Capped out</i>
+            <p>When credits are gone the agent stops, and callers reach your existing line
+              exactly as the overflow rule promises. No overdraft, no surprise charge.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-ceiling-note" data-note="note" role="note">
+          <span class="lp-note-label">Source</span>
+          <p>Our AI provider's own billing controls: prepaid balance, the 80% warning, automatic
+            rejection at zero. Your cap is written into the agreement before launch.</p>
+        </aside>
+      </div>
     </div>
   </section>
 
