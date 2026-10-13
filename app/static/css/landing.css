@@ -1831,3 +1831,10 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-draft-ctas button:not([disabled]):hover { box-shadow: 0 6px 20px rgba(26,77,58,0.2); }
 .lp-draft-note { max-width: 720px; }
 [data-motion-flat] .lp-draft-ctas button { transition: none; }
+
+/* Iter10 item 5: the tighten-only guardrail rows. The Iter5 guard grammar via
+   a modifier class, two rows under the role cards where onboarding is told.
+   The note reuses the honest-note component and states our own configuration
+   practice (no provider quote borrowed). Static by design. */
+.lp-tighten-block { margin-top: 48px; }
+.lp-tighten-note { max-width: 720px; }
