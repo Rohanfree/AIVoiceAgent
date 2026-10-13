@@ -429,10 +429,25 @@
           <div><dt>slot</dt><dd data-scramble-text="&quot;Tue 10:00&quot;">"Tue 10:00"</dd></div>
           <div><dt>crm</dt><dd data-scramble-text="&quot;synced&quot;">"synced"</dd></div>
         </dl>
+        <!-- Iter7 item 3: the measured per-call meter, a row inside the Iter5
+             post-call record card. It sits OUTSIDE the <dl> on purpose, so the
+             four typed field rows Iter5 pins are untouched. The value rides the
+             shared scramble observer; the note labels the figure an example. -->
+        <p class="lp-record-meter">
+          <i>metered</i>
+          <b data-scramble-text="$0.40">$0.40</b>
+          <span>read from the provider's per-request billing, after discounts</span>
+        </p>
       </div>
       <aside class="lp-note lp-record-note" data-note="note" role="note">
         <span class="lp-note-label">Example</span>
         <p>Shape of the record, not a real customer. Field set is configured per business.</p>
+      </aside>
+      <aside class="lp-note lp-meter-note" data-note="note" role="note">
+        <span class="lp-note-label">Metered</span>
+        <p>The cost line comes from our provider's per-request billing response, so it is exact
+          after discounts rather than estimated from a rate card. The figure shown is an example;
+          real records carry real meters.</p>
       </aside>
 
       <!-- Iter6 item 2: concurrency spec + overflow rule. Two callers at the
