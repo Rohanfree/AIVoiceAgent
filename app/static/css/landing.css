@@ -1547,3 +1547,8 @@ section:nth-child(even) { background: var(--bg-alt); }
    modifier class so the Iter3 count of unmodified notes is unchanged. */
 .lp-handoff-block { margin-top: 56px; }
 .lp-handoff-note { max-width: 720px; }
+
+/* Iter7 item 2: the data-handling policy. Same spec-table grammar, a denial
+   that is easy to state and impossible to fake. Static by design. */
+.lp-privacy-block { margin-top: 48px; }
+.lp-privacy-note { max-width: 720px; }
