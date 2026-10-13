@@ -1659,3 +1659,12 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-routine { margin-top: 20px; max-width: 640px; }
 .lp-routine dl > div { grid-template-columns: 8ch 1fr; }
 .lp-routine-note { max-width: 720px; }
+
+/* Iter8 item 4: cited answers. The Iter5 .lp-record skin, third job: the
+   source behind a quoted number, and the unknown that is handed to a person
+   rather than estimated. Static apart from the shared scramble-on-reveal
+   already riding each <dd>. */
+.lp-cite-block { margin-top: 56px; }
+.lp-cite { margin-top: 20px; max-width: 640px; }
+.lp-cite dl > div { grid-template-columns: 8ch 1fr; }
+.lp-cite-note { max-width: 720px; }

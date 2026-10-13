@@ -450,6 +450,30 @@
           real records carry real meters.</p>
       </aside>
 
+      <!-- Iter8 item 4: cited answers. The post-call record says what the agent
+           decided; this adds where the answer came from. The Iter5 .lp-record
+           skin carries quoted / source / unknown; the note states the rule
+           (no source, no answer). The values ride the shared scramble-on-reveal
+           observer, so no new observer is added. Static content, no asset. -->
+      <div class="lp-cite-block reveal">
+        <p class="lp-guard-title">Every quoted price carries its source</p>
+        <p class="lp-guard-sub">The post-call record shows where an answer came from, so a
+          number can be checked against your own sheet.</p>
+        <div class="lp-record lp-cite" data-record>
+          <p class="lp-record-head">Quoted answers <i>example record</i></p>
+          <dl>
+            <div><dt>quoted</dt><dd data-scramble-text="&quot;$65 · new patient cleaning&quot;">"$65 · new patient cleaning"</dd></div>
+            <div><dt>source</dt><dd data-scramble-text="&quot;price sheet you gave us, v3&quot;">"price sheet you gave us, v3"</dd></div>
+            <div><dt>unknown</dt><dd data-scramble-text="&quot;implant pricing · said I'll confirm&quot;">"implant pricing · said I'll confirm"</dd></div>
+          </dl>
+        </div>
+        <aside class="lp-note lp-cite-note" data-note="note" role="note">
+          <span class="lp-note-label">Rule</span>
+          <p>Every number the agent says comes from a document you supplied, and the record shows
+            which. No source, no answer: unknowns go to a person, never estimated.</p>
+        </aside>
+      </div>
+
       <!-- Iter6 item 2: concurrency spec + overflow rule. Two callers at the
            lunch rush: a stated simultaneous-call capacity and a defined
            behaviour at the ceiling, reusing the Iter5 read/write guard grammar
