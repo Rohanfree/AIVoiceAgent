@@ -24,11 +24,17 @@ from typing import Callable
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 # NOTE: agent_tools (VAPI) router has been moved to app/legacy/vapi/ and is no longer registered.
+
+# Mount prefix for the server-rendered UI (single source of truth — the
+# root redirect below derives the landing URL from it so it stays correct
+# if the prefix ever moves).
+UI_PREFIX = "/automiteaiapplication/automiteui"
+LANDING_PATH = f"{UI_PREFIX}/pages/landing"
 
 # ─── Logging setup ─────────────────────────────────────────────────────────
 
@@ -278,13 +284,13 @@ def create_app() -> FastAPI:
         google_auth_router,
     )
 
-    app.include_router(auth_router.router, prefix="/automiteaiapplication/automiteui")
-    app.include_router(client_router.router, prefix="/automiteaiapplication/automiteui")
-    app.include_router(admin_router.router, prefix="/automiteaiapplication/automiteui")
-    app.include_router(extraction_router.router, prefix="/automiteaiapplication/automiteui")
-    app.include_router(pages_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(auth_router.router, prefix=UI_PREFIX)
+    app.include_router(client_router.router, prefix=UI_PREFIX)
+    app.include_router(admin_router.router, prefix=UI_PREFIX)
+    app.include_router(extraction_router.router, prefix=UI_PREFIX)
+    app.include_router(pages_router.router, prefix=UI_PREFIX)
     app.include_router(google_auth_router.router, prefix="/automiteaiapplication")
-    app.include_router(contact_router.router, prefix="/automiteaiapplication/automiteui")
+    app.include_router(contact_router.router, prefix=UI_PREFIX)
     app.include_router(agent_tools_elevenlabs.router, prefix="/automiteaiapplication")
 
     # ── Static files ────────────────────────────────────────────────────────
@@ -418,6 +424,11 @@ def create_app() -> FastAPI:
         return PlainTextResponse(content)
 
     # ── Health check ────────────────────────────────────────────────────────
+    @app.get("/", include_in_schema=False, summary="Redirect bare root to landing")
+    async def root() -> RedirectResponse:
+        """Bare / 301-redirects to the landing page (derived from UI_PREFIX)."""
+        return RedirectResponse(url=LANDING_PATH, status_code=301)
+
     @app.get("/automiteaiapplication/health", tags=["Health"], summary="Service health check")
     async def health() -> dict:
         """Returns a simple liveness signal and current environment."""
