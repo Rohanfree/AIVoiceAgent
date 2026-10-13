@@ -788,6 +788,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  /* ── Iter6 item 4: copy-page-as-text utility ─────────────────────────
+     One click copies the page's plain-text digest (data-brief) so an owner
+     can paste it into an AI assistant. Clipboard API with a textarea fallback
+     for non-secure contexts; the label swaps to "Copied" for 1.6s. No network,
+     no tracking. Under the flat gate only the CSS transition is dropped; the
+     swap still happens. */
+  (function () {
+    const btn = document.querySelector('[data-copy-brief]');
+    if (!btn) return;
+    const label = btn.querySelector('.lp-copy-label');
+    const brief = btn.getAttribute('data-brief') || '';
+    if (!label || !brief) return;
+    const IDLE = label.textContent;
+    let timer = 0;
+    function flash() {
+      label.textContent = 'Copied ✓';
+      clearTimeout(timer);
+      timer = setTimeout(() => { label.textContent = IDLE; }, 1600);
+    }
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = brief;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (_) { /* clipboard unavailable */ }
+      ta.remove();
+      flash();
+    }
+    btn.addEventListener('click', () => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(brief).then(flash, fallback);
+      } else {
+        fallback();
+      }
+    });
+  })();
+
   document.querySelectorAll('[data-open-demo]').forEach(btn => {
     btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });
   });

@@ -1484,3 +1484,20 @@ section:nth-child(even) { background: var(--bg-alt); }
   text-wrap: pretty;
 }
 .lp-brief-note { max-width: 560px; }
+
+/* Iter6 item 4: copy-page-as-text utility. A mono pill in the footer that
+   copies the page's plain-text digest (data-brief) to the clipboard. Under
+   the flat gate only the transition is dropped; the label swap still happens. */
+.lp-copy {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 9999px;
+  border: 1px solid rgba(26,77,58,0.3); background: none; color: var(--green);
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; font-weight: 600; line-height: 1; letter-spacing: 0.18em;
+  text-transform: uppercase; cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.lp-copy i { font-style: normal; font-size: 0.9rem; letter-spacing: 0; }
+.lp-copy:hover { background: rgba(26,77,58,0.06); }
+.lp-copy:active { background: var(--green); color: #fff; }
+[data-motion-flat] .lp-copy { transition: none; }
