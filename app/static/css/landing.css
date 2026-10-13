@@ -1328,18 +1328,25 @@ section:nth-child(even) { background: var(--bg-alt); }
   vertical-align: -0.12em; margin: 0 0.12em;
   border-radius: 4px; overflow: hidden; position: relative;
   background: rgba(26,77,58,0.08);
+}
+/* The mask is an inner wrapper, never the observed chip itself: a fully
+   clip-path'd target reads as zero-area to IntersectionObserver, so the outer
+   .lp-chip (full box) is what the observer watches and .lp-chip-in carries the
+   iris. */
+.lp-chip-in {
+  position: absolute; inset: 0;
   clip-path: inset(100% 0 0 0);
   transition: clip-path 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.lp-chip.in { clip-path: inset(0 0 0 0); }
+.lp-chip.in .lp-chip-in { clip-path: inset(0 0 0 0); }
 .lp-chip-poster, .lp-chip-video {
   position: absolute; inset: -5%; width: 110%; height: 110%;
   object-fit: cover; pointer-events: none;
 }
-[data-motion-flat] .lp-chip { clip-path: inset(0 0 0 0); transition: none; }
+[data-motion-flat] .lp-chip-in { clip-path: inset(0 0 0 0); transition: none; }
 [data-motion-flat] .lp-chip-video { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .lp-chip { clip-path: inset(0 0 0 0); transition: none; }
+  .lp-chip-in { clip-path: inset(0 0 0 0); transition: none; }
   .lp-chip-video { display: none; }
 }
 

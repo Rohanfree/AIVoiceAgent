@@ -112,7 +112,7 @@ class TestLandingIter5Hooks(unittest.TestCase):
         self.assertEqual(len(set(thresholds)), len(thresholds))
 
     def test_move1_chips_are_decorative_and_never_autoplay(self):
-        chips = re.findall(r"<span class=\"lp-chip\".*?</span>", self.html, re.S)
+        chips = re.findall(r"<span class=\"lp-chip\".*?</span></span>", self.html, re.S)
         self.assertGreaterEqual(len(chips), 2)
         for chip in chips:
             self.assertIn('aria-hidden="true"', chip)
