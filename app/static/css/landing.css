@@ -1473,3 +1473,14 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-cost dd { font-variant-numeric: tabular-nums; }
 .lp-cost-note { max-width: 460px; }
+
+/* Iter6 item 3: the "brief your agent" artifact. The Iter5 .lp-record skin
+   reused once more, a paragraph instead of a typed list: the whole setup as
+   one short brief. Static; the existing .reveal gate handles its entrance. */
+.lp-brief-card { margin-top: 48px; max-width: 560px; }
+.lp-brief {
+  margin: 10px 0 0;
+  font: 500 .86rem/1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  text-wrap: pretty;
+}
+.lp-brief-note { max-width: 560px; }
