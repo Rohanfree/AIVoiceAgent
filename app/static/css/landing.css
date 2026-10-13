@@ -1105,6 +1105,25 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-tag[disabled] { opacity: 0.75; }
 
+/* Iter3 Move 3: decorative glyph ornaments inside the display headlines. Max
+   one glyph per line, always aria-hidden, inheriting the licensed --green
+   accent. They ride the existing observers: the hero glyphs sit inside a
+   .lp-line-in (split-line observer) and the manifesto glyph is a .lp-w
+   (word-reveal observer), so no new IntersectionObserver is added. Flattened
+   under the flat gate. Never placed inside a [data-scramble-text] node. */
+.lp-glyph {
+  display: inline-block; font-size: 0.34em; line-height: 1;
+  vertical-align: 0.52em; color: var(--green); opacity: 0.55;
+  transform: translateY(0.45em) rotate(-8deg);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s;
+}
+.lp-split.lp-in .lp-glyph { transform: translateY(0) rotate(0); }
+.lp-split.lp-in .lp-glyph-tail { transition-delay: 0.14s; }
+[data-motion-flat] .lp-glyph { transform: none; transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lp-glyph { transform: none; transition: none; }
+}
+
 /* Move 1 (Iter 1): progressive motion demotion gate.
    The inline <head> script sets data-motion-flat on <html> for touch devices,
    prefers-reduced-motion, or returning visitors. All motion-heavy rules branch
