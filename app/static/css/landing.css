@@ -640,3 +640,164 @@ section:nth-child(even) { background: var(--bg-alt); }
   .case-grid { grid-template-columns: 1fr; }
   #case-hero { min-height: unset; padding: 140px 24px 56px; }
 }
+
+/* ============================================================
+   Landing Moves rollout (from design/landing-moves prototype).
+   Brand lock: light theme, Montserrat, single --green accent.
+   Pills for interactive, 16px radius for cards. No new colors.
+   All figures below are SAMPLE placeholders, visibly marked.
+   Foundry media: abstract stills + ambient loops with
+   prefers-reduced-motion poster fallbacks.
+   ============================================================ */
+
+/* Move 1: mono eyebrow rhythm (2 total: hero + deployments) */
+.lp-eyebrow {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--green); margin-bottom: 18px;
+}
+
+/* Move 2: tightened hero with foundry ambient visual */
+.hero-tight { max-width: 1100px; }
+.hero-tight-grid {
+  display: grid; grid-template-columns: 1.15fr 0.85fr;
+  gap: 56px; align-items: center; text-align: left; width: 100%;
+}
+.hero-tight-grid .hero-h1 { font-size: clamp(2.4rem, 4.6vw, 3.9rem); max-width: 20ch; }
+.hero-tight-grid .hero-sub { margin-left: 0; }
+.hero-tight-grid .hero-ctas { justify-content: flex-start; margin-bottom: 0; }
+.lp-hero-media { display: flex; justify-content: center; }
+.lp-hero-orb {
+  width: min(340px, 72vw); aspect-ratio: 1; border-radius: 50%;
+  object-fit: cover; display: block;
+  box-shadow: 0 24px 80px rgba(26,77,58,0.22);
+}
+
+/* Move 3: metric ledger with count-up (SAMPLE figures) */
+.lp-ledger { margin-top: 44px; border-top: 1px solid var(--border); }
+.lp-ledger-band {
+  display: block; width: 100%; height: 120px; object-fit: cover;
+  border-radius: var(--radius); margin-bottom: 8px;
+}
+.lp-ledger-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px 24px;
+  align-items: baseline; padding: 22px 4px; border-bottom: 1px solid var(--border);
+}
+.lp-ledger-num {
+  font-size: clamp(1.9rem, 3.4vw, 2.7rem); font-weight: 800;
+  letter-spacing: -0.02em; color: var(--green);
+}
+.lp-ledger-label { font-weight: 600; font-size: 1rem; }
+.lp-ledger-note { grid-column: 1 / -1; color: var(--grey); font-size: 0.92rem; }
+.lp-sample-note {
+  display: inline-block; margin-top: 16px; font-size: 13px; color: var(--grey);
+  border: 1px dashed var(--border); border-radius: 50px; padding: 6px 16px;
+}
+
+/* Move 4: manifesto band with word reveal + drift loop */
+.lp-manifesto { position: relative; overflow: hidden; }
+.lp-manifesto-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.14; pointer-events: none;
+}
+.lp-manifesto-inner { position: relative; z-index: 1; }
+.lp-manifesto-text {
+  font-size: clamp(1.6rem, 3.6vw, 2.9rem); font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1.28; max-width: 26ch;
+}
+.lp-manifesto-text .lp-w { opacity: 0.16; transition: opacity 0.45s ease; }
+.lp-manifesto-text .lp-w.lp-on { opacity: 1; }
+.lp-manifesto-text .lp-w-mid { color: var(--green); }
+.lp-manifesto-accent {
+  display: block; margin-top: 32px; max-width: 100%; height: 120px;
+  object-fit: cover; border-radius: var(--radius);
+}
+
+/* Deployments index (SAMPLE rows, no client names) */
+.lp-index { margin-top: 40px; border-top: 1px solid var(--border); }
+.lp-index-row {
+  display: grid; grid-template-columns: 72px 64px 1fr auto; gap: 20px;
+  align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--border);
+  text-decoration: none; color: inherit; transition: background 0.2s ease;
+}
+.lp-index-row:hover { background: rgba(26,77,58,0.05); }
+.lp-index-no {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.85rem; color: var(--grey);
+}
+.lp-index-thumb {
+  width: 64px; height: 48px; object-fit: cover; border-radius: 8px; display: block;
+}
+.lp-index-name { font-weight: 700; }
+.lp-index-cat {
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.75rem;
+  letter-spacing: 0.08em; border: 1px solid var(--border); border-radius: 9999px;
+  padding: 6px 14px; color: var(--green); white-space: nowrap;
+}
+
+/* Move 7: demo lightbox slot */
+.lp-lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  display: none; align-items: center; justify-content: center; padding: 24px;
+}
+.lp-lightbox.lp-open { display: flex; }
+.lp-lightbox-backdrop { position: absolute; inset: 0; background: rgba(14,30,24,0.62); }
+.lp-lightbox-card {
+  position: relative; background: #fff; border-radius: 16px;
+  max-width: 560px; width: 100%; padding: 36px 32px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+}
+.lp-lightbox-card h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
+.lp-lightbox-card p { color: var(--grey); margin-top: 10px; font-size: 0.97rem; }
+.lp-lightbox-video {
+  display: block; width: 100%; border-radius: 12px; margin: 22px 0;
+}
+.lp-lightbox-close {
+  position: absolute; top: 14px; right: 14px; width: 38px; height: 38px;
+  border-radius: 9999px; border: 1px solid var(--border); background: #fff;
+  color: #111; font-size: 1.1rem; cursor: pointer; line-height: 1;
+}
+.lp-lightbox-close:hover { background: var(--bg-alt); }
+
+/* Move 6: AUTOMITE scroll wordmark */
+.lp-wordmark { padding: 48px 0 72px; overflow: hidden; background: var(--bg); }
+.lp-wordmark-band { display: block; width: 100%; height: 90px; object-fit: cover; }
+.lp-wordmark-inner {
+  font-weight: 900; font-size: clamp(3.4rem, 12.5vw, 11rem);
+  letter-spacing: 0.01em; line-height: 1; text-align: center;
+  color: rgba(26,77,58,0.16); white-space: nowrap;
+  animation: lpSpread linear both; animation-timeline: view();
+  animation-range: entry 0% cover 100%;
+}
+@keyframes lpSpread { from { letter-spacing: -0.02em; opacity: 0.55; } to { letter-spacing: 0.1em; opacity: 1; } }
+
+/* Move 5: marquee footer crown (single hero marquee) */
+.lp-crown {
+  overflow: hidden; border-top: 1px solid var(--border);
+  padding: 18px 0; background: var(--bg-alt); position: relative;
+}
+.lp-crown-band { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.25; pointer-events: none; }
+.lp-crown-track { display: flex; width: max-content; animation: lpMarquee 26s linear infinite; position: relative; }
+.lp-crown-track span {
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--green); padding: 0 28px; white-space: nowrap;
+}
+@keyframes lpMarquee { to { transform: translateX(-50%); } }
+
+@media (max-width: 768px) {
+  .hero-tight-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .hero-tight-grid .hero-sub { margin-left: auto; }
+  .hero-tight-grid .hero-ctas { justify-content: center; }
+  .lp-hero-orb { width: min(210px, 58vw); }
+  .lp-index-row { grid-template-columns: 52px 64px 1fr; }
+  .lp-index-cat { grid-column: 3; justify-self: start; }
+}
+
+/* Reduced motion: video posters + static fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .lp-crown-track, .lp-wordmark-inner { animation: none; }
+  .lp-wordmark-inner { opacity: 1; letter-spacing: 0.05em; }
+  .lp-manifesto-text .lp-w { opacity: 1; }
+  .lp-hero-orb-video, .lp-manifesto-bg, .lp-lightbox-video video { display: none; }
+}

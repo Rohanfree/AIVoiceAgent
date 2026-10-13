@@ -165,6 +165,111 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCalc();
   }
 
+  /* ── Landing Moves: metric ledger count-up (SAMPLE figures) ── */
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function lpFmt(value, decimals, suffix) {
+    if (decimals === 0) {
+      return Math.round(value).toLocaleString('en-US') + suffix;
+    }
+    return value.toFixed(decimals) + suffix;
+  }
+  function lpCountUp(el) {
+    const target = parseFloat(el.getAttribute('data-count'));
+    const decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+    const suffix = el.getAttribute('data-suffix') || '';
+    if (reduceMotion || !('requestAnimationFrame' in window)) {
+      el.textContent = lpFmt(target, decimals, suffix);
+      return;
+    }
+    const dur = 1400;
+    let t0 = null;
+    function frame(t) {
+      if (!t0) t0 = t;
+      const p = Math.min((t - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = lpFmt(target * eased, decimals, suffix);
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  const lpNums = document.querySelectorAll('.lp-ledger-num[data-count]');
+  if (lpNums.length) {
+    if (!('IntersectionObserver' in window)) {
+      lpNums.forEach(lpCountUp);
+    } else {
+      const no = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { lpCountUp(e.target); no.unobserve(e.target); }
+        });
+      }, { threshold: 0.4 });
+      lpNums.forEach(el => no.observe(el));
+    }
+  }
+
+  /* ── Landing Moves: manifesto word reveal ──────────────────── */
+  const lpMan = document.querySelector('.lp-manifesto-text');
+  if (lpMan) {
+    let lpWords = lpMan.querySelectorAll('.lp-w');
+    if (!lpWords.length) {
+      // Client-side split fallback if server did not wrap words.
+      const text = lpMan.textContent.trim().split(/\s+/);
+      lpMan.textContent = '';
+      text.forEach((word, i) => {
+        const s = document.createElement('span');
+        s.className = 'lp-w' + ((i >= 5 && i <= 7) ? ' lp-w-mid' : '');
+        s.textContent = word;
+        lpMan.appendChild(s);
+        lpMan.appendChild(document.createTextNode(' '));
+      });
+      lpWords = lpMan.querySelectorAll('.lp-w');
+    }
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      lpWords.forEach(w => w.classList.add('lp-on'));
+    } else {
+      const mo = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            lpWords.forEach((w, i) => {
+              setTimeout(() => w.classList.add('lp-on'), i * 90);
+            });
+            mo.disconnect();
+          }
+        });
+      }, { threshold: 0.35 });
+      mo.observe(lpMan);
+    }
+  }
+
+  /* ── Landing Moves: demo lightbox (open/close/focus/Escape) ── */
+  const lpBox = document.getElementById('demo-lightbox-slot');
+  let lpLastFocus = null;
+  function lpOpenBox() {
+    if (!lpBox) return;
+    lpLastFocus = document.activeElement;
+    lpBox.classList.add('lp-open');
+    document.body.style.overflow = 'hidden';
+    const close = lpBox.querySelector('.lp-lightbox-close');
+    if (close) close.focus();
+  }
+  function lpCloseBox() {
+    if (!lpBox) return;
+    lpBox.classList.remove('lp-open');
+    document.body.style.overflow = '';
+    const vid = lpBox.querySelector('video');
+    if (vid) vid.pause();
+    if (lpLastFocus && lpLastFocus.focus) lpLastFocus.focus();
+  }
+  document.querySelectorAll('[data-open-demo]').forEach(btn => {
+    btn.addEventListener('click', (ev) => { ev.preventDefault(); lpOpenBox(); });
+  });
+  if (lpBox) {
+    lpBox.querySelector('.lp-lightbox-backdrop').addEventListener('click', lpCloseBox);
+    lpBox.querySelector('.lp-lightbox-close').addEventListener('click', lpCloseBox);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && lpBox.classList.contains('lp-open')) lpCloseBox();
+    });
+  }
+
 });
 
 /* ── Footer: dynamic copyright year (spans keep baked-in year as no-JS fallback) ── */
