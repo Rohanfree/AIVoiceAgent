@@ -1310,3 +1310,35 @@ section:nth-child(even) { background: var(--bg-alt); }
   .lp-clone > li { grid-template-columns: 1fr; gap: 6px; }
   .lp-ab { grid-column: 1; }
 }
+
+/* ============================================================
+   Iteration 5 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Every motion below is inert under [data-motion-flat];
+   nothing references media the page does not already own, and no
+   audio asset is referenced or invented.
+   ============================================================ */
+
+/* Iter5 item 1: inline media chips inside the manifesto display sentence.
+   A 1em chip in the type stream, masked from the bottom and irised open by
+   the reveal observer; the ambient loop plays only while the chip is in view
+   and falls back to its poster twin under the flat gate. */
+.lp-chip {
+  display: inline-block; height: 1em; aspect-ratio: 1.2 / 1;
+  vertical-align: -0.12em; margin: 0 0.12em;
+  border-radius: 4px; overflow: hidden; position: relative;
+  background: rgba(26,77,58,0.08);
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lp-chip.in { clip-path: inset(0 0 0 0); }
+.lp-chip-poster, .lp-chip-video {
+  position: absolute; inset: -5%; width: 110%; height: 110%;
+  object-fit: cover; pointer-events: none;
+}
+[data-motion-flat] .lp-chip { clip-path: inset(0 0 0 0); transition: none; }
+[data-motion-flat] .lp-chip-video { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lp-chip { clip-path: inset(0 0 0 0); transition: none; }
+  .lp-chip-video { display: none; }
+}

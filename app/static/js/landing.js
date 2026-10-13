@@ -332,6 +332,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ── Iter5 item 1: inline media chips inside the manifesto sentence ──
+     A 1em chip per word gap, each irised open by its own IntersectionObserver
+     threshold. The ambient loop plays only while the chip is in view and
+     pauses on exit — the same IO-gated play/pause the hero orb uses, with no
+     autoplay attribute. Flat gate / reduced motion: the chips paint fully open
+     and their videos stay off (poster twin shows). */
+  (function () {
+    const chips = Array.prototype.slice.call(document.querySelectorAll('.lp-chip'));
+    if (!chips.length) return;
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      chips.forEach((chip) => chip.classList.add('in'));
+      return;
+    }
+    const groups = new Map(); // one observer per distinct data-chip threshold
+    chips.forEach((chip) => {
+      const t = parseFloat(chip.getAttribute('data-chip')) || 0.3;
+      if (!groups.has(t)) groups.set(t, []);
+      groups.get(t).push(chip);
+    });
+    groups.forEach((list, t) => {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          const chip = e.target;
+          const v = chip.querySelector('.lp-chip-video');
+          if (e.isIntersecting) {
+            chip.classList.add('in');
+            if (v) { try { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {} }
+          } else {
+            chip.classList.remove('in');
+            if (v) { try { v.pause(); } catch (_) {} }
+          }
+        });
+      }, { threshold: t });
+      list.forEach((chip) => io.observe(chip));
+    });
+  })();
+
   /* ── Move 3 (Iter 1): masked split-line reveals ─────────────── */
   // Each .lp-split block holds .lp-line > .lp-line-in (see CSS). One observer
   // per block; the inner lines slide up with a --i based stagger.
