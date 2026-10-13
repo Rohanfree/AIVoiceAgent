@@ -1370,3 +1370,22 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 .lp-lock-line.on { opacity: 1; }
 [data-motion-flat] .lp-lock-line { opacity: 1; transition: none; }
+
+/* Iter5 item 3: the read-vs-write tool boundary. Two hairline rows in the
+   spec-table grammar; mono kinds in the accent, plain-language rules. Static
+   by design. */
+.lp-guard-block { margin-top: 48px; max-width: 720px; }
+.lp-guard-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.lp-guard-sub { margin-top: 6px; max-width: 56ch; font-size: 0.95rem; color: var(--grey); }
+.lp-guard { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 10px; }
+.lp-guard li {
+  display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: baseline;
+  padding: 12px 0; border-top: 1px solid rgba(26,77,58,0.14);
+}
+.lp-guard-kind {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.68rem; font-weight: 600; line-height: 1; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--green);
+}
+.lp-guard li p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #333; }

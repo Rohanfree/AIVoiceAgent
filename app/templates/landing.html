@@ -825,6 +825,26 @@
         </article>
       </div>
 
+      <!-- Iter5 item 3: the read-vs-write tool boundary. Two kinds of action,
+           one rule: reads run mid-sentence without asking, writes always confirm
+           first. Pure copy in the existing spec-table grammar — static, no JS,
+           no new design language. -->
+      <div class="lp-guard-block reveal">
+        <p class="lp-guard-title">What it's allowed to do</p>
+        <p class="lp-guard-sub">Two kinds of action, one rule: reads happen without asking, writes
+          always ask first.</p>
+        <ul class="lp-guard" role="list">
+          <li>
+            <i class="lp-guard-kind">Reads</i>
+            <p>Checks the diary, your price list, the caller's history. Mid-sentence, no asking.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Writes</i>
+            <p>Books, cancels, refunds. Always confirms first, in one short question, and waits.</p>
+          </li>
+        </ul>
+      </div>
+
       <div class="explainer-block reveal">
         <h3>What Are AI Voice Agents?</h3>
         <p>AI voice agents are intelligent software programs that can hold natural phone conversations — listening,
