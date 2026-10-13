@@ -831,6 +831,28 @@ section:nth-child(even) { background: var(--bg-alt); }
 @media (max-width: 1024px) { .testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .testimonials-grid { grid-template-columns: 1fr; } }
 
+/* Move 1 (Iter 1): progressive motion demotion gate.
+   The inline <head> script sets data-motion-flat on <html> for touch devices,
+   prefers-reduced-motion, or returning visitors. All motion-heavy rules branch
+   on that single attribute so the whole page demotes coherently. */
+[data-motion-flat] { scroll-behavior: auto; }
+[data-motion-flat] .lp-crown-track,
+[data-motion-flat] .lp-wordmark-inner,
+[data-motion-flat] .marquee-inner,
+[data-motion-flat] .logo-ticker,
+[data-motion-flat] .lp-loader-wave-bar,
+[data-motion-flat] .hero-eyebrow span {
+  animation: none !important;
+}
+[data-motion-flat] .lp-loader-wave-bar { height: 22px; opacity: 0.85; }
+[data-motion-flat] .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+[data-motion-flat] .lp-manifesto-text .lp-w { opacity: 1 !important; }
+[data-motion-flat] .lp-wordmark-inner { opacity: 1; letter-spacing: 0.05em; }
+/* Hide the ambient loops; their poster twins (img) remain in place. */
+[data-motion-flat] .lp-hero-orb-video,
+[data-motion-flat] .lp-manifesto-bg,
+[data-motion-flat] .lp-lightbox-video video { display: none; }
+
 /* Reduced motion: no animation, no autoplaying media, posters stay visible
    (nothing goes blank). */
 @media (prefers-reduced-motion: reduce) {

@@ -166,7 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ── Landing Moves: metric ledger count-up (SAMPLE figures) ── */
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Motion demotion gate (Iter 1, Move 1): the inline head script decides once
+  // and sets data-motion-flat on <html>. Every animated branch below reads this,
+  // so flat visitors get the final state instantly with no animation.
+  const motionFlat = document.documentElement.hasAttribute('data-motion-flat');
+  const reduceMotion = motionFlat || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function lpFmt(value, decimals, suffix) {
     if (decimals === 0) {
       return Math.round(value).toLocaleString('en-US') + suffix;

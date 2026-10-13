@@ -4,6 +4,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Move 1 (Iter 1): progressive motion demotion gate.
+       Runs before paint, decides once, then sets one attribute on <html>
+       that every CSS rule and JS guard below branches on. Flat when:
+         • touch devices (no hover + fine pointer), or
+         • prefers-reduced-motion: reduce, or
+         • the visitor has already seen the full-motion pass twice this session
+           (kindness + a lighter page for returning visitors). -->
+  <script>
+    (function () {
+      var flat = false;
+      try { flat = !window.matchMedia('(hover:hover) and (pointer:fine)').matches; } catch (e) {}
+      try { if (!flat) flat = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      if (!flat) {
+        try {
+          var seen = parseInt(window.sessionStorage.getItem('lp-flat-seen') || '0', 10) || 0;
+          if (seen >= 2) {
+            flat = true;
+          } else {
+            window.sessionStorage.setItem('lp-flat-seen', String(seen + 1));
+          }
+        } catch (e) {}
+      }
+      if (flat) document.documentElement.setAttribute('data-motion-flat', '');
+    })();
+  </script>
   <title>Automite AI — Intelligent AI Voice Agents for Business</title>
   <meta name="description"
     content="Automite AI builds intelligent AI voice agents that handle inbound calls, automate follow-ups, and work 24/7 so your team doesn't have to." />
@@ -962,8 +987,10 @@
   <script>
     (function () {
       var loader = document.getElementById('lp-loader');
+      // Flat gate: no loader animation, so dismiss before the first paint cycle.
+      var flat = document.documentElement.hasAttribute('data-motion-flat');
       function dismiss() { if (loader) loader.classList.add('lp-loader-hidden'); }
-      if (document.readyState === 'complete') {
+      if (flat || document.readyState === 'complete') {
         dismiss();
       } else {
         window.addEventListener('load', dismiss);
