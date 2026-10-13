@@ -602,6 +602,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ── Iter4 Move 2: Smart Turn confidence meter (scripted demo) ───────
+     Honest by construction: no live API, no audio and no autoplay. The
+     end-of-turn confidence values are pre-authored samples replayed on
+     click, and one rAF timeline drives the bar fill, the number and the
+     reply gate. The gate flipping is the whole demo, so the flip has no
+     spring. Flat gate / reduced motion: the final frame renders statically. */
+  (function () {
+    const turn = document.querySelector('[data-turn]');
+    if (!turn) return;
+    const fill = turn.querySelector('.lp-conf-bar b');
+    const valEl = turn.querySelector('.lp-conf-val');
+    const reply = turn.querySelector('[data-reply]');
+    const play = turn.querySelector('[data-turn-play]');
+    // Pre-authored end-of-turn confidence samples: t (s) -> confidence (0..1).
+    const KEYS = [{ t: 0, c: 0.96 }, { t: 2.4, c: 0.92 }, { t: 3.1, c: 0.05 },
+                  { t: 4.6, c: 0.04 }, { t: 5.2, c: 0.98 }];
+    const FINAL = KEYS[KEYS.length - 1].c;
+    const END = KEYS[KEYS.length - 1].t + 1.2; // linger on the last frame
+    function at(t) {
+      if (t <= KEYS[0].t) return KEYS[0].c;
+      for (let i = 0; i < KEYS.length - 1; i++) {
+        if (t >= KEYS[i].t && t <= KEYS[i + 1].t) {
+          const p = (t - KEYS[i].t) / (KEYS[i + 1].t - KEYS[i].t);
+          return KEYS[i].c + (KEYS[i + 1].c - KEYS[i].c) * p;
+        }
+      }
+      return FINAL;
+    }
+    function paint(c) {
+      if (fill) fill.style.setProperty('--c', c.toFixed(3));
+      if (valEl) valEl.textContent = c.toFixed(2);
+      // The reply only fires once confidence clears the threshold (0.9).
+      if (reply) reply.classList.toggle('on', c > 0.9);
+    }
+    paint(FINAL); // rest / no-JS state = the labelled final frame
+    if (reduceMotion || !('requestAnimationFrame' in window)) {
+      if (play) play.disabled = true;
+      return;
+    }
+    let raf = 0;
+    if (play) play.addEventListener('click', () => {
+      if (raf) return;
+      play.disabled = true;
+      const t0 = performance.now();
+      (function frame(now) {
+        const t = (now - t0) / 1000;
+        if (t >= END) { paint(FINAL); raf = 0; play.disabled = false; return; }
+        paint(at(t));
+        raf = requestAnimationFrame(frame);
+      })(t0);
+    });
+  })();
+
   /* ── Iter2 Move 5: scramble-on-reveal ────────────────────────────────
      Eyebrows, section labels and ledger labels decode in place as they enter
      view: the final string lives in data-scramble-text and the visible text

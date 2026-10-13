@@ -410,6 +410,31 @@
       <div class="lp-demo-ctas">
         <a href="#demo" class="btn btn-primary" data-open-demo data-cursor="Play call">Play the sample call</a>
       </div>
+
+      <!-- Iter4 Move 2: Smart Turn confidence meter — a scripted visual demo.
+           Honest by construction: no live API, no audio, no autoplay. The
+           end-of-turn confidence values are pre-authored samples replayed on
+           click; one rAF timeline drives the bar, the number and the reply
+           gate. Under the flat gate the final frame renders statically. -->
+      <div class="lp-turn" data-turn>
+        <p class="lp-turn-title">It waits for you to finish</p>
+        <p class="lp-turn-sub">At a pause the confidence that the caller has finished drops
+          — so the agent holds the line instead of cutting in.</p>
+        <div class="lp-turn-demo">
+          <p class="lp-turn-line">…my number is five five five<span class="lp-hold">…</span>one
+            two three four. <span class="lp-hold-note">(caller pauses)</span></p>
+          <div class="lp-conf">
+            <i>End-of-turn confidence</i>
+            <span class="lp-conf-bar" role="img" aria-label="End-of-turn confidence meter">
+              <b style="--c:.98"></b>
+            </span>
+            <em class="lp-conf-val">0.98</em>
+          </div>
+          <p class="lp-turn-reply on" data-reply>Got it — five five five, one two three four.</p>
+          <button type="button" class="lp-turn-play" data-turn-play>▶ Play the pause</button>
+        </div>
+        <span class="lp-transcript-note">Scripted demo · pre-authored signal, not a live API call</span>
+      </div>
     </div>
   </section>
 
