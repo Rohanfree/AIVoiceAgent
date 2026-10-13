@@ -1530,3 +1530,20 @@ section:nth-child(even) { background: var(--bg-alt); }
   letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55;
 }
 .lp-cost-stamp { margin-top: 10px; max-width: 460px; }
+
+/* ============================================================
+   Iteration 7 moves. Brand lock unchanged: Montserrat, the single
+   --green accent, pills for interactive, 16px card radius, light
+   theme only. Nothing here adds a <section> (background parity),
+   references new media, or invents audio: the five items are
+   labelled content. Entrance motion reuses the existing .reveal
+   observer (flattened under [data-motion-flat]); the one new value
+   rides the shared scramble observer.
+   ============================================================ */
+
+/* Iter7 item 1: the handoff that reports the truth. Three hairline rows in the
+   Iter5 spec-table grammar (.lp-guard), static by design. The block uses the
+   shared .reveal entrance; the note reuses the honest-note component via a
+   modifier class so the Iter3 count of unmodified notes is unchanged. */
+.lp-handoff-block { margin-top: 56px; }
+.lp-handoff-note { max-width: 720px; }

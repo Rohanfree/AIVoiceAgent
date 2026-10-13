@@ -532,6 +532,41 @@
           uh… Ms Ock-uh-for… Tuesday, uh, nine forty.</p>
         <span class="lp-transcript-note">Illustrative · sample text, not a real call</span>
       </div>
+
+      <!-- Iter7 item 1: the handoff that reports the truth. Three hairline rows
+           in the Iter5 spec-table grammar (.lp-guard) via a modifier class, so
+           the read/write strip stays the only bare .lp-guard. It states what a
+           transfer actually does: counted only when a person answers, no drop
+           when nobody does, and keypresses captured. Static content, no JS, no
+           new asset; entrance motion reuses the .reveal observer that flattens
+           under the flat gate. -->
+      <div class="lp-guard-block lp-handoff-block reveal">
+        <p class="lp-guard-title">When it hands you the call</p>
+        <p class="lp-guard-sub">A handoff is the moment most systems go quiet. Ours reports
+          exactly what happened, in three facts.</p>
+        <ul class="lp-guard lp-handoff" role="list">
+          <li>
+            <i class="lp-guard-kind">Hands over</i>
+            <p>Counted as transferred only when the person <b>answers</b>. The transfer waits for
+              the far end to pick up; ringing is not success.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">No answer</i>
+            <p>If the transfer is rejected or times out the call does not drop: the agent is still
+              on the line and keeps talking. Never dead air.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Keypresses</i>
+            <p>Callers can press <b>1</b> to book and <b>2</b> for prices. Every keypress is
+              captured and logged, so the menu path appears in the post-call record.</p>
+          </li>
+        </ul>
+      </div>
+      <aside class="lp-note lp-handoff-note" data-note="note" role="note">
+        <span class="lp-note-label">Behaviour</span>
+        <p>What a transfer does when it works and when it does not, stated as behaviour rather
+          than a promise. No recording is needed to show it, and none is invented here.</p>
+      </aside>
     </div>
   </section>
 
