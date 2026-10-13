@@ -1291,6 +1291,42 @@
         </aside>
       </div>
 
+      <!-- Iter9 item 5: pinned web lookups. Iter8 item 4 said no source, no claim
+           for the numbers the agent quotes; this answers what happens when the
+           supplied documents do not cover the question. Where web lookup is
+           switched on at all, it is contained to an allowed-domains list of up
+           to five you approve, cited like any other source, and otherwise it
+           says it does not know. Three rows in the Iter5 guard grammar via a
+           modifier class, dropped under the connectors strip. Static content,
+           no JS, no asset. -->
+      <div class="lp-guard-block lp-pinned-block reveal">
+        <p class="lp-guard-title">If it ever checks the web, only the sites you name</p>
+        <p class="lp-guard-sub">Web lookup, where a deployment switches it on at all, is pinned
+          to a short list you approve.</p>
+        <ul class="lp-guard lp-pinned" role="list">
+          <li>
+            <i class="lp-guard-kind">Pinned</i>
+            <p>Locked to <b>up to five domains you name</b>: your site, your booking page, your
+              price list. Not the open web.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Cited</i>
+            <p>Anything it finds that way comes back as a named source in the post-call record,
+              the same rule as your own documents.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Otherwise</i>
+            <p>A question outside the five gets "I don't know" rather than a guess from somewhere
+              you never approved.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-pinned-note" data-note="note" role="note">
+          <span class="lp-note-label">Scope</span>
+          <p>Our provider's web-search tool takes an allowed-domains list of up to five. If it is
+            switched on for your agent, that list is yours to set.</p>
+        </aside>
+      </div>
+
       <!-- Iter5 item 3: the read-vs-write tool boundary. Two kinds of action,
            one rule: reads run mid-sentence without asking, writes always confirm
            first. Pure copy in the existing spec-table grammar — static, no JS,

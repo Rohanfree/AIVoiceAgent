@@ -1759,3 +1759,8 @@ section:nth-child(even) { background: var(--bg-alt); }
    reuses the honest-note component. Static by design. */
 .lp-inject-block { margin-top: 48px; }
 .lp-inject-note { max-width: 720px; }
+
+/* Iter9 item 5: pinned web lookups. The Iter5 guard grammar via a modifier
+   class, three rows under the Iter8 connectors strip. Static by design. */
+.lp-pinned-block { margin-top: 48px; }
+.lp-pinned-note { max-width: 720px; }
