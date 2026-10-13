@@ -1501,3 +1501,32 @@ section:nth-child(even) { background: var(--bg-alt); }
 .lp-copy:hover { background: rgba(26,77,58,0.06); }
 .lp-copy:active { background: var(--green); color: #fff; }
 [data-motion-flat] .lp-copy { transition: none; }
+
+/* Iter6 item 5: dated shipping log + freshness stamps. A mono dated ledger of
+   product changes beside the figures, and a last-updated stamp on the figures
+   and on the unit rates. Sample entries, hand-written; nothing is fetched at
+   runtime. Rows decode on the existing scramble observer and flatten under the
+   flat gate. */
+.lp-ship { margin-top: 44px; max-width: 640px; }
+.lp-log { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.lp-log li {
+  display: grid; grid-template-columns: 7ch 1fr; gap: 14px; align-items: baseline;
+  padding: 8px 0; border-top: 1px solid rgba(26,77,58,0.14);
+  font: 500 0.82rem/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.lp-log i {
+  font-style: normal; color: var(--green);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.lp-log p { margin: 0; }
+.lp-log-new {
+  font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 9999px; padding: 2px 7px;
+  margin-left: 6px; color: var(--green);
+}
+.lp-stamp {
+  margin: 18px 0 0;
+  font: 500 0.7rem/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55;
+}
+.lp-cost-stamp { margin-top: 10px; max-width: 460px; }

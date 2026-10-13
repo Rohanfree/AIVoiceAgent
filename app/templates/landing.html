@@ -313,6 +313,32 @@
         <span class="lp-note-label">Sample</span>
         <p>Sample figures for layout only. Real aggregates must replace these before launch.</p>
       </aside>
+
+      <!-- Iter6 item 5: dated shipping log + freshness stamp. The product moves:
+           a short dated changelog beside the figures and a last-updated stamp on
+           them, so a number reads as maintained rather than frozen. Sample
+           entries, hand-written; nothing is fetched at runtime. Rows decode on
+           the existing scramble observer and flatten under the flat gate. -->
+      <div class="lp-ship reveal">
+        <p class="lp-record-head">What changed lately <i>sample log</i></p>
+        <ol class="lp-log" role="list">
+          <li>
+            <i data-scramble-text="Oct 09">Oct 09</i>
+            <p data-scramble-text="Post-call records now carry the booking confirmation code.">Post-call records now carry the booking confirmation code.</p>
+          </li>
+          <li>
+            <i data-scramble-text="Sep 22">Sep 22</i>
+            <p>Callers mid-sentence are no longer cut off at pauses
+              <span class="lp-log-new">new</span>.</p>
+          </li>
+          <li>
+            <i data-scramble-text="Aug 30">Aug 30</i>
+            <p data-scramble-text="Two lines: a second simultaneous caller reaches your desk.">Two lines: a second simultaneous caller reaches your desk.</p>
+          </li>
+        </ol>
+        <p class="lp-stamp">Figures last updated
+          <time datetime="2026-10-14">14 Oct 2026</time></p>
+      </div>
     </div>
   </section>
 
@@ -985,6 +1011,8 @@
           <div><dt>≈ one call</dt><dd data-scramble-text="$0.40">$0.40</dd></div>
         </dl>
       </div>
+      <p class="lp-stamp lp-cost-stamp">Rates last checked
+        <time datetime="2026-10-14">14 Oct 2026</time></p>
       <aside class="lp-note lp-cost-note" data-note="note" role="note">
         <span class="lp-note-label">Example</span>
         <p>Illustrative only, at our provider's published list prices, not your quote. Telephony
