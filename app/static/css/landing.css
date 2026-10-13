@@ -1753,3 +1753,9 @@ section:nth-child(even) { background: var(--bg-alt); }
   font-size: 0.72rem; font-weight: 600; line-height: 1;
 }
 .lp-seek-note { max-width: 720px; }
+
+/* Iter9 item 4: injection defense. The Iter5 guard grammar via a modifier
+   class, three rows beside the Iter8 approval card it backstops. The note
+   reuses the honest-note component. Static by design. */
+.lp-inject-block { margin-top: 48px; }
+.lp-inject-note { max-width: 720px; }
