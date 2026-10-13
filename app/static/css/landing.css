@@ -1644,3 +1644,10 @@ section:nth-child(even) { background: var(--bg-alt); }
 }
 [data-motion-flat] .lp-approve-ctas button { transition: none; }
 .lp-approve-note { max-width: 720px; }
+
+/* Iter8 item 2: caller recognition and the field-minimized lookup. Two
+   diarized utterances (the known-caller badge reuses the Iter5 .lp-lock
+   grammar) plus two hairline rows in the guard grammar, via a modifier class
+   so the Iter5 read-vs-write strip stays the only bare .lp-guard. Static. */
+.lp-lookup { margin-top: 22px; }
+.lp-known-note { max-width: 720px; }

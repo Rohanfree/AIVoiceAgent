@@ -583,6 +583,46 @@
           than a promise. No recording is needed to show it, and none is invented here.</p>
       </aside>
 
+      <!-- Iter8 item 2: caller recognition and the lookup that sends only the
+           fields it needs. A read-only CRM lookup resolves the number before
+           the greeting, so the agent opens with the caller's name and history;
+           the two guard rows state the privacy rule (name and history only,
+           records stay yours, read-only until you switch writes on). Reuses
+           the diarized utterance skin, the Iter5 .lp-lock badge and the guard
+           grammar via modifier classes. Static content, no JS, no asset. -->
+      <div class="lp-moment reveal">
+        <p class="lp-moment-title">It knows who's calling</p>
+        <p class="lp-moment-sub">A read-only lookup resolves the number before the greeting.
+          The example below is a scripted transcript, not a real caller.</p>
+        <ol class="lp-call-list lp-moment-list" role="list">
+          <li class="lp-call-line lp-moment-line" data-sp="0">
+            <i>Caller</i>
+            <p>Hi, it's Sarah Okafor.</p>
+          </li>
+          <li class="lp-call-line lp-moment-line" data-sp="1">
+            <i>Agent <span class="lp-lock">known caller</span></i>
+            <p>Morning, Ms. Okafor. Back for the usual Tuesday cleaning?</p>
+          </li>
+        </ol>
+        <ul class="lp-guard lp-lookup" role="list">
+          <li>
+            <i class="lp-guard-kind">Looks up</i>
+            <p>Your CRM answers the phone with <b>name and history only</b>. The lookup sends
+              the fields the greeting needs, and nothing else crosses.</p>
+          </li>
+          <li>
+            <i class="lp-guard-kind">Stays yours</i>
+            <p>Records live in your system. Connections are read-only until you switch writes
+              on, and you revoke them in the source app.</p>
+          </li>
+        </ul>
+        <aside class="lp-note lp-known-note" data-note="note" role="note">
+          <span class="lp-note-label">Example</span>
+          <p>An example greeting, not a real caller. The two rules above are configuration
+            statements, not a claim about any one CRM.</p>
+        </aside>
+      </div>
+
       <!-- Iter8 item 1: the approval card. The Iter5 read/write rule says a
            write always confirms first; this is the artifact that shows the
            confirmation. A proposed booking renders with its target and values,
