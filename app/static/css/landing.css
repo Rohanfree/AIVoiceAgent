@@ -952,6 +952,24 @@ section:nth-child(even) { background: var(--bg-alt); }
 [data-motion-flat] .lp-cursor,
 [data-motion-flat] .lp-cursor-label { display: none !important; }
 
+/* Iter2 Move 2: footer sound toggle — a single SVG holding two groups
+   (speaker waves / mute cross) crossfaded by [aria-pressed]. Off by default.
+   Only rendered as a live control when ambient audio exists: hidden under the
+   flat gate, where the ambient loops themselves are hidden. */
+.lp-sound {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 9999px;
+  border: 1px solid var(--border); background: #fff; color: var(--green);
+  cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
+}
+.lp-sound:hover { border-color: var(--green); background: var(--bg-alt); }
+.lp-sound svg { display: block; width: 22px; height: 20px; }
+.lp-sound [data-sound-wave]  { opacity: 0; transition: opacity 0.18s linear; }
+.lp-sound [data-sound-cross] { opacity: 1; transition: opacity 0.18s linear; }
+.lp-sound[aria-pressed="true"] [data-sound-wave]  { opacity: 1; }
+.lp-sound[aria-pressed="true"] [data-sound-cross] { opacity: 0; }
+[data-motion-flat] .lp-sound { display: none !important; }
+
 /* ── Consolidation: the crown is the ONLY marquee on the page.
    Testimonials and the partner logo band are static. ── */
 .testimonials-grid {

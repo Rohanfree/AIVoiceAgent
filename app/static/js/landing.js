@@ -211,6 +211,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, { passive: true });
   })();
+
+  /* ── Iter2 Move 2: footer sound toggle ───────────────────────────────
+     Off by default and never autoplayed. One click unmutes both ambient
+     looping videos (hero orb + manifesto drift); the choice is remembered.
+     Under the flat gate the control is inert: it starts muted, restores
+     nothing, and its CSS is hidden alongside the loops it would unmute. */
+  (function () {
+    const btn = document.querySelector('[data-sound-toggle]');
+    if (!btn || motionFlat) return;
+    const loops = document.querySelectorAll('.lp-hero-orb-video, .lp-manifesto-bg');
+    const KEY = 'lp-sound-on';
+    let on = false;
+    try { on = localStorage.getItem(KEY) === '1'; } catch (_) { /* private mode */ }
+    function apply(state, playNow) {
+      on = state;
+      loops.forEach((v) => {
+        v.muted = !state;
+        if (state && playNow) { try { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {} }
+      });
+      btn.setAttribute('aria-pressed', state ? 'true' : 'false');
+      btn.setAttribute('aria-label', state ? 'Mute ambient sound' : 'Unmute ambient sound');
+    }
+    // Restore the muted flag only — playback already began muted, so this never
+    // counts as an autoplay and cannot startle anyone on first paint.
+    apply(on, false);
+    btn.addEventListener('click', () => {
+      const next = !on;
+      apply(next, true);
+      try { localStorage.setItem(KEY, next ? '1' : '0'); } catch (_) { /* private mode */ }
+    });
+  })();
+
   function lpFmt(value, decimals, suffix) {
     if (decimals === 0) {
       return Math.round(value).toLocaleString('en-US') + suffix;
