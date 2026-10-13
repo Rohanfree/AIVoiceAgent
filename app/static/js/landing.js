@@ -356,18 +356,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function kick() { if (!raf) raf = requestAnimationFrame(step); }
 
     function onDown(e) {
-      if (!dragging && e.button != null && e.button !== 0) return;
+      if (!e) return;
+      if (e.button != null && e.button !== 0) return;
+      // Stop the browser's native link/text drag on mouse-drag; it otherwise
+      // swallows the pointermove stream and the rail freezes after one frame.
+      // (Touch relies on touch-action: pan-y instead, so vertical scroll survives.)
+      if (e.pointerType === 'mouse' && e.cancelable) e.preventDefault();
       dragging = true; moved = false;
       startX = e.clientX; startTarget = target;
       lastX = e.clientX; lastT = nowMs(); velocity = 0;
       rail.classList.add('lp-grabbing');
-      if (e.pointerId != null && rail.setPointerCapture) {
-        try { rail.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
-      }
       kick();
     }
     function onMove(e) {
-      if (!dragging) return;
+      if (!dragging || !e) return;
+      if (e.clientX == null) return;
       const dx = e.clientX - startX;
       if (Math.abs(dx) > 4) moved = true;
       target = startTarget + dx;
@@ -386,18 +389,19 @@ document.addEventListener('DOMContentLoaded', () => {
       kick();
     }
 
+    // Move/up live on window so the drag survives the pointer leaving the rail.
     if (window.PointerEvent) {
       rail.addEventListener('pointerdown', onDown);
-      rail.addEventListener('pointermove', onMove);
-      rail.addEventListener('pointerup', onUp);
-      rail.addEventListener('pointercancel', onUp);
+      window.addEventListener('pointermove', onMove, { passive: true });
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     } else {
       rail.addEventListener('mousedown', onDown);
       window.addEventListener('mousemove', onMove);
       window.addEventListener('mouseup', onUp);
       rail.addEventListener('touchstart', (e) => onDown(e.touches[0]), { passive: true });
-      rail.addEventListener('touchmove', (e) => onMove(e.touches[0]), { passive: true });
-      rail.addEventListener('touchend', onUp);
+      window.addEventListener('touchmove', (e) => onMove(e.touches[0]), { passive: true });
+      window.addEventListener('touchend', onUp);
     }
 
     // Suppress the link click that follows a drag.
