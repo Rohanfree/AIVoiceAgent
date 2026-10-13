@@ -1719,3 +1719,37 @@ section:nth-child(even) { background: var(--bg-alt); }
    component. Static by design. */
 .lp-ceiling-block { margin-top: 48px; }
 .lp-ceiling-note { max-width: 720px; }
+
+/* Iter9 item 3: click-a-word seeking. A static, aria-disabled preview of a
+   published recording's seek transcript: words read as handles, the speed
+   pill is a disabled pill. No timing attribute and no audio, so nothing can
+   play and nothing is faked. Static by design (only the word underline is
+   decorative). */
+.lp-seek { margin-top: 48px; max-width: 720px; }
+.lp-seek-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.lp-seek-sub { margin-top: 6px; max-width: 56ch; font-size: 0.95rem; color: var(--grey); }
+.lp-seek-strip {
+  position: relative; margin-top: 18px; padding: 16px 18px;
+  border: 1px solid rgba(26,77,58,0.14); border-radius: 16px;
+  background: var(--bg-alt);
+}
+.lp-seek-caption {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.6rem; font-weight: 600; line-height: 1;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--grey);
+}
+.lp-seek-body { margin: 12px 0 0; padding-right: 56px; font-size: 0.97rem; line-height: 1.7; color: #333; }
+.lp-seek-word {
+  color: var(--green); text-decoration: underline; text-decoration-style: dotted;
+  text-decoration-thickness: 1px; text-underline-offset: 3px;
+  text-decoration-color: rgba(26,77,58,0.4);
+}
+.lp-seek-speed {
+  position: absolute; top: 13px; right: 14px; cursor: default;
+  padding: 5px 12px; border-radius: 9999px;
+  border: 1px solid rgba(26,77,58,0.4); background: transparent;
+  color: var(--green); opacity: 0.55;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.72rem; font-weight: 600; line-height: 1;
+}
+.lp-seek-note { max-width: 720px; }

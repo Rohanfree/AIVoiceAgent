@@ -769,6 +769,36 @@
             uninterruptible.</p>
         </aside>
       </div>
+
+      <!-- Iter9 item 3: click-a-word seeking over a published recording. On a
+           real sample every word is a seek handle (jump to that moment) with a
+           speed control beside it. No recording is published, so this ships as
+           an honest, labelled, static preview: the strip is aria-disabled, the
+           words carry no timing attribute, and the speed pill is a disabled
+           slot. Nothing plays and no timing is invented; when a recording
+           ships, the same markup becomes the seek control. Static by design. -->
+      <div class="lp-seek reveal" data-seek>
+        <p class="lp-seek-title">Jump straight to the part you doubt</p>
+        <p class="lp-seek-sub">On a published recording every word is a handle: click one and
+          playback starts there, so you can check the sentence you care about without hearing
+          the whole call.</p>
+        <div class="lp-seek-strip" aria-disabled="true">
+          <span class="lp-seek-caption">Illustrative transcript · not clickable yet</span>
+          <p class="lp-seek-body">
+            <span class="lp-seek-word">Agent</span>: sorry to hear that. I can get an engineer
+            out today, with a <span class="lp-seek-word">2pm</span> or a
+            <span class="lp-seek-word">4:30pm</span> window.
+          </p>
+          <button type="button" class="lp-seek-speed" disabled aria-disabled="true"
+            aria-label="Playback speed, available when a recording is published">1×</button>
+        </div>
+        <aside class="lp-note lp-seek-note" data-note="note" role="note">
+          <span class="lp-note-label">Preview</span>
+          <p>Word-level seeking and the speed control appear when a real sample call is
+            published. Until then this shows the shape only: nothing plays, and no timing is
+            invented.</p>
+        </aside>
+      </div>
     </div>
   </section>
 
