@@ -21,6 +21,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
+# Run the application as a dedicated non-root user
+RUN useradd --create-home --uid 10001 automite \
+    && chown -R automite:automite /app
+USER automite
+
 # Expose the port the app runs on
 EXPOSE 8090
 
