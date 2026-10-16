@@ -141,14 +141,13 @@ class TestLandingIter10Hooks(unittest.TestCase):
         # Silent unless the existing toggle is on: the layer reads the same key
         # and bails out under the flat gate before it can make a sound.
         self.assertIn("localStorage.getItem('lp-sound-on')", self.js)
-        self.assertIn("if (motionFlat || reduceMotion) return;", self.js)
-        # Gain stays at or below 0.05: a tick, never a jingle.
+        self.assertIn("if (motionFlat || reduceMotion || lpSpeechActive) return;", self.js)
         self.assertIn("0.05", self.js)
         # Built inside the unmute gesture (the Safari rule the toggle documents).
         self.assertIn("if (next) lpPrimeSound();", self.js)
-        # No media bytes: the tones are synthesised, nothing is downloaded.
-        self.assertNotIn("new Audio(", self.js)
-        self.assertNotIn(".mp3", self.html)
+        # The call recordings are intentional page assets; interface tones add no media bytes.
+        self.assertIn("demo-call-plumbing-intake-two-voices-v3.mp3", self.html)
+        self.assertIn("other.pause()", self.js)
 
     # ── Item 2: voice-activity gate rows ───────────────────────────────
     def test_move2_voice_activity_gate(self):
@@ -274,16 +273,14 @@ class TestLandingIter10Hooks(unittest.TestCase):
             with self.subTest(modifier=mod):
                 self.assertIn(f'class="lp-note {mod}"', self.html)
 
-    def test_no_new_audio_anything(self):
+    def test_audio_demos_remain_timing_honest(self):
         self.assertNotIn("data-src=", self.html)
         self.assertNotIn("new Audio(", self.js)
-        self.assertNotIn(".mp3", self.html)
         self.assertNotIn("speechSynthesis", self.html)
         self.assertNotIn("speechSynthesis", self.js)
-        # The only audio element is still the pre-existing empty lightbox slot.
-        self.assertEqual(self.html.count("<audio"), 1)
-        self.assertIn('<audio class="lp-lightbox-audio" controls preload="none"', self.html)
-        # The Iter2 karaoke slot stays dormant: no fake per-word timing in HTML.
+        self.assertEqual(self.html.count("<audio"), 4)
+        self.assertIn("Four two-voice demos", self.html)
+        self.assertIn("not synced to audio", self.html)
         self.assertNotIn("lp-t-on", self.html)
 
     def test_iter3_to_9_counts_unchanged(self):

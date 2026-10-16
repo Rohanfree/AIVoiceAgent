@@ -157,14 +157,18 @@ class TestLandingIter3Hooks(unittest.TestCase):
         self.assertIn('.lp-note[data-note="warn"]', self.css)
         self.assertIn(".lp-note-label", self.css)
 
-    def test_no_new_audio_src_anywhere(self):
-        # Nothing Iter3 added points at a media file it does not have.
+    def test_audio_demos_are_real_two_voice_assets(self):
+        # Four generated samples are intentionally shipped and referenced by
+        # the four editorial chapters in the lightbox.
         self.assertNotIn("data-src=", self.html)
         self.assertNotIn("new Audio(", self.js)
-        # The only audio element is the pre-existing empty lightbox slot.
-        self.assertEqual(self.html.count("<audio"), 1)
-        self.assertIn('<audio class="lp-lightbox-audio" controls preload="none"', self.html)
-        self.assertNotIn(".mp3", self.html)
+        self.assertEqual(self.html.count("<audio"), 4)
+        self.assertEqual(self.html.count("demo-call-"), 4)
+        self.assertEqual(self.html.count('class="lp-lightbox-audio"'), 4)
+        self.assertIn("demo-call-plumbing-intake-two-voices-v3.mp3", self.html)
+        self.assertIn("demo-call-appointment-booking-two-voices-v3.mp3", self.html)
+        self.assertIn("demo-call-missed-call-callback-two-voices-v3.mp3", self.html)
+        self.assertIn("demo-call-service-qualification-two-voices-v3.mp3", self.html)
 
 
 class TestIter3ProtectedSurfaces(unittest.TestCase):

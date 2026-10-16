@@ -223,17 +223,15 @@ class TestLandingIter5Hooks(unittest.TestCase):
         self.assertIn('class="lp-note lp-record-note"', self.html)
         self.assertIn("not a real customer", self.html)
 
-    # ── Honesty: no invented audio, the Iter3 note count holds ─────────
-    def test_no_new_audio_anything(self):
+    # Honesty: generated audio is labeled and remains timing-honest.
+    def test_audio_demos_remain_timing_honest(self):
         self.assertNotIn("data-src=", self.html)
         self.assertNotIn("new Audio(", self.js)
-        self.assertNotIn(".mp3", self.html)
         self.assertNotIn("speechSynthesis", self.html)
         self.assertNotIn("speechSynthesis", self.js)
-        # The only audio element is still the pre-existing empty lightbox slot.
-        self.assertEqual(self.html.count("<audio"), 1)
-        self.assertIn('<audio class="lp-lightbox-audio" controls preload="none"', self.html)
-        # The Iter2 karaoke slot stays dormant: no fake per-word timing in HTML.
+        self.assertEqual(self.html.count("<audio"), 4)
+        self.assertIn("Four two-voice demos", self.html)
+        self.assertIn("not synced to audio", self.html)
         self.assertNotIn("lp-t-on", self.html)
 
     def test_iter3_honest_note_count_unchanged(self):

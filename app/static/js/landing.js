@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
      0.05. The context is built inside the unmute press (the Safari rule the
      toggle below already documents). */
   let lpAudioCtx = null;
+  let lpSpeechActive = false;
   function lpPrimeSound() {
     if (lpAudioCtx) return;
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -229,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try { lpAudioCtx = new Ctx(); } catch (_) { lpAudioCtx = null; }
   }
   function lpBlip(kind) {
-    if (motionFlat || reduceMotion) return;                    // Iter1 gate
+    if (motionFlat || reduceMotion || lpSpeechActive) return;                    // Iter1 gate
     let on = false;
     try { on = localStorage.getItem('lp-sound-on') === '1'; } catch (_) { /* private mode */ }
     if (!on) return;                                           // existing toggle, existing key
@@ -1017,6 +1018,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (ev.key === 'Escape' && lpBox.classList.contains('lp-open')) lpCloseBox();
     });
   }
+
+  /* One speech channel: the demos are a listening experience, so audio never overlaps
+     and decorative ambient media yields while a call is playing. */
+  document.querySelectorAll('.lp-call-demo .lp-lightbox-audio').forEach((audio) => {
+    audio.addEventListener('play', () => {
+      lpSpeechActive = true;
+      document.querySelectorAll('.lp-call-demo .lp-lightbox-audio').forEach((other) => {
+        if (other !== audio) other.pause();
+      });
+      document.querySelectorAll('.lp-hero-orb-video, .lp-manifesto-bg').forEach((video) => {
+        try { video.pause(); } catch (_) { /* media unavailable */ }
+      });
+    });
+    audio.addEventListener('pause', () => {
+      lpSpeechActive = Array.from(document.querySelectorAll('.lp-call-demo .lp-lightbox-audio'))
+        .some((other) => !other.paused && !other.ended);
+    });
+    audio.addEventListener('ended', () => { lpSpeechActive = false; });
+  });
 
   /* ── Landing Moves: reduced motion — never autoplay ambient loops ── */
   if (reduceMotion) {

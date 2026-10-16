@@ -1837,4 +1837,68 @@ section:nth-child(even) { background: var(--bg-alt); }
    The note reuses the honest-note component and states our own configuration
    practice (no provider quote borrowed). Static by design. */
 .lp-tighten-block { margin-top: 48px; }
+
+/* 10-iteration editorial reel: proof-led content with cinematic restraint. */
+.lp-lightbox-card { max-width: 760px; max-height: calc(100dvh - 48px); }
+.lp-call-library {
+  counter-reset: call-chapter;
+  display: grid;
+  gap: 42px;
+  margin-top: 28px;
+}
+.lp-call-demo {
+  counter-increment: call-chapter;
+  position: relative;
+  padding: 30px 0 0;
+  border-top: 1px solid var(--border);
+}
+.lp-call-demo::before {
+  content: "CHAPTER " counter(call-chapter, decimal-leading-zero);
+  display: block;
+  margin-bottom: 10px;
+  color: var(--green);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.lp-call-demo h4 { margin: 0; font-size: clamp(1.25rem, 2vw, 1.65rem); letter-spacing: -0.025em; }
+.lp-call-demo .lp-transcript-note { max-width: 52ch; margin: 8px 0 16px; color: var(--grey); }
+.lp-call-demo .lp-call-list { gap: 8px; max-width: 66ch; }
+.lp-call-demo .lp-call-list li {
+  padding: 10px 12px;
+  border-left: 2px solid var(--border);
+  color: #242424;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.lp-call-demo .lp-call-list li[data-sp="agent"] {
+  border-left-color: var(--green);
+  background: color-mix(in srgb, var(--green) 5%, transparent);
+}
+.lp-call-demo .lp-call-list li[data-sp="customer"] { background: var(--bg-alt); }
+.lp-call-demo .lp-call-list b {
+  display: inline-block;
+  min-width: 5.6rem;
+  margin-right: 0.35rem;
+  color: var(--green);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lp-call-demo .lp-lightbox-audio { margin: 16px 0 18px; }
+.lp-lightbox-card > .lp-note p { max-width: 60ch; }
+[data-motion-flat] .lp-call-demo { transition: none; }
+@media (max-width: 640px) {
+  .lp-lightbox { padding: 12px; }
+  .lp-lightbox-card { padding: 28px 18px; max-height: calc(100dvh - 24px); }
+  .lp-call-library { gap: 30px; }
+  .lp-call-demo { padding-top: 24px; }
+  .lp-call-demo .lp-call-list li { font-size: 0.9rem; }
+  .lp-call-demo .lp-call-list b { display: block; margin: 0 0 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-call-demo, .lp-call-demo .lp-call-list li { transition: none !important; }
+}
+
 .lp-tighten-note { max-width: 720px; }

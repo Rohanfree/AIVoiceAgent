@@ -95,7 +95,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=33" />
+  <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/landing.css?v=34" />
   <link rel="icon" type="image/png" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <link rel="apple-touch-icon" href="/automiteaiapplication/automiteui/static/images/logo.png" />
   <style>
@@ -2052,61 +2052,64 @@
       </aside>
       <img class="lp-lightbox-poster" src="/automiteaiapplication/automiteui/static/media/demo-poster.png"
         alt="" aria-hidden="true" width="1280" height="720" />
+      <div class="lp-transcript" data-transcript aria-disabled="true" hidden>
+        <span class="lp-transcript-note">Illustrative transcript, not synced to audio</span>
+      </div>
       <div class="lp-call-library" aria-label="Generated sample calls">
-        <article class="lp-call-demo">
+        <article class="lp-call-demo" id="call-plumbing-intake" data-call-title="Emergency Plumbing Intake">
           <h4>Emergency Plumbing Intake</h4>
           <p class="lp-transcript-note">Capture and route a slow kitchen-sink leak.</p>
           <audio class="lp-lightbox-audio" controls preload="metadata" aria-label="Emergency Plumbing Intake audio"><source src="/automiteaiapplication/automiteui/static/media/demo-call-plumbing-intake-two-voices-v3.mp3" type="audio/mpeg" /></audio>
           <ol class="lp-call-list" role="list">
-            <li><b>Agent</b> Thanks for calling Acme Plumbing. I can help get your plumbing request started. What's happening?</li>
-            <li><b>Customer</b> There's water collecting under the kitchen sink, and I'm not sure where it's coming from.</li>
-            <li><b>Agent</b> I'm sorry you're dealing with that. Is the water still spreading, or has it slowed down?</li>
-            <li><b>Customer</b> It's still dripping, but slowly. I've put a bowl underneath it.</li>
-            <li><b>Agent</b> I'll note a slow leak under the kitchen sink. May I have your name and the best number for follow-up?</li>
-            <li><b>Customer</b> I'm the customer, and you can reach me at the number on my request.</li>
-            <li><b>Agent</b> I've captured the details and will pass them to the service team for next steps.</li>
+            <li data-sp="agent"><b>Agent</b> Thanks for calling Acme Plumbing. I can help get your plumbing request started. What's happening?</li>
+            <li data-sp="customer"><b>Customer</b> There's water collecting under the kitchen sink, and I'm not sure where it's coming from.</li>
+            <li data-sp="agent"><b>Agent</b> I'm sorry you're dealing with that. Is the water still spreading, or has it slowed down?</li>
+            <li data-sp="customer"><b>Customer</b> It's still dripping, but slowly. I've put a bowl underneath it.</li>
+            <li data-sp="agent"><b>Agent</b> I'll note a slow leak under the kitchen sink. May I have your name and the best number for follow-up?</li>
+            <li data-sp="customer"><b>Customer</b> I'm the customer, and you can reach me at the number on my request.</li>
+            <li data-sp="agent"><b>Agent</b> I've captured the details and will pass them to the service team for next steps.</li>
           </ol>
         </article>
-        <article class="lp-call-demo">
+        <article class="lp-call-demo" id="call-appointment-booking" data-call-title="Appointment Booking">
           <h4>Appointment Booking</h4>
           <p class="lp-transcript-note">Collect a repair request and preferred days.</p>
           <audio class="lp-lightbox-audio" controls preload="metadata" aria-label="Appointment Booking audio"><source src="/automiteaiapplication/automiteui/static/media/demo-call-appointment-booking-two-voices-v3.mp3" type="audio/mpeg" /></audio>
           <ol class="lp-call-list" role="list">
-            <li><b>Agent</b> You've reached Acme Plumbing. What can I help you arrange today?</li>
-            <li><b>Customer</b> I'd like to book a visit for a repair at my home.</li>
-            <li><b>Agent</b> What type of repair do you need, and which days usually work best?</li>
-            <li><b>Customer</b> It's a bathroom faucet. Tuesday or Thursday would be good.</li>
-            <li><b>Agent</b> I'll record a bathroom faucet repair request with those preferred days. What name should I use?</li>
-            <li><b>Customer</b> Please use the customer name.</li>
-            <li><b>Agent</b> The team will confirm the available time with you.</li>
+            <li data-sp="agent"><b>Agent</b> You've reached Acme Plumbing. What can I help you arrange today?</li>
+            <li data-sp="customer"><b>Customer</b> I'd like to book a visit for a repair at my home.</li>
+            <li data-sp="agent"><b>Agent</b> What type of repair do you need, and which days usually work best?</li>
+            <li data-sp="customer"><b>Customer</b> It's a bathroom faucet. Tuesday or Thursday would be good.</li>
+            <li data-sp="agent"><b>Agent</b> I'll record a bathroom faucet repair request with those preferred days. What name should I use?</li>
+            <li data-sp="customer"><b>Customer</b> Please use the customer name.</li>
+            <li data-sp="agent"><b>Agent</b> The team will confirm the available time with you.</li>
           </ol>
         </article>
-        <article class="lp-call-demo">
+        <article class="lp-call-demo" id="call-missed-call-callback" data-call-title="Missed-Call Callback">
           <h4>Missed-Call Callback</h4>
           <p class="lp-transcript-note">Return a missed call and capture the request.</p>
           <audio class="lp-lightbox-audio" controls preload="metadata" aria-label="Missed-Call Callback audio"><source src="/automiteaiapplication/automiteui/static/media/demo-call-missed-call-callback-two-voices-v3.mp3" type="audio/mpeg" /></audio>
           <ol class="lp-call-list" role="list">
-            <li><b>Agent</b> We saw a missed call from this number. How can we help?</li>
-            <li><b>Customer</b> I called earlier because I need help with a service issue.</li>
-            <li><b>Agent</b> Could you give me a quick description so I can send the right details?</li>
-            <li><b>Customer</b> The heating system isn't working properly.</li>
-            <li><b>Agent</b> Is this the best number for the team to call you back on?</li>
-            <li><b>Customer</b> Yes, it is. I'm calling about the customer request.</li>
-            <li><b>Agent</b> I've recorded the request. The team will follow up with the next steps.</li>
+            <li data-sp="agent"><b>Agent</b> We saw a missed call from this number. How can we help?</li>
+            <li data-sp="customer"><b>Customer</b> I called earlier because I need help with a service issue.</li>
+            <li data-sp="agent"><b>Agent</b> Could you give me a quick description so I can send the right details?</li>
+            <li data-sp="customer"><b>Customer</b> The heating system isn't working properly.</li>
+            <li data-sp="agent"><b>Agent</b> Is this the best number for the team to call you back on?</li>
+            <li data-sp="customer"><b>Customer</b> Yes, it is. I'm calling about the customer request.</li>
+            <li data-sp="agent"><b>Agent</b> I've recorded the request. The team will follow up with the next steps.</li>
           </ol>
         </article>
-        <article class="lp-call-demo">
+        <article class="lp-call-demo" id="call-service-qualification" data-call-title="Service Qualification">
           <h4>Service Qualification</h4>
           <p class="lp-transcript-note">Ask focused questions about service coverage.</p>
           <audio class="lp-lightbox-audio" controls preload="metadata" aria-label="Service Qualification audio"><source src="/automiteaiapplication/automiteui/static/media/demo-call-service-qualification-two-voices-v3.mp3" type="audio/mpeg" /></audio>
           <ol class="lp-call-list" role="list">
-            <li><b>Agent</b> I can ask a few quick questions to understand what service you need.</li>
-            <li><b>Customer</b> I'm having trouble with the air conditioning at my property.</li>
-            <li><b>Agent</b> Is the issue affecting the whole property or just one room?</li>
-            <li><b>Customer</b> The whole property. The system is running, but the air isn't getting cool.</li>
-            <li><b>Agent</b> I'll capture that for follow-up. The service team will review the request.</li>
-            <li><b>Customer</b> Thank you.</li>
-            <li><b>Agent</b> You're welcome. The service team will review the request and follow up.</li>
+            <li data-sp="agent"><b>Agent</b> I can ask a few quick questions to understand what service you need.</li>
+            <li data-sp="customer"><b>Customer</b> I'm having trouble with the air conditioning at my property.</li>
+            <li data-sp="agent"><b>Agent</b> Is the issue affecting the whole property or just one room?</li>
+            <li data-sp="customer"><b>Customer</b> The whole property. The system is running, but the air isn't getting cool.</li>
+            <li data-sp="agent"><b>Agent</b> I'll capture that for follow-up. The service team will review the request.</li>
+            <li data-sp="customer"><b>Customer</b> Thank you.</li>
+            <li data-sp="agent"><b>Agent</b> You're welcome. The service team will review the request and follow up.</li>
           </ol>
         </article>
       </div>
