@@ -430,7 +430,8 @@ async def get_token_usage(
             price_per_character = 0.0
 
     total_characters = usage.get("total_characters", 0)
-    estimated_cost = total_characters * price_per_character
+    # Keep the admin and client usage APIs consistent at currency precision.
+    estimated_cost = round(total_characters * price_per_character, 6)
 
     return {
         "client_id": client_id,

@@ -16,11 +16,11 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status
-from fastapi.params import Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 from google.cloud.firestore import Client
 
 from app.config import settings
+from app.auth.dependencies import require_scope
 from app.db import get_db
 from app.services.availability_service import check_slot_availability
 from app.services.booking_service import create_appointment, save_call_log
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/elevenlabs-tools",
     tags=["ElevenLabs Tool Calls"],
+    dependencies=[Depends(require_scope("tool"))],
 )
 
 

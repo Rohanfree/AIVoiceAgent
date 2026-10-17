@@ -100,7 +100,7 @@ async def update_profile(  # noqa: C901
             )
         if len(kb) > KNOWLEDGE_BASE_MAX_LENGTH:
             raise HTTPException(
-                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail=(
                     f"knowledge_base_text exceeds max length of "
                     f"{KNOWLEDGE_BASE_MAX_LENGTH} characters "
