@@ -249,3 +249,56 @@ async def test_admin_usage_cost_uses_same_money_rounding():
     with patch("app.services.elevenlabs_service.get_agent_usage", new=AsyncMock(return_value={"total_characters": 3, "conversation_count": 1, "total_duration_secs": 2, "conversations": []})):
         result = await get_token_usage("c1", "2026-01-01", "2026-01-01", {"scope": "admin:all"}, db)
     assert result["estimated_cost"] == 0.000003
+
+
+def test_active_route_inventory_checks_every_registered_endpoint_method():
+    from app.main import create_app
+
+    app = create_app()
+    routes = {(route.path, method) for route in app.routes for method in (getattr(route, "methods", None) or ())}
+    expected = {
+        ("/automiteaiapplication/health", "GET"),
+        ("/automiteaiapplication/automiteui/auth/login", "POST"),
+        ("/automiteaiapplication/automiteui/auth/check-agent", "GET"),
+        ("/automiteaiapplication/automiteui/auth/register", "POST"),
+        ("/automiteaiapplication/automiteui/auth/refresh", "POST"),
+        ("/automiteaiapplication/automiteui/client-portal/profile", "GET"),
+        ("/automiteaiapplication/automiteui/client-portal/profile", "PUT"),
+        ("/automiteaiapplication/automiteui/client-portal/change-password", "POST"),
+        ("/automiteaiapplication/automiteui/client-portal/appointments", "GET"),
+        ("/automiteaiapplication/automiteui/client-portal/call-logs", "GET"),
+        ("/automiteaiapplication/automiteui/client-portal/parse-text", "POST"),
+        ("/automiteaiapplication/automiteui/client-portal/token-usage", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/dashboard", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/status", "PATCH"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/subscription", "PATCH"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients", "POST"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}", "DELETE"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/refresh-tool-tokens", "POST"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/token-usage/{client_id}", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/pricing", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/pricing", "PUT"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/pricing", "PATCH"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/elevenlabs/agents", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/elevenlabs/agents/{agent_id}", "GET"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/elevenlabs/agents/duplicate", "POST"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/character-limit", "PATCH"),
+        ("/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/add-characters", "POST"),
+        ("/automiteaiapplication/elevenlabs-tools/get-customer", "POST"),
+        ("/automiteaiapplication/elevenlabs-tools/check-availability", "POST"),
+        ("/automiteaiapplication/elevenlabs-tools/book-appointment", "POST"),
+        ("/automiteaiapplication/elevenlabs-tools/save-call-summary", "POST"),
+        ("/automiteaiapplication/automiteui/api/contact", "POST"),
+        ("/automiteaiapplication/client/auth/google/debug", "GET"),
+        ("/automiteaiapplication/client/auth/google/login", "GET"),
+        ("/automiteaiapplication/client/auth/google/callback", "GET"),
+        ("/automiteaiapplication/automiteui/extraction/parse-text", "POST"),
+        ("/automiteaiapplication/automiteui/extraction/upload-file", "POST"),
+        ("/automiteaiapplication/automiteui/extraction/confirm", "POST"),
+        ("/", "GET"), ("/robots.txt", "GET"), ("/sitemap.xml", "GET"),
+        ("/sitemap-pages.xml", "GET"), ("/llms.txt", "GET"),
+    }
+    assert expected <= routes
+    assert not any(path.startswith("/vapi") for path, _ in routes)
+
