@@ -15,6 +15,12 @@ from google.cloud.firestore import Client, FieldFilter
 
 from app.auth.dependencies import require_admin
 from app.auth.password import hash_password
+from app.auth.tool_token_store import (
+    ToolTokenStoreUnavailable,
+    issue_tool_token,
+    revoke_client_tool_tokens,
+    rotate_tool_token,
+)
 from app.db import get_db
 
 logger = logging.getLogger(__name__)
@@ -237,12 +243,19 @@ async def add_client_manually(
     }
     db.collection("users").document(user_id).set(user_doc)
 
+    try:
+        _, tool_token_id = issue_tool_token(db, client_id)
+    except ToolTokenStoreUnavailable:
+        db.collection("users").document(user_id).delete()
+        raise _tool_token_unavailable()
+
     # Create client
     client_doc = {
         "id": client_id,
         "user_id": user_id,
         "business_name": client_name,
         "assistant_name": assistant_name,
+        "tool_token_id": tool_token_id,
         "services": [],
         "operating_hours": {},
         "policies": {},
@@ -278,6 +291,14 @@ async def delete_client(
     client_ref = db.collection("clients").document(client_id)
     if not client_ref.get().exists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    # Tool tokens must not outlive the client they authenticate. Fail closed
+    # before deleting any associated records if revocation cannot be confirmed.
+    try:
+        revoke_client_tool_tokens(db, client_id)
+    except ToolTokenStoreUnavailable:
+        logger.error("Could not revoke tool tokens while deleting client %s", client_id)
+        raise _tool_token_unavailable()
 
     # Delete linked user document
     users = db.collection("users").where(filter=FieldFilter("client_id", "==", client_id)).stream()
@@ -324,11 +345,18 @@ async def delete_client(
     }
 
 
-# ─── REFRESH TOOL TOKENS ────────────────────────────────────────────────────
+# ─── TOOL TOKEN ROTATION / REVOCATION ───────────────────────────────────────
+
+def _tool_token_unavailable() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Tool token store is temporarily unavailable.",
+    )
+
 
 @router.post(
     "/refresh-tool-tokens",
-    summary="Regenerate all M2M tool-level tokens",
+    summary="Rotate tool tokens for all active clients",
     include_in_schema=False,
 )
 async def refresh_tool_tokens(
@@ -336,43 +364,67 @@ async def refresh_tool_tokens(
     db: Client = Depends(get_db),
 ) -> dict:
     """
-    Rotate all machine-to-machine tokens used for external API communication.
-    This is a security hygiene operation for rotating keys across integrated AI APIs.
+    Rotate the ElevenLabs tool token of every active client. Each client's previous
+    tokens are revoked immediately. The new raw tokens are returned once in this
+    response (they are never stored or logged) so they can be redeployed.
     """
-    from app.auth.jwt_handler import create_access_token
+    rotated: dict[str, str] = {}
+    try:
+        for doc in db.collection("clients").stream():
+            if not (doc.to_dict() or {}).get("is_active", True):
+                continue
+            token, jti = rotate_tool_token(db, doc.id)
+            db.collection("clients").document(doc.id).update({"tool_token_id": jti})
+            rotated[doc.id] = token
+    except ToolTokenStoreUnavailable:
+        raise _tool_token_unavailable()
 
-    now = datetime.now(tz=timezone.utc).isoformat()
+    logger.info("Admin rotated tool tokens for %d clients", len(rotated))
+    return {"status": "rotated", "clients_affected": len(rotated), "tokens": rotated}
 
-    # Regenerate tool-scope tokens for all active clients
-    clients = db.collection("clients").stream()
-    rotated_count = 0
 
-    for doc in clients:
-        client_data = doc.to_dict()
-        if not client_data.get("is_active", True):
-            continue
+@router.post(
+    "/clients/{client_id}/tool-token/rotate",
+    summary="Rotate one client's tool token",
+    include_in_schema=False,
+)
+async def rotate_client_tool_token(
+    client_id: str,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    """Issue a new tool token for one client and revoke its previous tokens."""
+    client_ref = db.collection("clients").document(client_id)
+    if not client_ref.get().exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+    try:
+        token, jti = rotate_tool_token(db, client_id)
+        client_ref.update({"tool_token_id": jti})
+    except ToolTokenStoreUnavailable:
+        raise _tool_token_unavailable()
+    logger.info("Admin rotated tool token for client %s (token_id=%s)", client_id, jti)
+    return {"status": "rotated", "client_id": client_id, "token_id": jti, "tool_token": token}
 
-        token_data = {
-            "sub": doc.id,
-            "scope": "tool",
-            "client_id": doc.id,
-        }
-        new_token = create_access_token(token_data, scope="tool")
 
-        # Store the new token reference
-        token_id = str(uuid.uuid4())
-        db.collection("tokens").document(token_id).set({
-            "id": token_id,
-            "client_id": doc.id,
-            "tool_scope": "tool",
-            "token_hash": new_token[:16] + "...",  # Store partial for audit
-            "created_at": now,
-            "is_revoked": False,
-        })
-        rotated_count += 1
-
-    logger.info("Admin rotated tool tokens for %d clients", rotated_count)
-    return {"status": "rotated", "clients_affected": rotated_count}
+@router.post(
+    "/clients/{client_id}/tool-token/revoke",
+    summary="Revoke all of one client's tool tokens",
+    include_in_schema=False,
+)
+async def revoke_client_tool_token(
+    client_id: str,
+    admin: dict = Depends(require_admin),
+    db: Client = Depends(get_db),
+) -> dict:
+    """Revoke every active tool token for a client without issuing a replacement."""
+    if not db.collection("clients").document(client_id).get().exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+    try:
+        revoked = revoke_client_tool_tokens(db, client_id)
+    except ToolTokenStoreUnavailable:
+        raise _tool_token_unavailable()
+    logger.info("Admin revoked %d tool token(s) for client %s", revoked, client_id)
+    return {"status": "revoked", "client_id": client_id, "tokens_revoked": revoked}
 
 
 # ─── TOKEN USAGE ─────────────────────────────────────────────────────────────
@@ -430,7 +482,8 @@ async def get_token_usage(
             price_per_character = 0.0
 
     total_characters = usage.get("total_characters", 0)
-    estimated_cost = total_characters * price_per_character
+    # Keep the admin and client usage APIs consistent at currency precision.
+    estimated_cost = round(total_characters * price_per_character, 6)
 
     return {
         "client_id": client_id,

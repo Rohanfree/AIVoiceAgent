@@ -1,29 +1,37 @@
 """
 google_auth_router.py — Handles Google OAuth2 flow for Calendar access.
 Endpoints:
-  - GET /client/auth/google/login: Starts OAuth flow.
+  - POST /client/auth/google/start: Starts OAuth flow (Bearer auth, returns authorization_url).
+  - GET /client/auth/google/login: Header-authenticated redirect variant of /start.
+  - GET /client/auth/google/debug: Admin-only diagnostics.
   - GET /client/auth/google/callback: Finishes OAuth flow and stores tokens.
 """
 
+import hashlib
+import hmac
 import logging
-import json
 import os
+import re
+import secrets
 import urllib.parse
 import smtplib
+from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import requests as http_requests
-from fastapi import APIRouter, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from app.config import settings
 from app.db import get_db
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_admin
 from app.services.sheets_service import create_client_sheet
-from jose import jwt
+from app.services.token_crypto import firestore_token_write
+from google.api_core.exceptions import AlreadyExists
+from jose import JWTError, jwt
 
 # Allow insecure transport when base_url uses http (local dev or http-only deployments)
 if settings.base_url.startswith("http://"):
@@ -46,8 +54,138 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
-# We use the user's JWT as the state to identify them in the callback
-# and prevent CSRF.
+OAUTH_STATE_TTL_SECONDS = 600
+_STATE_TYPE = "google_oauth_state"
+_STATE_COLLECTION = "oauth_states_used"
+_DEFAULT_RETURN_PATH = "/automiteui/pages/dashboard"
+_CONTROL_CHARS = re.compile(r"[\x00-\x20\x7f\\]")
+
+
+def _callback_uri() -> str:
+    # Built from base_url so the scheme matches what is registered in Google Cloud Console.
+    return settings.base_url.rstrip("/") + "/automiteaiapplication/client/auth/google/callback"
+
+
+def _origin(url: str) -> str | None:
+    parts = urllib.parse.urlsplit(url)
+    if not parts.scheme or not parts.netloc:
+        return None
+    return f"{parts.scheme}://{parts.netloc}".lower()
+
+
+def _allowed_origins() -> set[str]:
+    origins = {_origin(settings.base_url), _origin(settings.public_site_url)}
+    origins.update(_origin(o) for o in settings.cors_origins)
+    return {o for o in origins if o}
+
+
+def validate_return_to(return_to: str | None) -> str | None:
+    """Return a safe return_to or None if absent; raise ValueError if off-list.
+
+    Accepts a same-origin absolute path ("/x") or an absolute http(s) URL whose
+    origin is base_url, public_site_url or a configured CORS origin.
+    """
+    if not return_to:
+        return None
+    if len(return_to) > 2048 or _CONTROL_CHARS.search(return_to):
+        raise ValueError("return_to is not allowed")
+    if return_to.startswith("/"):
+        if return_to.startswith("//"):
+            raise ValueError("return_to is not allowed")
+        return return_to
+    parts = urllib.parse.urlsplit(return_to)
+    if (
+        parts.scheme not in ("http", "https")
+        or parts.username is not None
+        or parts.password is not None
+        or _origin(return_to) not in _allowed_origins()
+    ):
+        raise ValueError("return_to is not allowed")
+    return return_to
+
+
+def _state_key() -> str:
+    # Derived key: a state token can never verify as an access token, or vice versa.
+    return hmac.new(
+        settings.jwt_secret_key.encode(), b"google-oauth-state-v1", hashlib.sha256
+    ).hexdigest()
+
+
+def create_oauth_state(client_id: str, return_to: str | None) -> str:
+    """Signed, short-lived state carrying only the client id, return_to and a nonce."""
+    now = datetime.now(tz=timezone.utc)
+    claims = {
+        "typ": _STATE_TYPE,
+        "cid": client_id,
+        "jti": secrets.token_urlsafe(16),
+        "iat": now,
+        "exp": now + timedelta(seconds=OAUTH_STATE_TTL_SECONDS),
+    }
+    if return_to:
+        claims["r"] = return_to
+    return jwt.encode(claims, _state_key(), algorithm="HS256")
+
+
+def verify_oauth_state(state: str) -> dict:
+    """Verify signature, expiry and type. Raises ValueError otherwise."""
+    try:
+        claims = jwt.decode(state, _state_key(), algorithms=["HS256"])
+    except JWTError as exc:
+        raise ValueError("Invalid or expired state") from exc
+    if claims.get("typ") != _STATE_TYPE or not claims.get("cid") or not claims.get("jti"):
+        raise ValueError("Invalid state")
+    return claims
+
+
+def consume_oauth_state(db, claims: dict) -> None:
+    """Mark the state nonce used; atomic create() fails if it was already consumed."""
+    try:
+        db.collection(_STATE_COLLECTION).document(claims["jti"]).create({
+            "client_id": claims["cid"],
+            "used_at": datetime.now(tz=timezone.utc),
+            "expires_at": datetime.fromtimestamp(claims["exp"], tz=timezone.utc),
+        })
+    except AlreadyExists as exc:
+        raise ValueError("State already used") from exc
+
+
+def _build_authorization_url(user: dict, return_to: str | None) -> str:
+    client_id = user.get("client_id")
+    if user.get("scope") == "tool" or not isinstance(client_id, str) or not client_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="A client session is required.")
+    try:
+        safe_return_to = validate_return_to(return_to)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="return_to is not allowed.")
+
+    flow = Flow.from_client_config(get_client_config(), scopes=SCOPES, redirect_uri=_callback_uri())
+    authorization_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        state=create_oauth_state(client_id, safe_return_to),
+        prompt="consent",
+    )
+    return authorization_url
+
+
+def _with_params(url: str, params: dict) -> str:
+    parts = urllib.parse.urlsplit(url)
+    query = urllib.parse.urlencode(params)
+    query = f"{parts.query}&{query}" if parts.query else query
+    return urllib.parse.urlunsplit(parts._replace(query=query))
+
+
+def _result_redirect(return_to: str | None, **params) -> RedirectResponse:
+    target = return_to
+    if target:
+        try:
+            target = validate_return_to(target)
+        except ValueError:
+            target = None
+    if not target:
+        target = settings.base_url.rstrip("/") + _DEFAULT_RETURN_PATH
+    return RedirectResponse(url=_with_params(target, params))
+
 
 def get_client_config():
     if not settings.google_client_id or not settings.google_client_secret:
@@ -66,86 +204,59 @@ def get_client_config():
     }
 
 @router.get("/debug")
-async def google_debug(request: Request):
-    """Debug info for OAuth."""
-    base = settings.base_url.rstrip("/")
-    redirect_uri = f"{base}/automiteaiapplication/client/auth/google/callback"
+async def google_debug(request: Request, user: dict = Depends(require_admin)):
+    """Admin-only OAuth configuration diagnostics (never exposes secret values)."""
     return {
         "base_url_settings": settings.base_url,
-        "computed_redirect_uri": redirect_uri,
+        "computed_redirect_uri": _callback_uri(),
         "request_url_host": request.url.netloc,
         "client_id_present": bool(settings.google_client_id),
         "client_secret_present": bool(settings.google_client_secret),
         "insecure_transport_env": os.environ.get('OAUTHLIB_INSECURE_TRANSPORT'),
     }
 
+@router.post("/start")
+async def google_start(return_to: str | None = None, user: dict = Depends(get_current_user)):
+    """Start Google OAuth. The app JWT travels in the Authorization header, never the URL.
+
+    Returns {"authorization_url": ...} for the browser to navigate to.
+    """
+    return {"authorization_url": _build_authorization_url(user, return_to)}
+
 @router.get("/login")
-async def google_login(request: Request, token: str, return_to: str = None):
+async def google_login(return_to: str | None = None, user: dict = Depends(get_current_user)):
+    """Header-authenticated variant of /start that responds with a redirect.
+
+    The former ``?token=`` query parameter is no longer accepted.
     """
-    Start Google OAuth flow.
-    Expects 'token' (the app's JWT) to be passed in query params.
-    Optional 'return_to' is the URL to redirect back to after OAuth completes.
-    """
-    try:
-        # Validate token first
-        jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
-
-        client_config = get_client_config()
-
-        # Build redirect URI from base_url so the scheme (http/https) matches
-        # what is registered in Google Cloud Console, regardless of proxy termination.
-        redirect_uri = settings.base_url.rstrip("/") + "/automiteaiapplication/client/auth/google/callback"
-
-        logger.info("Generating Google OAuth URL. Computed redirect_uri: %s", redirect_uri)
-
-        flow = Flow.from_client_config(
-            client_config,
-            scopes=SCOPES,
-            redirect_uri=redirect_uri
-        )
-
-        # Encode token and return_to URL into state so both survive the OAuth round-trip
-        state_data = {"t": token}
-        if return_to:
-            state_data["r"] = return_to
-        state = json.dumps(state_data)
-
-        authorization_url, _ = flow.authorization_url(
-            access_type="offline",
-            include_granted_scopes="true",
-            state=state,
-            prompt="consent"
-        )
-        
-        logger.info("Redirecting user to: %s", authorization_url)
-        return RedirectResponse(authorization_url)
-    except Exception as e:
-        logger.error("Error starting Google OAuth: %s", e)
-        raise HTTPException(status_code=400, detail=str(e))
+    return RedirectResponse(_build_authorization_url(user, return_to))
 
 @router.get("/callback", name="google_callback")
-async def google_callback(request: Request, code: str, state: str):
-    """
-    OAuth callback. Uses 'state' (JWT) to identify the client.
-    """
+async def google_callback(
+    request: Request,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+):
+    """OAuth callback. Verifies the signed single-use state to identify the client."""
+    return_to = None
     try:
-        # 1. Parse state: JSON {"t": jwt, "r": return_to} or legacy raw JWT
-        return_to = None
-        try:
-            state_data = json.loads(state)
-            token = state_data["t"]
-            return_to = state_data.get("r")
-        except (json.JSONDecodeError, KeyError):
-            token = state  # backward compat: state was the raw JWT
+        # 1. Verify and consume state before doing anything else
+        if not state:
+            raise ValueError("Missing state")
+        claims = verify_oauth_state(state)
+        return_to = claims.get("r")
+        client_id = claims["cid"]
+        db = get_db()
+        consume_oauth_state(db, claims)
 
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
-        client_id = payload.get("client_id")
-        if not client_id:
-            raise Exception("Invalid state: no client_id")
+        if error or not code:
+            logger.warning("Google OAuth returned an error for client %s: %s", client_id, error)
+            return _result_redirect(return_to, google_linked="error", detail="access_denied" if error == "access_denied" else "google_error")
 
         # 2. Exchange code for tokens
         client_config = get_client_config()
-        redirect_uri = settings.base_url.rstrip("/") + "/automiteaiapplication/client/auth/google/callback"
+        redirect_uri = _callback_uri()
 
         flow = Flow.from_client_config(
             client_config,
@@ -156,7 +267,6 @@ async def google_callback(request: Request, code: str, state: str):
         credentials = flow.credentials
 
         # 3. Save to Firestore
-        db = get_db()
         token_data = {
             "token": credentials.token,
             "refresh_token": credentials.refresh_token,
@@ -167,10 +277,8 @@ async def google_callback(request: Request, code: str, state: str):
         }
 
         logger.info("Attempting to save tokens to Firestore for client: %s", client_id)
-        db.collection("clients").document(client_id).set({
-            "google_calendar_linked": True,
-            "google_calendar_tokens": token_data,
-        }, merge=True)
+        write = firestore_token_write(token_data, client_id)
+        db.collection("clients").document(client_id).set(write["data"], merge=write["merge"])
         logger.info("Successfully updated Firestore document for client: %s", client_id)
 
         # 4. Create a Google Sheet — only if one hasn't been created yet
@@ -195,24 +303,12 @@ async def google_callback(request: Request, code: str, state: str):
             logger.error("Sheet creation failed for client %s (non-fatal): %s", client_id, sheet_exc)
 
         # 5. Redirect back to the originating page (or fallback to dashboard)
-        base = settings.base_url.rstrip("/")
-        if return_to:
-            sep = "&" if "?" in return_to else "?"
-            success_url = f"{return_to}{sep}google_linked=success"
-        else:
-            success_url = f"{base}/automiteui/pages/dashboard?google_linked=success"
-        return RedirectResponse(url=success_url)
+        return _result_redirect(return_to, google_linked="success")
 
     except Exception as e:
-        logger.exception("CRITICAL ERROR in Google OAuth callback")
-        base = settings.base_url.rstrip("/")
-        error_msg = urllib.parse.quote(str(e))
-        if return_to:
-            sep = "&" if "?" in return_to else "?"
-            error_url = f"{return_to}{sep}google_linked=error&detail={error_msg}"
-        else:
-            error_url = f"{base}/automiteui/pages/dashboard?google_linked=error&detail={error_msg}"
-        return RedirectResponse(url=error_url)
+        logger.exception("Google OAuth callback failed")
+        detail = "invalid_state" if isinstance(e, ValueError) else "callback_failed"
+        return _result_redirect(return_to, google_linked="error", detail=detail)
 
 
 def _send_sheet_notification(credentials, client_id: str, business_name: str, sheet_id: str, db) -> None:

@@ -4,9 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Case Studies — Automite AI</title>
-  <meta name="description"
-    content="See how real businesses use Automite AI voice agents to capture more leads, cut missed calls, and save hours every week." />
+  {% include "partials/seo_head.html" %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -70,6 +68,7 @@
   <!-- ═══════════════════════════════════════════
      HERO
 ════════════════════════════════════════════ -->
+  <main id="main-content">
   <section id="case-hero" aria-labelledby="case-hero-heading">
     <div class="case-hero-content reveal">
       <p class="section-label" style="text-align:center;">Case Studies</p>
@@ -438,6 +437,7 @@
     </div>
   </section>
 
+  </main>
   <!-- ═══════════════════════════════════════════
      FOOTER
 ════════════════════════════════════════════ -->
@@ -448,6 +448,9 @@
           <span class="footer-logo">Automite AI</span>
           <span class="footer-tagline">Building AI Voice Agents for Real Business</span>
         </div>
+        <address class="footer-contact" style="font-style:normal;">
+          <a href="mailto:aiautomite@gmail.com">aiautomite@gmail.com</a> · <a href="tel:+17053150166">+1 (705) 315-0166</a>
+        </address>
         <nav class="footer-links" aria-label="Footer navigation">
           <a href="/automiteaiapplication/automiteui/pages/landing#services">Services</a>
           <a href="/automiteaiapplication/automiteui/pages/landing#why">Why Us</a>
@@ -457,7 +460,7 @@
           <a href="/automiteaiapplication/automiteui/pages/privacy-policy">Privacy Policy</a>
           <a href="/automiteaiapplication/automiteui/pages/login">Login</a>
         </nav>
-        <span class="footer-copy">© Automite AI 2025. All rights reserved.</span>
+        <span class="footer-copy">© Automite AI <span class="js-year">2025</span>. All rights reserved.</span>
       </div>
     </div>
   </footer>

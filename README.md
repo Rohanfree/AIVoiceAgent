@@ -6,6 +6,8 @@
 
 ## 🚀 Quick Start
 
+Requires **Python 3.12** (the Docker image uses `python:3.12-slim`).
+
 ```bash
 # 1. Clone and install
 cd "AI Agent"
@@ -89,7 +91,7 @@ docker compose -f docker-compose.test.yml up --build -d
 │   │   ├── calendar_service.py      #   Google Calendar sync
 │   │   ├── customer_service.py      #   Customer record management
 │   │   ├── sheets_service.py        #   Google Sheets logging
-│   │   └── whatsapp_service.py      #   WhatsApp Cloud API messaging
+│   │   └── whatsapp_service.py      #   ⚠️  UNINTEGRATED — dead code, no callers (see notes)
 │   ├── legacy/
 │   │   └── vapi/                # ⚠️  LEGACY — Vapi AI integration (disabled)
 │   │       ├── __init__.py      #   Legacy package notice
@@ -183,6 +185,11 @@ ADMIN_PASSWORD=YourStr0ng!Pa$$word
 
 Then re-run `python3 seed_firestore.py` to update Firestore.
 
+Outside `APP_ENV=development`/`test`, the app refuses to start if `JWT_SECRET_KEY`
+is missing, a published default, or under 32 characters, or if `ADMIN_PASSWORD`
+is missing, the published default, or under 12 characters. It also refuses to start
+if `CORS_ALLOWED_ORIGINS` is empty or contains `*`.
+
 ---
 
 ## 📡 API Reference
@@ -205,7 +212,9 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `PATCH` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{id}/status` | Activate/deactivate |
 | `PATCH` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{id}/subscription` | Change tier |
 | `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients` | Manual client add |
-| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/refresh-tool-tokens` | Rotate M2M tokens |
+| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/refresh-tool-tokens` | Rotate all active clients' tool tokens (old ones revoked; new raw tokens returned once) |
+| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/tool-token/rotate` | Rotate one client's tool token |
+| `POST` | `/automiteaiapplication/automiteui/mngr-sys-access-78/clients/{client_id}/tool-token/revoke` | Revoke all of a client's tool tokens |
 
 ### Extraction Engine (stubs — coming soon)
 
@@ -258,11 +267,12 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 | `ADMIN_PASSWORD` | Admin login password | `Aut0m!te@Secure#2026` |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | — |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | — |
-| `SECRET_KEY` | Fernet encryption key | — |
+| `SECRET_KEY` | Master secret (>=32 chars) encrypting Google OAuth tokens at rest | — |
 | `BASE_URL` | Public base URL for callbacks | `http://localhost:8090` |
-| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token | — |
-| `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID | — |
-| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID | — |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins (no `*` in production) | `http://localhost:8090,http://127.0.0.1:8090` |
+| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API access token (⚠️ currently unused — service is dead code) | — |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta Phone Number ID (⚠️ currently unused) | — |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Meta Business Account ID (⚠️ currently unused) | — |
 | `SMTP_HOST` / `SMTP_PORT` | Email SMTP server | `smtp.gmail.com:587` |
 | `SMTP_USER` / `SMTP_PASSWORD` | Gmail SMTP credentials (App Password) | — |
 | `CONTACT_EMAIL` | Where contact form submissions are sent | `aiautomite@gmail.com` |
@@ -320,6 +330,21 @@ Then re-run `python3 seed_firestore.py` to update Firestore.
 - [ ] Production docker-compose with nginx reverse proxy
 - [ ] Monitoring with Prometheus + Grafana
 - [ ] Firestore backup automation
+
+---
+
+## 📝 Known Limitations (doc-only notes, 2026-10-11)
+
+- **`.env.example` / config SMTP mismatch:** `app/config.py` reads five SMTP
+  settings (`smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`,
+  `contact_email`), but `.env.example` documents only `SMTP_USER`,
+  `SMTP_PASSWORD`, `CONTACT_EMAIL`. `SMTP_HOST`/`SMTP_PORT` silently fall back
+  to `smtp.gmail.com:587`. No code change — just be aware the host/port are
+  not in the template.
+- **WhatsApp is dead code:** `app/services/whatsapp_service.py` exists and
+  `WHATSAPP_*` keys exist in config/`.env.example`, but nothing imports or
+  calls the service (verified by grep). Treat as unintegrated until a router
+  wires it up. No code change.
 
 ---
 

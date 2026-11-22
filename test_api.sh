@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 # =============================================================================
-# test_api.sh — Curl tests for the AI Receptionist /agent-tools endpoints
-# Usage: bash test_api.sh
+# DEPRECATED — test_api.sh targets the removed legacy Vapi paths (/health,
+# /agent-tools/*) and does NOT pass against the current app. Do not use as a
+# health signal. See mapping below for the current ElevenLabs equivalents.
+#
+# Current equivalents (all under $BASE_URL, live server + Firestore required):
+#   GET  /health                                        -> GET  /automiteaiapplication/health
+#   POST /agent-tools/get-services-and-prices           -> removed (no equivalent)
+#   POST /agent-tools/get-client-by-mobile              -> POST /automiteaiapplication/elevenlabs-tools/get-customer
+#   POST /agent-tools/check-availability                -> POST /automiteaiapplication/elevenlabs-tools/check-availability
+#   POST /agent-tools/book-appointment                  -> POST /automiteaiapplication/elevenlabs-tools/book-appointment
+#   POST /agent-tools/save-call-log                     -> POST /automiteaiapplication/elevenlabs-tools/save-call-summary
+# NOTE: elevenlabs-tools endpoints require an X-Client-Token JWT (scope=tool);
+# plain curl without a token returns 401/403. For automated checks use the
+# mocked pytest suite (test_*.py) instead — no live server needed.
 # =============================================================================
 
 BASE_URL="http://localhost:8090"

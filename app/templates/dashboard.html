@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
-{% block meta_description %}Manage your AI voice assistant, services, and appointments{% endblock %}
+{% block title %}Client Dashboard — Your Automite AI Voice Agent Hub{% endblock %}
+{% block meta_description %}Manage your Automite AI voice assistant, services, appointments, Google Calendar integration, and monthly usage from one dashboard.{% endblock %}
+{% block canonical_url %}https://auto-mite.com/automiteaiapplication/automiteui/pages/dashboard{% endblock %}
+{% block og_title %}Client Dashboard — Your Automite AI Voice Agent Hub{% endblock %}
+{% block og_description %}Manage your Automite AI voice assistant, services, appointments, Google Calendar integration, and monthly usage from one dashboard.{% endblock %}
+{% block og_url %}https://auto-mite.com/automiteaiapplication/automiteui/pages/dashboard{% endblock %}
+{% block twitter_title %}Client Dashboard — Your Automite AI Voice Agent Hub{% endblock %}
+{% block twitter_description %}Manage your Automite AI voice assistant, services, appointments, Google Calendar integration, and monthly usage from one dashboard.{% endblock %}
+{% block meta_extra %}
+<meta name="robots" content="noindex, follow">{% endblock %}
 
 {% block navbar %}
 <nav class="navbar">
@@ -67,6 +75,30 @@
         </div>
     </div>
     
+    <!-- Campaign preparation -->
+    <div class="glass-card" style="margin-bottom:var(--space-xl);">
+        <h2>Outbound Campaigns</h2>
+        <p style="color:var(--color-text-secondary);margin:8px 0 16px;">Prepare and validate a list using your existing ElevenLabs agent.</p>
+        <button class="btn btn-primary" type="button" onclick="openCampaignModal()">Prepare Campaign</button>
+    </div>
+    <div id="campaign-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1200;overflow:auto;">
+      <section class="glass-card modal-content animate-in" style="max-width:680px;margin:5vh auto;padding:var(--space-xl);">
+        <button class="modal-close" type="button" onclick="closeCampaignModal()" aria-label="Close">&times;</button>
+        <h2>Campaign preparation</h2>
+        <p>ElevenLabs agent: <strong id="campaign-agent-name">Loading…</strong></p>
+        <p>Agent ID: <code id="campaign-agent-id">—</code></p>
+        <label class="form-label" for="campaign-phone-number">Outbound phone number</label>
+        <select id="campaign-phone-number" class="form-input"><option value="">Loading configured numbers…</option></select>
+        <p id="campaign-provider-note" role="status">Choose a phone number already configured in ElevenLabs.</p>
+        <p><a class="btn btn-secondary" href="/automiteaiapplication/automiteui/client-portal/campaigns/template.csv">Download CSV template</a></p>
+        <label class="form-label" for="campaign-file">Upload contact list (.csv or .xlsx)</label>
+        <input id="campaign-file" class="form-input" type="file" accept=".csv,.xlsx">
+        <button class="btn btn-primary" type="button" onclick="validateCampaignUpload()">Validate contacts</button>
+        <div id="campaign-result" role="status" aria-live="polite" style="margin-top:16px;"></div>
+        <button id="campaign-launch" class="btn btn-primary" type="button" onclick="launchCampaign()" disabled>Submit campaign</button>
+      </section>
+    </div>
+
     <!-- Integrations & Settings -->
     <div class="dashboard-grid" style="margin-bottom: var(--space-xl);">
         <div class="glass-card stat-card">
@@ -266,4 +298,5 @@
             </div>
         </div>
     </div>
+{% block scripts %}<script src="/automiteaiapplication/automiteui/static/js/campaign.js?v={{ static_hash('js/campaign.js') }}"></script>{% endblock %}
 {% endblock %}

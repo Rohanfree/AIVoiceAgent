@@ -8,6 +8,7 @@ Scopes:
 """
 
 import logging
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -54,12 +55,14 @@ def create_access_token(
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=ALGORITHM)
 
 
-def create_refresh_token(data: dict[str, Any]) -> str:
+def create_refresh_token(data: dict[str, Any], jti: str | None = None) -> str:
     """
     Create a long-lived refresh token for token rotation.
 
     Args:
         data: Payload dict (must include 'sub').
+        jti: Unique token ID tracked server-side (see refresh_store). A random
+            one is generated when omitted.
 
     Returns:
         Encoded JWT refresh token string.
@@ -72,6 +75,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
         "exp": expires,
         "iat": now,
         "scope": "refresh",
+        "jti": jti or uuid.uuid4().hex,
     })
 
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=ALGORITHM)

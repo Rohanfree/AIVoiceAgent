@@ -7,17 +7,25 @@ Handles:
   POST /automiteui/auth/refresh   → rotate refresh token
 """
 
+import html
 import logging
 import smtplib
 import uuid
-from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore import Client, FieldFilter
 
-from app.auth.jwt_handler import create_access_token, create_refresh_token, verify_token
+from app.auth.jwt_handler import create_access_token
+from app.auth.refresh_store import (
+    RefreshStoreUnavailable,
+    RefreshTokenInvalid,
+    issue_refresh_token,
+    rotate_refresh_token,
+)
+from app.auth.rate_limit import rate_limit
+from app.auth.tool_token_store import ToolTokenStoreUnavailable, issue_tool_token
 from app.auth.password import hash_password, verify_password
 from app.config import settings
 from app.db import get_db
@@ -42,6 +50,7 @@ router = APIRouter(
     "/login",
     response_model=TokenResponse,
     summary="Authenticate and receive JWT tokens",
+    dependencies=[Depends(rate_limit("login"))],
 )
 async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenResponse:
     """
@@ -60,7 +69,7 @@ async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenRespon
 
         return TokenResponse(
             access_token=create_access_token(token_data, scope=scope),
-            refresh_token=create_refresh_token(token_data),
+            refresh_token=_issue_refresh(db, token_data),
             scope=scope,
             expires_in_minutes=settings.jwt_access_token_expire_minutes,
         )
@@ -89,7 +98,7 @@ async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenRespon
 
     return TokenResponse(
         access_token=create_access_token(token_data, scope=scope),
-        refresh_token=create_refresh_token(token_data),
+        refresh_token=_issue_refresh(db, token_data),
         scope=scope,
         expires_in_minutes=settings.jwt_access_token_expire_minutes,
     )
@@ -97,7 +106,11 @@ async def login(body: LoginRequest, db: Client = Depends(get_db)) -> TokenRespon
 
 # ─── CHECK AGENT ───────────────────────────────────────────────────────────
 
-@router.get("/check-agent", summary="Check if an ElevenLabs agent ID is already registered")
+@router.get(
+    "/check-agent",
+    summary="Check if an ElevenLabs agent ID is already registered",
+    dependencies=[Depends(rate_limit("check-agent"))],
+)
 async def check_agent(agent_id: str, db: Client = Depends(get_db)):
     """Returns {taken, client_name, first_message} for the given agent ID."""
     from app.services.elevenlabs_service import get_agent as el_get_agent
@@ -136,6 +149,7 @@ async def check_agent(agent_id: str, db: Client = Depends(get_db)):
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new client user",
+    dependencies=[Depends(rate_limit("register"))],
 )
 async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> TokenResponse:
     """
@@ -181,11 +195,15 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     logger.info("User '%s' registered with id=%s, client_id=%s", body.username, user_id, client_id)
 
     # Generate a long-lived tool token (embedded in ElevenLabs agent tool headers)
-    tool_token = create_access_token(
-        {"sub": client_id, "client_id": client_id},
-        scope="tool",
-        expires_delta=timedelta(days=365),
-    )
+    # Only its server-side record (tool_tokens/<jti>) is persisted, never the raw value.
+    try:
+        _, tool_token_id = issue_tool_token(db, client_id)
+    except ToolTokenStoreUnavailable:
+        db.collection("users").document(user_id).delete()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Registration is temporarily unavailable.",
+        )
 
     # Create client document
     client_doc = {
@@ -193,7 +211,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         "user_id": user_id,
         "business_name": body.client_name,
         "elevenlabs_agent_id": body.elevenlabs_agent_id,
-        "tool_token": tool_token,
+        "tool_token_id": tool_token_id,
         "services": [],
         "operating_hours": {},
         "policies": {},
@@ -258,16 +276,16 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
         except Exception as exc:
             logger.error("patch_agent_first_message failed for client %s: %s", client_id, exc)
 
-    # Send welcome email with credentials
+    # Send welcome email (never includes the password). Failures must not break registration,
+    # and only the exception type is logged so provider messages can't echo sensitive data.
     try:
         _send_welcome_email(
             to_email=str(body.email),
             client_name=body.client_name,
             username=body.username,
-            password=body.password,
         )
     except Exception as exc:
-        logger.error("Failed to send welcome email to %s: %s", body.email, exc)
+        logger.error("Failed to send welcome email to %s: %s", body.email, type(exc).__name__)
 
     # Issue tokens
     scope = "dashboard"
@@ -280,7 +298,7 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
 
     return TokenResponse(
         access_token=create_access_token(token_data, scope=scope),
-        refresh_token=create_refresh_token(token_data),
+        refresh_token=_issue_refresh(db, token_data),
         scope=scope,
         expires_in_minutes=settings.jwt_access_token_expire_minutes,
     )
@@ -293,39 +311,50 @@ async def register(body: RegisterRequest, db: Client = Depends(get_db)) -> Token
     response_model=TokenResponse,
     summary="Rotate refresh token and get a new access token",
 )
-async def refresh_token(body: RefreshRequest) -> TokenResponse:
+async def refresh_token(body: RefreshRequest, db: Client = Depends(get_db)) -> TokenResponse:
     """
     Exchange a valid refresh token for a new access + refresh token pair.
-    Old refresh token is implicitly invalidated by issuing a new one.
-    """
-    payload = verify_token(body.refresh_token)
 
-    if payload is None or payload.get("scope") != "refresh":
+    The presented token is single-use: it is marked used atomically with the
+    new token's creation. Replaying it is rejected and revokes its whole
+    rotation family.
+    """
+    try:
+        token_data, new_refresh = rotate_refresh_token(db, body.refresh_token)
+    except RefreshTokenInvalid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token.",
         )
+    except RefreshStoreUnavailable:
+        raise _token_store_unavailable()
 
-    # Determine scope for the new access token
-    is_admin = payload.get("is_admin", False)
-    scope = "admin:all" if is_admin else "dashboard"
-
-    token_data = {
-        "sub": payload["sub"],
-        "username": payload.get("username"),
-        "client_id": payload.get("client_id"),
-        "is_admin": is_admin,
-    }
+    scope = "admin:all" if token_data["is_admin"] else "dashboard"
 
     return TokenResponse(
         access_token=create_access_token(token_data, scope=scope),
-        refresh_token=create_refresh_token(token_data),
+        refresh_token=new_refresh,
         scope=scope,
         expires_in_minutes=settings.jwt_access_token_expire_minutes,
     )
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
+
+def _token_store_unavailable() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Authentication service temporarily unavailable.",
+    )
+
+
+def _issue_refresh(db: Client, token_data: dict) -> str:
+    """Issue a tracked refresh token; fail closed if it cannot be recorded."""
+    try:
+        return issue_refresh_token(db, token_data)
+    except RefreshStoreUnavailable:
+        raise _token_store_unavailable()
+
 
 def _find_user_by_username(db: Client, username: str) -> dict | None:
     """Look up a user document by username. Returns dict or None."""
@@ -342,12 +371,14 @@ def _find_user_by_username(db: Client, username: str) -> dict | None:
     return None
 
 
-def _send_welcome_email(to_email: str, client_name: str, username: str, password: str) -> None:
-    """Send a welcome email to the newly registered client with their credentials."""
-    if not settings.smtp_user or not settings.smtp_password:
-        logger.warning("SMTP not configured — skipping welcome email to %s", to_email)
-        return
+def _build_welcome_message(to_email: str, client_name: str, username: str) -> MIMEMultipart:
+    """Build the welcome email. It deliberately carries no password or credential of any kind.
 
+    There is no set-password / password-reset flow yet, so the email does not link to one.
+    Users sign in with the password they chose at registration.
+    """
+    client_name = html.escape(client_name)
+    username = html.escape(username)
     html_body = f"""
     <html><body style="font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:600px;margin:0 auto;">
       <div style="background:#1A4D3A;padding:24px 32px;border-radius:12px 12px 0 0;">
@@ -355,22 +386,15 @@ def _send_welcome_email(to_email: str, client_name: str, username: str, password
       </div>
       <div style="background:#f9f9f9;padding:32px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;">
         <p>Hi <strong>{client_name}</strong>,</p>
-        <p>Your account has been created successfully. Here are your login credentials:</p>
+        <p>Your account has been created successfully.</p>
         <table style="border-collapse:collapse;width:100%;margin:16px 0;">
           <tr>
             <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-weight:600;width:130px;">Username</td>
             <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-family:monospace;">{username}</td>
           </tr>
-          <tr>
-            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-weight:600;">Password</td>
-            <td style="padding:10px 14px;background:#fff;border:1px solid #e0e0e0;font-family:monospace;">{password}</td>
-          </tr>
         </table>
-        <p>Please keep these credentials safe. You can log in at any time from the Automite AI dashboard.</p>
-        <p style="background:#fff8e1;border:1px solid #f0c040;border-radius:6px;padding:12px 14px;color:#7a5800;margin-top:16px;font-size:0.93em;">
-          <strong>Security tip:</strong> For better security, please change your password after your first login.
-          Open the <strong>Edit Profile</strong> section in your dashboard to set a new password.
-        </p>
+        <p>Sign in from the Automite AI dashboard with the password you chose when you registered.
+        For your security, we never send passwords by email.</p>
         <p style="margin-top:24px;">— The Automite AI Team</p>
       </div>
       <p style="font-size:12px;color:#999;text-align:center;margin-top:16px;">
@@ -380,10 +404,20 @@ def _send_welcome_email(to_email: str, client_name: str, username: str, password
     """
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Welcome to Automite AI — Your Account Details"
+    msg["Subject"] = "Welcome to Automite AI"
     msg["From"] = f"Automite AI <{settings.smtp_user}>"
     msg["To"] = to_email
     msg.attach(MIMEText(html_body, "html"))
+    return msg
+
+
+def _send_welcome_email(to_email: str, client_name: str, username: str) -> None:
+    """Send a welcome email to the newly registered client. Never includes their password."""
+    if not settings.smtp_user or not settings.smtp_password:
+        logger.warning("SMTP not configured — skipping welcome email to %s", to_email)
+        return
+
+    msg = _build_welcome_message(to_email, client_name, username)
 
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
         server.ehlo()

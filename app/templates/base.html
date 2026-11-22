@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Automite AI{% endblock %} — Intelligent Automation</title>
-    <meta name="description" content="{% block meta_description %}Automite AI — Intelligent Automation. Simplified.{% endblock %}">
+    {% include "partials/seo_head.html" %}
     {% block meta_extra %}{% endblock %}
     <link rel="icon" type="image/jpeg" href="/automiteaiapplication/automiteui/static/images/icon.jpeg">
     <link rel="stylesheet" href="/automiteaiapplication/automiteui/static/css/automite.css?v={{ static_hash('css/automite.css') }}">

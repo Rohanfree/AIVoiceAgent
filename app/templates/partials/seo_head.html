@@ -1,0 +1,52 @@
+{#- Shared SEO head metadata, driven by app/seo/registry.py.
+    Expects `seo_template` (registry template name, passed by pages_router); optional `seo_robots`
+    (pages that own a robots meta in their own template, e.g. via base.html's meta_extra block, omit it)
+    and `seo_jsonld_extra` (extra JSON-LD @graph nodes, each preceded by a comma). -#}
+{%- set seo = seo_page(seo_template) -%}
+{%- set site = site_url() -%}
+{%- set logo = site ~ ui_prefix ~ "/static/images/logo.png" -%}
+<title>{{ seo.title }}</title>
+{% if seo.description %}<meta name="description" content="{{ seo.description }}" />
+{% endif %}
+{%- if seo_robots %}<meta name="robots" content="{{ seo_robots }}" />
+{% endif %}
+{%- if seo.indexable %}<link rel="canonical" href="{{ site }}{{ seo.canonical_path }}" />
+{% endif %}
+<meta name="theme-color" content="#1A4D3A" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Automite AI" />
+<meta property="og:title" content="{{ seo.title }}" />
+{% if seo.description %}<meta property="og:description" content="{{ seo.description }}" />
+{% endif %}
+{%- if seo.indexable %}<meta property="og:url" content="{{ site }}{{ seo.canonical_path }}" />
+{% endif %}
+<meta property="og:image" content="{{ logo }}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ seo.title }}" />
+{% if seo.description %}<meta name="twitter:description" content="{{ seo.description }}" />
+{% endif %}
+<meta name="twitter:image" content="{{ logo }}" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "{{ site }}/#organization",
+      "name": "Automite AI",
+      "url": "{{ site }}/",
+      "logo": "{{ logo }}",
+      "email": "aiautomite@gmail.com",
+      "telephone": "+1-705-315-0166",
+      "sameAs": ["{{ site }}/blogs"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ site }}/#website",
+      "url": "{{ site }}/",
+      "name": "Automite AI",
+      "publisher": {"@id": "{{ site }}/#organization"}
+    }{{ seo_jsonld_extra or "" }}
+  ]
+}
+</script>
